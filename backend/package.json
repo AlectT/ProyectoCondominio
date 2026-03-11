@@ -1,24 +1,26 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "start": "node src/app.js",
-    "dev": "node --watch src/app.js",
-    "test:db": "node src/tests/probarConexion.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
-  "description": "",
-  "dependencies": {
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.6",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
-    "oracledb": "^6.10.0",
-    "zod": "^4.3.6"
-  }
+	"name": "backend",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"start": "node src/app.js",
+		"dev": "node --watch src/app.js",
+		"test:db": "node src/tests/probarConexion.js",
+		"test:admin": "node src/tests/usuarioAdmin.js"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"type": "module",
+	"description": "",
+	"dependencies": {
+		"bcrypt": "^6.0.0",
+		"cookie-parser": "^1.4.7",
+		"cors": "^2.8.6",
+		"dotenv": "^17.3.1",
+		"express": "^5.2.1",
+		"jsonwebtoken": "^9.0.3",
+		"oracledb": "^6.10.0",
+		"zod": "^4.3.6"
+	}
 }
