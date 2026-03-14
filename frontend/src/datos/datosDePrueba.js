@@ -236,23 +236,23 @@ export const GRUPOS = [
 		titulo: 'Residencial & Accesos',
 		IconoGrupo: Home,
 		modulos: [
-			{ id: 'Gestión de Propiedades', Icono: Building, propio: true, roles: ['Administrador'] },
+			{ id: 'Gestión de Propiedades', Icono: Building, propio: false, roles: ['Administrador'] },
 			{
 				id: 'Directorio Residentes',
 				Icono: Users,
-				propio: false,
+				propio: true,
 				roles: ['Administrador', 'Guardia'],
 			},
 			{
 				id: 'Control Vehicular',
 				Icono: Car,
-				propio: true,
+				propio: false,
 				roles: ['Administrador', 'Guardia', 'Residente'],
 			},
 			{
 				id: 'Pases de Visita (QR)',
 				Icono: QrCode,
-				propio: true,
+				propio: false,
 				roles: ['Administrador', 'Guardia', 'Residente'],
 			},
 		],
@@ -307,7 +307,7 @@ export const GRUPOS = [
 			{
 				id: 'Infracciones y Multas',
 				Icono: AlertTriangle,
-				propio: true,
+				propio: false,
 				roles: ['Administrador', 'Guardia', 'Residente'],
 			},
 		],
@@ -326,7 +326,7 @@ export const GRUPOS = [
 			{
 				id: 'Mesa de Ayuda',
 				Icono: Ticket,
-				propio: false,
+				propio: true,
 				roles: ['Administrador', 'Residente'],
 			},
 			{ id: 'Catálogos del Sistema', Icono: Layers, propio: false, roles: ['Administrador'] },
