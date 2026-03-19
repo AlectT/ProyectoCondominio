@@ -19,11 +19,25 @@ enrutadorLlamadasAtencion.post(
 	verificarRol('Administrador'),
 	LlamadasAtencionController.crear,
 );
+
+enrutadorLlamadasAtencion.get(
+	'/agrupados',
+	verificarRol('Administrador'),
+	LlamadasAtencionController.agrupados,
+);
+
+enrutadorLlamadasAtencion.get(
+	'/agrupados/:id',
+	verificarRol('Administrador'),
+	LlamadasAtencionController.obtenerPorIdAgrupados,
+);
+
 enrutadorLlamadasAtencion.get(
 	'/:id',
 	verificarRol('Administrador', 'Guardia'),
 	LlamadasAtencionController.obtenerPorId,
 );
+
 enrutadorLlamadasAtencion.put(
 	'/:id',
 	verificarRol('Administrador'),

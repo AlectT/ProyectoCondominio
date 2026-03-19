@@ -32,8 +32,6 @@ const esquemaLlamadasAtencion = z.object({
 		})
 		.min(2)
 		.max(500),
-
-	estado: z.enum(['ABIERTO', 'EN_PROGRESO', 'RESUELTO', 'CERRADO', 'CANCELADO']).optional(),
 });
 
 export function validarLlamadasAtencion(entrada) {

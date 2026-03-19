@@ -31,8 +31,6 @@ const esquemaParqueo = z.object({
 		})
 		.int()
 		.positive(),
-
-	estado: z.enum(['ABIERTO', 'EN_PROGRESO', 'RESUELTO', 'CERRADO', 'CANCELADO']).optional(),
 });
 
 export function validarParqueo(entrada) {

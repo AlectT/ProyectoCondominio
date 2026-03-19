@@ -5,6 +5,7 @@ const origenesAceptados = [
 	'http://localhost:1234',
 	'http://localhost:3000',
 	'http://localhost:5173',
+	'http://localhost:1000',
 ];
 
 export const middlewareCors = ({ origenes = origenesAceptados } = {}) =>
@@ -18,4 +19,5 @@ export const middlewareCors = ({ origenes = origenesAceptados } = {}) =>
 			}
 			return callback(new Error('Origen no permitido por CORS'));
 		},
+		credentials: true,
 	});

@@ -17,6 +17,18 @@ export class LlamadasAtencionController {
 		res.status(404).json({ mensaje: 'Llamada de atención no encontrada.' });
 	}
 
+	static async agrupados(req, res) {
+		const llamadas = await LlamadasAtencionModel.agrupados();
+		res.json(llamadas);
+	}
+
+	static async obtenerPorIdAgrupados(req, res) {
+		const { id } = req.params;
+		const llamada = await LlamadasAtencionModel.obtenerPorIdAgrupados({ id: id });
+		if (llamada) return res.json(llamada);
+		res.status(404).json({ mensaje: 'Llamada de atención no encontrada.' });
+	}
+
 	static async crear(req, res) {
 		const resultado = validarLlamadasAtencion(req.body);
 		if (!resultado.success) {

@@ -39,7 +39,41 @@ export class LlamadasAtencionModel {
 				{ id },
 				{ outFormat: oracledb.OUT_FORMAT_OBJECT },
 			);
-			return resultado.rows[0] ?? null;
+			return resultado.rows;
+		} finally {
+			await conexion.close();
+		}
+	}
+
+	static async agrupados() {
+		const conexion = await conectar();
+		try {
+			const parametros = {};
+			const resultado = await conexion.execute(
+				'SELECT COUNT(la.ID_PROPIEDAD) AS cantidad, la.ID_PROPIEDAD, la.ID_TIPO_CARGO FROM LLAMADO_ATENCION la GROUP BY la.ID_TIPO_CARGO, la.ID_PROPIEDAD',
+				parametros,
+				{
+					outFormat: oracledb.OUT_FORMAT_OBJECT,
+				},
+			);
+			return resultado.rows;
+		} finally {
+			await conexion.close();
+		}
+	}
+
+	static async obtenerPorIdAgrupados({ id }) {
+		const conexion = await conectar();
+		try {
+			const parametros = {};
+			const resultado = await conexion.execute(
+				'SELECT COUNT(la.ID_PROPIEDAD) AS cantidad, la.ID_PROPIEDAD, la.ID_TIPO_CARGO FROM LLAMADO_ATENCION la  WHERE la.ID_PROPIEDAD = :id GROUP BY la.ID_TIPO_CARGO, la.ID_PROPIEDAD',
+				{ ...parametros, id },
+				{
+					outFormat: oracledb.OUT_FORMAT_OBJECT,
+				},
+			);
+			return resultado.rows;
 		} finally {
 			await conexion.close();
 		}
