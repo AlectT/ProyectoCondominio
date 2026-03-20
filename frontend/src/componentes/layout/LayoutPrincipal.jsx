@@ -8,12 +8,14 @@ import useStore from '../../estado/useStore.js';
 // Módulos propios conectados al backend
 import UsuariosPagina from '../../paginas/UsuariosPagina.jsx';
 import TicketsPagina from '../../paginas/TicketsPagina.jsx';
+import ParqueosPagina from '../../Paginas/ParqueosPagina.jsx';
 
 // Módulos de compañeros (datos de prueba)
 import ModuloPropiedades from '../../paginas/modulos/ModuloPropiedades.jsx';
 import ModuloVehiculos from '../../paginas/modulos/ModuloVehiculos.jsx';
 import ModuloInvitaciones from '../../paginas/modulos/ModuloInvitaciones.jsx';
 import ModuloMulta from '../../paginas/modulos/ModuloMulta.jsx';
+import LlamadasAtencionPagina from '../../Paginas/LlamadasAtencionPagina.jsx';
 
 const SUBTITULOS = {
 	'Gestión de Propiedades': 'Administración general de unidades y responsables',
@@ -22,6 +24,8 @@ const SUBTITULOS = {
 	'Pases de Visita (QR)': 'Generación de códigos de acceso temporales',
 	'Infracciones y Multas': 'Bitácora de faltas y control de sanciones',
 	'Mesa de Ayuda': 'Gestión de tickets asignados al personal',
+	'Inventario Parqueos': 'Inventario de parqueos disponibles',
+	'Llamados de Atención': 'Listado de llamadas de atención acumuladas',
 };
 
 export default function LayoutPrincipal() {
@@ -36,6 +40,8 @@ export default function LayoutPrincipal() {
 		'Infracciones y Multas': <ModuloMulta filtroGlobal={busquedaGlobal} />,
 		'Directorio Residentes': <UsuariosPagina filtroGlobal={busquedaGlobal} />,
 		'Mesa de Ayuda': <TicketsPagina filtroGlobal={busquedaGlobal} />,
+		'Inventario Parqueos': <ParqueosPagina filtroGlobal={busquedaGlobal} />,
+		'Llamados de Atención': <LlamadasAtencionPagina filtroGlobal={busquedaGlobal} />,
 	};
 
 	const infoModulo = GRUPOS.flatMap((g) => g.modulos).find((m) => m.id === moduloActivo);

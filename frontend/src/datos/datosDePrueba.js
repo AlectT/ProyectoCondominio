@@ -276,7 +276,7 @@ export const GRUPOS = [
 			{
 				id: 'Inventario Parqueos',
 				Icono: ParkingCircle,
-				propio: false,
+				propio: true,
 				roles: ['Administrador', 'Guardia'],
 			},
 			{
@@ -301,7 +301,7 @@ export const GRUPOS = [
 			{
 				id: 'Llamados de Atención',
 				Icono: PhoneCall,
-				propio: false,
+				propio: true,
 				roles: ['Administrador', 'Guardia'],
 			},
 			{
