@@ -4,6 +4,8 @@ import { Topbar } from './Topbar.jsx';
 import { ModuloPendiente } from '../ModuloPendiente.jsx';
 import { GRUPOS } from '../../datos/datosDePrueba.js';
 import useStore from '../../estado/useStore.js';
+import PagosPagina from '../../paginas/PagosPagina.jsx';
+import ReservasPagina from '../../paginas/ReservasPagina.jsx';
 
 // Módulos propios conectados al backend
 import UsuariosPagina from '../../paginas/UsuariosPagina.jsx';
@@ -26,6 +28,7 @@ const SUBTITULOS = {
 	'Pases de Visita (QR)': 'Generación de códigos de acceso temporales',
 	'Infracciones y Multas': 'Bitácora de faltas y control de sanciones',
 	'Mesa de Ayuda': 'Gestión de tickets asignados al personal',
+	'Reservas de Áreas': 'Calendario y gestión de áreas sociales',
 	'Inventario Parqueos': 'Inventario de parqueos disponibles',
 	'Llamados de Atención': 'Listado de llamadas de atención acumuladas',
 	'Bitácora de Seguridad': 'Bitácora y registro de las personas que han ingresado.',
@@ -44,6 +47,8 @@ export default function LayoutPrincipal() {
 		'Infracciones y Multas': <ModuloMulta filtroGlobal={busquedaGlobal} />,
 		'Directorio Residentes': <UsuariosPagina filtroGlobal={busquedaGlobal} />,
 		'Mesa de Ayuda': <TicketsPagina filtroGlobal={busquedaGlobal} />,
+		'Control de Cuotas': <PagosPagina filtroGlobal={busquedaGlobal} />,
+		'Reservas de Áreas': <ReservasPagina filtroGlobal={busquedaGlobal} />,
 		'Inventario Parqueos': <ParqueosPagina filtroGlobal={busquedaGlobal} />,
 		'Llamados de Atención': <LlamadasAtencionPagina filtroGlobal={busquedaGlobal} />,
 		'Propietarios e Inquilinos': <UsuarioPropiedadPagina filtroGlobal={busquedaGlobal} />,

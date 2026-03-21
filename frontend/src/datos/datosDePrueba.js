@@ -300,7 +300,7 @@ export const GRUPOS = [
 			{
 				id: 'Control de Cuotas',
 				Icono: CreditCard,
-				propio: false,
+				propio: true,
 				roles: ['Administrador', 'Residente'],
 			},
 			{ id: 'Historial Financiero', Icono: Zap, propio: false, roles: ['Administrador'] },
@@ -326,7 +326,7 @@ export const GRUPOS = [
 			{
 				id: 'Reservas de Áreas',
 				Icono: CalendarDays,
-				propio: false,
+				propio: true,
 				roles: ['Administrador', 'Residente'],
 			},
 			{
