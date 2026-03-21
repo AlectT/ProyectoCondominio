@@ -4,6 +4,9 @@ import { Topbar } from './Topbar.jsx';
 import { ModuloPendiente } from '../ModuloPendiente.jsx';
 import { GRUPOS } from '../../datos/datosDePrueba.js';
 import useStore from '../../estado/useStore.js';
+import ModuloTiposCargo from '../../paginas/modulos/ModuloTiposCargo.jsx';
+import ModuloCargosFinancieros from '../../paginas/modulos/ModuloCargosFinancieros.jsx';
+import ModuloAreasSociales from '../../paginas/modulos/ModuloAreasSociales.jsx';
 
 // Módulos propios conectados al backend
 import UsuariosPagina from '../../paginas/UsuariosPagina.jsx';
@@ -26,6 +29,9 @@ const SUBTITULOS = {
 	'Pases de Visita (QR)': 'Generación de códigos de acceso temporales',
 	'Infracciones y Multas': 'Bitácora de faltas y control de sanciones',
 	'Mesa de Ayuda': 'Gestión de tickets asignados al personal',
+	'Tipos de Cargo': 'Catálogo de conceptos financieros, cargos dinámicos y multas',
+	'Cargos Financieros': 'Consulta de estado de cuenta por propiedad y cuotas mensuales',
+	'Áreas Sociales': 'Gestión de espacios comunes, horarios y precio por hora',
 	'Inventario Parqueos': 'Inventario de parqueos disponibles',
 	'Llamados de Atención': 'Listado de llamadas de atención acumuladas',
 	'Bitácora de Seguridad': 'Bitácora y registro de las personas que han ingresado.',
@@ -44,6 +50,9 @@ export default function LayoutPrincipal() {
 		'Infracciones y Multas': <ModuloMulta filtroGlobal={busquedaGlobal} />,
 		'Directorio Residentes': <UsuariosPagina filtroGlobal={busquedaGlobal} />,
 		'Mesa de Ayuda': <TicketsPagina filtroGlobal={busquedaGlobal} />,
+		'Tipos de Cargo': <ModuloTiposCargo filtroGlobal={busquedaGlobal} />,
+		'Cargos Financieros': <ModuloCargosFinancieros />,
+		'Áreas Sociales': <ModuloAreasSociales />,
 		'Inventario Parqueos': <ParqueosPagina filtroGlobal={busquedaGlobal} />,
 		'Llamados de Atención': <LlamadasAtencionPagina filtroGlobal={busquedaGlobal} />,
 		'Propietarios e Inquilinos': <UsuarioPropiedadPagina filtroGlobal={busquedaGlobal} />,
