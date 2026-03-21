@@ -1,232 +1,451 @@
+// ============================================================
+// 📁 RUTA: frontend/src/paginas/modulos/ModuloInvitaciones.jsx
+// ============================================================
+
 import { useState, useEffect } from 'react';
-import {
-    QrCode,
-    CheckCircle,
-    XCircle,
-    Clock,
-    Plus,
-    Ban,
-    Eye,
-    User,
-    CalendarClock
-} from 'lucide-react';
+import { QrCode, Plus, Ban, Trash2, Pencil, CheckCircle, Clock } from 'lucide-react';
 import { invitacionesApi } from '../../api/invitacionesApi.js';
-import { usuariosApi } from '../../api/usuariosApi.js'; // Para traer los residentes
+import useStore from '../../estado/useStore.js';
 import { TarjetaMetrica, Etiqueta } from '../../componentes/ui/Etiquetas.jsx';
 import { BuscadorCasa } from '../../componentes/ui/Buscador.jsx';
 import { BtnPrimario, BtnAccion, BotonesModal } from '../../componentes/ui/Botones.jsx';
 import { CabeceraTabla, Fila, Celda, PieTabla } from '../../componentes/ui/Tablas.jsx';
-import { Modal } from '../../componentes/ui/Modales.jsx';
+import { Modal, ModalConfirmacion } from '../../componentes/ui/Modales.jsx';
 import { Campo, Entrada, Selector } from '../../componentes/ui/Formularios.jsx';
-import { formatearFecha } from '../../utilidades/formatearFecha.js'; // Asumiendo que tienes esto
 
 export default function ModuloInvitaciones({ filtroGlobal = '' }) {
-    const [datos, setDatos] = useState([]);
-    const [usuarios, setUsuarios] = useState([]);
-    const [cargando, setCargando] = useState(true);
-    const [busqueda, setBusqueda] = useState('');
-    const [modal, setModal] = useState(null);
-    const [seleccion, setSeleccion] = useState(null);
-    const [filaActiva, setFilaActiva] = useState(null);
-    
-    const [form, setForm] = useState({
-        idUsuario: '',
-        tipo: 'Normal',
-        nombreVisitante: '',
-    });
+	// ── STORE ─────────────────────────────────────────────────
+	const usuario = useStore((s) => s.usuario);
 
-    // Mapeo de tipos para Oracle
-    const mapTipoId = { 'Normal': 1, 'Servicio': 2 };
+	// ── ESTADO ────────────────────────────────────────────────
+	const [datos, setDatos] = useState([]);
+	const [cargando, setCargando] = useState(true);
+	const [busqueda, setBusqueda] = useState('');
+	const [modal, setModal] = useState(null); // null | 'nuevo' | 'qr'
+	const [seleccion, setSeleccion] = useState(null);
+	const [filaActiva, setFilaActiva] = useState(null);
+	const [aEliminar, setAEliminar] = useState(null);
+	const [editandoId, setEditandoId] = useState(null);
+	const [form, setForm] = useState({
+		visitante: '',
+		tipo: 'Normal',
+	});
 
-    const cargarDatos = async () => {
-        setCargando(true);
-        try {
-            // Traemos las invitaciones
-            const resInvitaciones = await invitacionesApi.obtenerTodas();
-            
-            // Formateamos para la tabla
-            const datosFormateados = resInvitaciones.data.map((i) => ({
-                id: i.ID_INVITACION,
-                residente: i.NOMBRE_RESIDENTE,
-                tipo: i.TIPO_INVITACION,
-                visitante: i.NOMBRE_VISITANTE,
-                codigoQr: i.CODIGO_QR,
-                fechaGeneracion: i.FECHA_GENERACION,
-                fechaExpiracion: i.FECHA_EXPIRACION,
-                estado: i.ACTIVO === 1 ? 'Activa' : 'Inactiva',
-            }));
-            setDatos(datosFormateados);
+	// ── CARGAR DATOS DESDE ORACLE ─────────────────────────────
+	const cargarDatos = async () => {
+		setCargando(true);
+		try {
+			const respuesta = await invitacionesApi.obtenerTodas();
 
-            // Traemos los usuarios para el selector del formulario
-            const resUsuarios = await usuariosApi.obtenerTodos();
-            setUsuarios(resUsuarios.data || []);
-            
-        } catch (error) {
-            console.error('Error al cargar datos:', error);
-        } finally {
-            setCargando(false);
-        }
-    };
+			// Normalizar columnas Oracle al formato visual
+			// ACTIVO = 1 → Activo/Pendiente, ACTIVO = 0 → Inactivo/Expirado
+			const datosFormateados = respuesta.data.map((inv) => {
+				// Determinar estado visual según ACTIVO y fechas
+				let estado = 'Activo';
+				if (inv.ACTIVO === 0) {
+					// Si es Normal y ya expiró → Expirado, si no → Inactivo
+					if (inv.ID_TIPO === 1 && inv.FECHA_EXPIRACION) {
+						const expiracion = new Date(inv.FECHA_EXPIRACION);
+						estado = expiracion < new Date() ? 'Expirado' : 'Inactivo';
+					} else {
+						estado = 'Inactivo';
+					}
+				}
 
-    useEffect(() => {
-        cargarDatos();
-    }, []);
+				return {
+					id: inv.ID_INVITACION,
+					idUsuario: inv.ID_USUARIO,
+					idTipo: inv.ID_TIPO,
+					tipo: inv.TIPO_NOMBRE, // 'Normal' o 'Servicio'
+					visitante: inv.NOMBRE_VISITANTE,
+					codigoQR: inv.CODIGO_QR,
+					activo: inv.ACTIVO,
+					estado,
+					fechaGeneracion: inv.FECHA_GENERACION
+						? new Date(inv.FECHA_GENERACION).toLocaleDateString('es-GT')
+						: null,
+					fechaExpiracion: inv.FECHA_EXPIRACION
+						? new Date(inv.FECHA_EXPIRACION).toLocaleDateString('es-GT')
+						: null,
+				};
+			});
 
-    const termino = (busqueda || filtroGlobal).toLowerCase().trim();
-    const filtrados = termino
-        ? datos.filter(
-                (i) =>
-                    i.visitante.toLowerCase().includes(termino) ||
-                    i.residente.toLowerCase().includes(termino) ||
-                    i.codigoQr.toLowerCase().includes(termino)
-            )
-        : datos;
+			setDatos(datosFormateados);
+		} catch (error) {
+			console.error('Error al cargar invitaciones:', error);
+		} finally {
+			setCargando(false);
+		}
+	};
 
-    const guardarNuevo = async (e) => {
-        if (e) e.preventDefault();
-        if (!form.idUsuario || !form.nombreVisitante.trim()) return;
+	useEffect(() => {
+		cargarDatos();
+	}, []);
 
-        const payload = {
-            idUsuario: Number(form.idUsuario),
-            idTipo: mapTipoId[form.tipo],
-            nombreVisitante: form.nombreVisitante.trim(),
-        };
+	// ── FILTRADO ──────────────────────────────────────────────
+	const termino = (busqueda || filtroGlobal).toLowerCase().trim();
+	const filtrados = termino
+		? datos.filter(
+				(inv) =>
+					inv.visitante.toLowerCase().includes(termino) ||
+					inv.tipo.toLowerCase().includes(termino) ||
+					inv.codigoQR?.toLowerCase().includes(termino),
+			)
+		: datos;
 
-        try {
-            await invitacionesApi.crear(payload);
-            await cargarDatos();
-            setModal(null);
-        } catch (error) {
-            console.error('Error al crear invitación:', error);
-            alert('Error al generar la invitación. Verifica la consola.');
-        }
-    };
+	// ── GUARDAR (crear o editar) ──────────────────────────────
+	const guardar = async (e) => {
+		if (e) e.preventDefault();
+		if (!form.visitante.trim()) return;
 
-    const toggleEstado = async (id, estadoActual) => {
-        try {
-            const nuevoActivo = estadoActual === 'Activa' ? 0 : 1;
-            await invitacionesApi.actualizar(id, { activo: nuevoActivo });
-            await cargarDatos();
-        } catch (error) {
-            console.error('Error al cambiar estado:', error);
-        }
-    };
+		try {
+			if (editandoId) {
+				// EDITAR — solo nombre visitante
+				await invitacionesApi.actualizar(editandoId, {
+					nombreVisitante: form.visitante.trim(),
+				});
+			} else {
+				// CREAR
+				await invitacionesApi.crear({
+					nombreVisitante: form.visitante.trim(),
+					tipo: form.tipo,
+					idUsuario: usuario?.ID_USUARIO,
+				});
+			}
+			await cargarDatos();
+			setModal(null);
+			setEditandoId(null);
+		} catch (error) {
+			console.error('Error al guardar:', error);
+			alert(error.response?.data?.mensaje || 'Error al guardar la invitación');
+		}
+	};
 
-    if (cargando) return <div className="p-8 text-center text-zinc-400 animate-pulse">Cargando invitaciones desde Oracle...</div>;
+	// ── ABRIR EDITAR ──────────────────────────────────────────
+	function abrirEditar(inv) {
+		setForm({ visitante: inv.visitante, tipo: inv.tipo });
+		setEditandoId(inv.id);
+		setModal('nuevo');
+	}
 
-    return (
-        <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="grid grid-cols-4 gap-4">
-                <TarjetaMetrica etiqueta="Total Generadas" valor={datos.length} Icono={QrCode} fondo="bg-zinc-800" />
-                <TarjetaMetrica etiqueta="Activas" valor={datos.filter((i) => i.estado === 'Activa').length} Icono={CheckCircle} fondo="bg-emerald-500/10" />
-                <TarjetaMetrica etiqueta="Tipo Normal" valor={datos.filter((i) => i.tipo === 'Normal').length} Icono={User} fondo="bg-blue-500/10" />
-                <TarjetaMetrica etiqueta="Tipo Servicio" valor={datos.filter((i) => i.tipo === 'Servicio').length} Icono={CalendarClock} fondo="bg-amber-500/10" />
-            </div>
+	// ── DESACTIVAR (invalidar QR) — RN-I5 ────────────────────
+	const desactivar = async (inv) => {
+		try {
+			await invitacionesApi.desactivar(inv.id);
+			await cargarDatos();
+		} catch (error) {
+			console.error('Error al desactivar:', error);
+			alert(error.response?.data?.mensaje || 'Error al desactivar la invitación');
+		}
+	};
 
-            <div className="border bg-fondo border-borde rounded-xl overflow-hidden shadow-sm">
-                <div className="flex items-center justify-between p-4 border-b border-borde bg-tarjeta/50">
-                    <BuscadorCasa valor={busqueda} alCambiar={setBusqueda} />
-                    <BtnPrimario onClick={() => { setForm({ idUsuario: '', tipo: 'Normal', nombreVisitante: '' }); setModal('nuevo'); }}>
-                        <Plus className="w-4 h-4" /> Generar Invitación
-                    </BtnPrimario>
-                </div>
-                <table className="w-full">
-                    <CabeceraTabla columnas={['Código QR', 'Visitante', 'Residente que invita', 'Tipo', 'Expiración', 'Estado', 'Acciones']} />
-                    <tbody>
-                        {filtrados.map((inv, i) => (
-                            <Fila key={inv.id} indice={i} seleccionada={filaActiva === inv.id} onClick={() => setFilaActiva(filaActiva === inv.id ? null : inv.id)}>
-                                <Celda mono>
-                                    <div className="flex items-center gap-2">
-                                        <QrCode className="w-4 h-4 text-zinc-500" />
-                                        {inv.codigoQr.split('-')[2]} {/* Mostramos solo el fragmento final para no saturar */}
-                                    </div>
-                                </Celda>
-                                <Celda className="font-bold text-primario">{inv.visitante}</Celda>
-                                <Celda>{inv.residente}</Celda>
-                                <td className="px-4 py-3">
-                                    <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${inv.tipo === 'Normal' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
-                                        {inv.tipo}
-                                    </span>
-                                </td>
-                                <Celda className="text-xs">
-                                    {inv.tipo === 'Normal' && inv.fechaExpiracion ? (
-                                        <span className="text-red-400">Hoy 23:59</span>
-                                    ) : (
-                                        <span className="text-emerald-400">Sin expiración</span>
-                                    )}
-                                </Celda>
-                                <td className="px-4 py-3">
-                                    <Etiqueta texto={inv.estado} variante={inv.estado === 'Activa' ? 'activo' : 'inactivo'} />
-                                </td>
-                                <td className="px-4 py-3">
-                                    <div className="flex items-center gap-1">
-                                        <BtnAccion Icono={Eye} titulo="Ver Detalle y QR" onClick={() => { setSeleccion(inv); setModal('detalle'); }} />
-                                        <BtnAccion Icono={Ban} titulo="Activar/Desactivar" onClick={() => toggleEstado(inv.id, inv.estado)} colorHover="hover:text-amber-400" />
-                                    </div>
-                                </td>
-                            </Fila>
-                        ))}
-                    </tbody>
-                </table>
-                <PieTabla mostrados={filtrados.length} total={datos.length} unidad="invitaciones" />
-            </div>
+	// ── CARGANDO ──────────────────────────────────────────────
+	if (cargando)
+		return (
+			<div className="p-8 text-center text-zinc-400 animate-pulse">
+				Cargando datos desde Oracle...
+			</div>
+		);
 
-            {modal === 'nuevo' && (
-                <Modal titulo="Generar Nueva Invitación" alCerrar={() => setModal(null)}>
-                    <form onSubmit={guardarNuevo} className="space-y-4">
-                        <Campo etiqueta="Residente que invita">
-                            <Selector required value={form.idUsuario} onChange={(e) => setForm({ ...form, idUsuario: e.target.value })}>
-                                <option value="">Seleccione un usuario...</option>
-                                {usuarios.map(u => (
-                                    <option key={u.ID_USUARIO} value={u.ID_USUARIO}>{u.NOMBRE} {u.APELLIDO}</option>
-                                ))}
-                            </Selector>
-                        </Campo>
-                        <div className="grid grid-cols-2 gap-4">
-                            <Campo etiqueta="Nombre del Visitante">
-                                <Entrada required value={form.nombreVisitante} onChange={(e) => setForm({ ...form, nombreVisitante: e.target.value })} placeholder="Ej: Juan Pérez" />
-                            </Campo>
-                            <Campo etiqueta="Tipo de Invitación">
-                                <Selector value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
-                                    <option value="Normal">Normal (Expira hoy)</option>
-                                    <option value="Servicio">Servicio (Reutilizable)</option>
-                                </Selector>
-                            </Campo>
-                        </div>
-                        <div className="p-3 rounded-lg bg-zinc-800/60 border border-borde text-xs text-secundario space-y-1">
-                            <p>⚠️ <strong>Nota de Seguridad:</strong> El código QR se generará automáticamente en el sistema y será validado por la garita de seguridad.</p>
-                        </div>
-                        <BotonesModal alCancelar={() => setModal(null)} textoGuardar="Generar Invitación" />
-                    </form>
-                </Modal>
-            )}
+	// ── RENDER ────────────────────────────────────────────────
+	return (
+		<div className="space-y-6 animate-in fade-in duration-300">
+			{/* MÉTRICAS */}
+			<div className="grid grid-cols-4 gap-4">
+				<TarjetaMetrica
+					etiqueta="Total Pases"
+					valor={datos.length}
+					Icono={QrCode}
+					fondo="bg-zinc-800"
+				/>
+				<TarjetaMetrica
+					etiqueta="Activos"
+					valor={datos.filter((i) => i.activo === 1).length}
+					Icono={CheckCircle}
+					fondo="bg-emerald-500/10"
+				/>
+				<TarjetaMetrica
+					etiqueta="Expirados"
+					valor={datos.filter((i) => i.estado === 'Expirado').length}
+					Icono={Clock}
+					fondo="bg-amber-500/10"
+				/>
+				<TarjetaMetrica
+					etiqueta="Inactivos"
+					valor={datos.filter((i) => i.activo === 0).length}
+					Icono={Ban}
+					fondo="bg-red-500/10"
+				/>
+			</div>
 
-            {modal === 'detalle' && seleccion && (
-                <Modal titulo={`Pase de Acceso`} alCerrar={() => setModal(null)}>
-                    <div className="flex flex-col items-center justify-center space-y-4 pb-4 border-b border-borde/50 mb-4">
-                        {/* Simulador visual de código QR */}
-                        <div className="bg-white p-4 rounded-xl">
-                            <QrCode className="w-32 h-32 text-black" strokeWidth={1.5} />
-                        </div>
-                        <p className="font-mono text-sm tracking-widest text-primario bg-zinc-800 px-3 py-1 rounded-md">{seleccion.codigoQr}</p>
-                    </div>
+			{/* TABLA */}
+			<div className="border bg-fondo border-borde rounded-xl overflow-hidden shadow-sm">
+				{/* Barra superior */}
+				<div className="flex items-center justify-between p-4 border-b border-borde bg-tarjeta/50">
+					<BuscadorCasa valor={busqueda} alCambiar={setBusqueda} />
+					<BtnPrimario
+						onClick={() => {
+							setForm({ visitante: '', tipo: 'Normal' });
+							setEditandoId(null);
+							setModal('nuevo');
+						}}
+					>
+						<Plus className="w-4 h-4" /> Generar Pase QR
+					</BtnPrimario>
+				</div>
 
-                    <div className="space-y-0">
-                        {[
-                            ['Visitante', seleccion.visitante],
-                            ['Invitado por', seleccion.residente],
-                            ['Tipo de Pase', seleccion.tipo],
-                            ['Expiración', seleccion.tipo === 'Normal' ? 'Vence hoy a las 23:59 hrs' : 'No expira automáticamente'],
-                            ['Estado del Pase', seleccion.estado],
-                        ].map(([k, v]) => (
-                            <div key={k} className="flex justify-between py-3 border-b border-borde/50 last:border-0">
-                                <span className="text-xs text-secundario">{k}</span>
-                                <span className="text-sm font-bold text-primario">{v}</span>
-                            </div>
-                        ))}
-                    </div>
-                </Modal>
-            )}
-        </div>
-    );
+				<table className="w-full">
+					<CabeceraTabla
+						columnas={[
+							'Visitante',
+							'Tipo',
+							'Código QR',
+							'Generado',
+							'Vencimiento',
+							'Estado',
+							'Acciones',
+						]}
+					/>
+					<tbody>
+						{filtrados.map((inv, i) => (
+							<Fila
+								key={inv.id}
+								indice={i}
+								seleccionada={filaActiva === inv.id}
+								onClick={() => setFilaActiva(filaActiva === inv.id ? null : inv.id)}
+							>
+								<Celda>{inv.visitante}</Celda>
+
+								{/* Tipo con color */}
+								<td className="px-4 py-3">
+									<span
+										className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border
+										${
+											inv.tipo === 'Normal'
+												? 'bg-violet-500/10 text-violet-400 border-violet-500/20'
+												: 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20'
+										}`}
+									>
+										{inv.tipo}
+									</span>
+								</td>
+
+								<Celda mono>{inv.codigoQR}</Celda>
+
+								{/* Fecha generación */}
+								<td className="px-4 py-3 text-sm text-primario">{inv.fechaGeneracion ?? '—'}</td>
+
+								{/* Vencimiento */}
+								<td className="px-4 py-3 text-sm text-primario">
+									{inv.tipo === 'Servicio' ? (
+										<span className="italic font-normal text-zinc-500 text-xs">Sin vencimiento</span>
+									) : (
+										(inv.fechaExpiracion ?? '—')
+									)}
+								</td>
+
+								{/* Estado */}
+								<td className="px-4 py-3">
+									<Etiqueta texto={inv.estado} variante={inv.estado.toLowerCase()} />
+								</td>
+
+								{/* Acciones */}
+								<td className="px-4 py-3">
+									<div className="flex items-center gap-1">
+										{/* Ver QR */}
+										<BtnAccion
+											Icono={QrCode}
+											titulo="Ver código QR"
+											onClick={() => {
+												setSeleccion(inv);
+												setModal('qr');
+											}}
+											colorHover="hover:text-sky-400"
+										/>
+
+										{/* Editar */}
+										<BtnAccion
+											Icono={Pencil}
+											titulo="Editar"
+											onClick={() => abrirEditar(inv)}
+											colorHover="hover:text-blue-400"
+										/>
+
+										{/* Invalidar — solo si está activo */}
+										{inv.activo === 1 && (
+											<BtnAccion
+												Icono={Ban}
+												titulo="Invalidar QR"
+												onClick={() => desactivar(inv)}
+												colorHover="hover:text-amber-400"
+											/>
+										)}
+
+										{/* Eliminar */}
+										<BtnAccion
+											Icono={Trash2}
+											titulo="Eliminar registro"
+											onClick={() => setAEliminar(inv)}
+											colorHover="hover:text-red-500"
+										/>
+									</div>
+								</td>
+							</Fila>
+						))}
+					</tbody>
+				</table>
+
+				<PieTabla mostrados={filtrados.length} total={datos.length} unidad="invitaciones" />
+			</div>
+
+			{/* ── MODAL CREAR / EDITAR ─────────────────────────────── */}
+			{modal === 'nuevo' && (
+				<Modal
+					titulo={editandoId ? 'Editar Invitación' : 'Generar Pase de Visita'}
+					alCerrar={() => {
+						setModal(null);
+						setEditandoId(null);
+					}}
+				>
+					<form onSubmit={guardar} className="space-y-4">
+						<Campo etiqueta="Nombre del visitante">
+							<Entrada
+								value={form.visitante}
+								onChange={(e) => setForm({ ...form, visitante: e.target.value })}
+								placeholder="Nombre completo"
+								required
+							/>
+						</Campo>
+
+						{/* Tipo solo al crear */}
+						{!editandoId && (
+							<Campo etiqueta="Tipo de invitación">
+								<Selector
+									value={form.tipo}
+									onChange={(e) => setForm({ ...form, tipo: e.target.value })}
+								>
+									<option value="Normal">Normal</option>
+									<option value="Servicio">Servicio</option>
+								</Selector>
+							</Campo>
+						)}
+
+						{/* Info contextual — RN-I3 / RN-I5 */}
+						{!editandoId && form.tipo === 'Normal' && (
+							<div className="flex gap-2 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+								<Clock className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+								<div className="text-xs text-amber-400">
+									<p className="font-bold mb-1">Pase Temporal</p>
+									<ul className="list-disc pl-4 space-y-0.5 opacity-90">
+										<li>Expira automáticamente a las 23:59 del día de hoy.</li>
+										<li>Un solo uso — se desactiva tras escanearse.</li>
+									</ul>
+								</div>
+							</div>
+						)}
+						{!editandoId && form.tipo === 'Servicio' && (
+							<div className="flex gap-2 p-3 rounded-lg bg-violet-500/5 border border-violet-500/20">
+								<CheckCircle className="w-4 h-4 text-violet-400 flex-shrink-0 mt-0.5" />
+								<div className="text-xs text-violet-400">
+									<p className="font-bold mb-1">Pase Permanente</p>
+									<ul className="list-disc pl-4 space-y-0.5 opacity-90">
+										<li>Sin fecha de caducidad.</li>
+										<li>Reutilizable hasta desactivación manual.</li>
+									</ul>
+								</div>
+							</div>
+						)}
+
+						<BotonesModal
+							alCancelar={() => {
+								setModal(null);
+								setEditandoId(null);
+							}}
+							textoGuardar={editandoId ? 'Actualizar' : 'Generar QR'}
+							IconoGuardar={editandoId ? undefined : QrCode}
+						/>
+					</form>
+				</Modal>
+			)}
+
+			{/* ── MODAL VER QR ────────────────────────────────────── */}
+			{modal === 'qr' && seleccion && (
+				<Modal titulo={`Código QR — ${seleccion.visitante}`} alCerrar={() => setModal(null)}>
+					<div className="flex flex-col items-center gap-5">
+						{/* Imagen QR */}
+						<div className="p-4 bg-white rounded-xl shadow-lg relative">
+							{seleccion.activo === 0 && (
+								<div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center rounded-xl z-10">
+									<span className="bg-red-500 text-white font-bold px-3 py-1 rounded-full text-xs uppercase tracking-wider">
+										{seleccion.estado}
+									</span>
+								</div>
+							)}
+							<img
+								src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(seleccion.codigoQR)}&color=09090b`}
+								alt={`QR ${seleccion.codigoQR}`}
+								className="w-[180px] h-[180px] rounded-sm object-contain"
+							/>
+						</div>
+
+						{/* Detalles */}
+						<div className="w-full space-y-0">
+							{[
+								['Código', seleccion.codigoQR],
+								['Tipo', seleccion.tipo],
+								['Estado', seleccion.estado],
+								['Generado', seleccion.fechaGeneracion ?? '—'],
+								[
+									'Vencimiento',
+									seleccion.tipo === 'Servicio'
+										? 'Sin vencimiento'
+										: (seleccion.fechaExpiracion ?? '—'),
+								],
+							].map(([k, v]) => (
+								<div
+									key={k}
+									className="flex justify-between py-3 border-b border-borde/50 last:border-0"
+								>
+									<span className="text-xs text-secundario">{k}</span>
+									<span className="text-sm font-bold text-primario font-mono">{v}</span>
+								</div>
+							))}
+						</div>
+
+						{/* Botón invalidar desde modal */}
+						{seleccion.activo === 1 && (
+							<button
+								onClick={() => {
+									desactivar(seleccion);
+									setModal(null);
+								}}
+								className="w-full px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded-lg text-xs font-bold transition-colors"
+							>
+								Invalidar este QR
+							</button>
+						)}
+					</div>
+				</Modal>
+			)}
+
+			{/* ── MODAL CONFIRMACIÓN ELIMINAR ──────────────────────── */}
+			{aEliminar && (
+				<ModalConfirmacion
+					titulo="¿Eliminar Invitación?"
+					mensaje={`Vas a eliminar permanentemente el pase de ${aEliminar.visitante}. Esta acción no se puede deshacer.`}
+					onCancelar={() => setAEliminar(null)}
+					onConfirmar={async () => {
+						try {
+							await invitacionesApi.eliminar(aEliminar.id);
+							setDatos(datos.filter((inv) => inv.id !== aEliminar.id));
+							setAEliminar(null);
+						} catch (error) {
+							console.error('Error al eliminar:', error);
+							alert(error.response?.data?.mensaje || 'Error al eliminar la invitación');
+						}
+					}}
+				/>
+			)}
+		</div>
+	);
 }

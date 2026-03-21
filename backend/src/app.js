@@ -13,7 +13,6 @@ import { enrutadorInvitaciones } from './routes/invitaciones.js';
 
 import { enrutadorPropiedades } from './routes/propiedades.js';
 
-
 const aplicacion = express();
 // Middlewares
 aplicacion.use(json());
@@ -31,7 +30,11 @@ aplicacion.use('/multas', enrutadorMultas);
 
 //Andres
 aplicacion.use('/propiedades', enrutadorPropiedades);
+import { enrutadorCategorias } from './routes/categoriasPropiedad.js';
+aplicacion.use('/categorias-propiedad', enrutadorCategorias);
 aplicacion.use('/invitaciones', enrutadorInvitaciones);
+import { enrutadorVinculaciones } from './routes/usuariosPropiedades.js';
+aplicacion.use('/vinculaciones', enrutadorVinculaciones);
 
 if (process.env.NODE_ENV !== 'test') {
 	aplicacion.listen(PORT, () => {

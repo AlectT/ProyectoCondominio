@@ -15,3 +15,5 @@ enrutadorPropiedades.post('/', propiedadesController.crear);
 
 // PATCH: Actualizar existente
 enrutadorPropiedades.patch('/:id', propiedadesController.actualizar);
+
+enrutadorPropiedades.delete('/:id', propiedadesController.eliminar);
