@@ -3,16 +3,17 @@ import { conectar } from '../config/db.js';
 
 const consultaBase = `
   SELECT
-    p.ID_PARQUEO,
-    p.ID_PROPIEDAD,
-    p.NUMERO_PARQUEO,
-    p.DESCRIPCION,
-    p.ACTIVO,
-	pr.NUMERO_PROPIEDAD
-	FROM PARQUEO p JOIN PROPIEDAD pr ON p.ID_PROPIEDAD = pr.ID_PROPIEDAD
+    ID_USUARIO_PROPIEDAD,
+    ID_USUARIO,
+    ID_PROPIEDAD,
+    TIPO_VINCULO,
+    FECHA_INICIO,
+    FECHA_FIN,
+    ACTIVO
+    FROM USUARIO_PROPIEDAD
 `;
 
-export class ParqueoModel {
+export class UsuarioPropiedadModel {
 	static async obtenerTodos() {
 		const conexion = await conectar();
 		try {
@@ -34,7 +35,7 @@ export class ParqueoModel {
 		const conexion = await conectar();
 		try {
 			const resultado = await conexion.execute(
-				consultaBase + ' WHERE p.ID_PARQUEO = :numero',
+				consultaBase + ' WHERE ID_USUARIO_PROPIEDAD = :numero',
 				{ numero },
 				{ outFormat: oracledb.OUT_FORMAT_OBJECT },
 			);
@@ -47,24 +48,24 @@ export class ParqueoModel {
 	static async crear({ datos }) {
 		const conexion = await conectar();
 		try {
-			const { idPropiedad, numeroParqueo, descripcion, activo } = datos;
+			const { idUsuario, idPropiedad, tipoVinculo, fechaFin } = datos;
 			const resultado = await conexion.execute(
-				`INSERT INTO PARQUEO
-				(ID_PROPIEDAD, NUMERO_PARQUEO, DESCRIPCION, ACTIVO) 
-				VALUES
-				(:idPropiedad, :numeroParqueo, :descripcion, :activo)
-				RETURNING ID_PARQUEO INTO :idParqueo`,
+				`INSERT INTO USUARIO_PROPIEDAD
+                (ID_USUARIO, ID_PROPIEDAD, TIPO_VINCULO, FECHA_FIN) 
+                VALUES
+                (:idUsuario, :idPropiedad, :tipoVinculo, :fechaFin)
+                RETURNING ID_USUARIO_PROPIEDAD INTO :idUsuarioPropiedad`,
 				{
+					idUsuario,
 					idPropiedad,
-					numeroParqueo,
-					descripcion,
-					activo,
-					idParqueo: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT },
+					tipoVinculo,
+					fechaFin,
+					idUsuarioPropiedad: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT },
 				},
 				{ autoCommit: true },
 			);
-			const nuevoId = resultado.outBinds.idParqueo[0];
-			return ParqueoModel.obtenerPorNumero({ numero: nuevoId });
+			const nuevoId = resultado.outBinds.idUsuarioPropiedad[0];
+			return UsuarioPropiedadModel.obtenerPorNumero({ numero: nuevoId });
 		} finally {
 			await conexion.close();
 		}
@@ -74,10 +75,10 @@ export class ParqueoModel {
 		const conexion = await conectar();
 		try {
 			const camposPermitidos = {
+				idUsuario: 'ID_USUARIO',
 				idPropiedad: 'ID_PROPIEDAD',
-				numeroParqueo: 'NUMERO_PARQUEO',
-				descripcion: 'DESCRIPCION',
-				activo: 'ACTIVO',
+				tipoVinculo: 'TIPO_VINCULO',
+				fechaFin: 'FECHA_FIN',
 			};
 
 			const setCampos = [];
@@ -95,12 +96,12 @@ export class ParqueoModel {
 			if (setCampos.length === 0) return null;
 
 			await conexion.execute(
-				`UPDATE PARQUEO SET ${setCampos.join(', ')} WHERE ID_PARQUEO = :id`,
+				`UPDATE USUARIO_PROPIEDAD SET ${setCampos.join(', ')} WHERE ID_USUARIO_PROPIEDAD = :id`,
 				parametros,
 				{ autoCommit: true },
 			);
 
-			return ParqueoModel.obtenerPorNumero({ numero: id });
+			return UsuarioPropiedadModel.obtenerPorNumero({ numero: id });
 		} finally {
 			await conexion.close();
 		}
@@ -110,7 +111,7 @@ export class ParqueoModel {
 		const conexion = await conectar();
 		try {
 			const resultado = await conexion.execute(
-				'DELETE FROM PARQUEO WHERE ID_PARQUEO = :id',
+				'DELETE FROM USUARIO_PROPIEDAD WHERE ID_USUARIO_PROPIEDAD = :id',
 				{ id },
 				{ autoCommit: true },
 			);

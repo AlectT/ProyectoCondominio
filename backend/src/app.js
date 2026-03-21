@@ -7,10 +7,12 @@ import { enrutadorUsuarios } from './routes/usuarios.js';
 import { enrutadorLlamadasAtencion } from './routes/llamadasAtencion.js';
 import { enrutadorTiposCargo } from './routes/tiposCargo.js';
 import { enrutadorAccesoGarita } from './routes/accesoGarita.js';
+import { enrutadorUsuarioPropiedad } from './routes/usuarioPropiedad.js';
 import { middlewareCors } from './middlewares/cors.js';
 import { PORT } from './config/config.js';
 import { enrutadorCargosFinancieros } from './routes/cargosFinancieros.js';
 import { enrutadorAreasSociales } from './routes/areasSociales.js';
+import { enrutadorMultas } from './routes/multas.js';
 
 
 
@@ -30,6 +32,9 @@ aplicacion.use('/accesoGarita', enrutadorAccesoGarita);
 aplicacion.use('/tipos-cargo', enrutadorTiposCargo);
 aplicacion.use('/cargos-financieros', enrutadorCargosFinancieros);
 aplicacion.use('/areas-sociales', enrutadorAreasSociales);
+aplicacion.use('/usuarioPropiedad', enrutadorUsuarioPropiedad);
+aplicacion.use('/multas', enrutadorMultas);
+
 
 if (process.env.NODE_ENV !== 'test') {
 	aplicacion.listen(PORT, () => {

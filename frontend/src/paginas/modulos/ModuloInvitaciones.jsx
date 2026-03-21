@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
 	Building,
 	CheckCircle,
@@ -19,11 +19,8 @@ import {
 } from 'lucide-react';
 import {
 	propiedadesEjemplo,
-	vehiculosEjemplo,
 	invitacionesEjemplo,
-	multasEjemplo,
 	limpiarBusqueda,
-	colorVehiculo,
 } from '../../datos/datosDePrueba.js';
 import { TarjetaMetrica, Etiqueta } from '../../componentes/ui/Etiquetas.jsx';
 import { BuscadorCasa } from '../../componentes/ui/Buscador.jsx';

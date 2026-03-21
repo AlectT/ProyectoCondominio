@@ -11,12 +11,16 @@ import ModuloAreasSociales from '../../paginas/modulos/ModuloAreasSociales.jsx';
 // Módulos propios conectados al backend
 import UsuariosPagina from '../../paginas/UsuariosPagina.jsx';
 import TicketsPagina from '../../paginas/TicketsPagina.jsx';
+import ParqueosPagina from '../../Paginas/ParqueosPagina.jsx';
 
 // Módulos de compañeros (datos de prueba)
 import ModuloPropiedades from '../../paginas/modulos/ModuloPropiedades.jsx';
 import ModuloVehiculos from '../../paginas/modulos/ModuloVehiculos.jsx';
 import ModuloInvitaciones from '../../paginas/modulos/ModuloInvitaciones.jsx';
 import ModuloMulta from '../../paginas/modulos/ModuloMulta.jsx';
+import LlamadasAtencionPagina from '../../Paginas/LlamadasAtencionPagina.jsx';
+import AccesoGaritaPagina from '../../Paginas/accesoGaritaPagina.jsx';
+import UsuarioPropiedadPagina from '../../Paginas/usuarioPropiedadPagina.jsx';
 
 const SUBTITULOS = {
 	'Gestión de Propiedades': 'Administración general de unidades y responsables',
@@ -28,6 +32,10 @@ const SUBTITULOS = {
 	'Tipos de Cargo': 'Catálogo de conceptos financieros, cargos dinámicos y multas',
 	'Cargos Financieros': 'Consulta de estado de cuenta por propiedad y cuotas mensuales',
 	'Áreas Sociales': 'Gestión de espacios comunes, horarios y precio por hora',
+	'Inventario Parqueos': 'Inventario de parqueos disponibles',
+	'Llamados de Atención': 'Listado de llamadas de atención acumuladas',
+	'Bitácora de Seguridad': 'Bitácora y registro de las personas que han ingresado.',
+	'Propietarios e Inquilinos': 'Control de inquilinos y propietarios',
 };
 
 export default function LayoutPrincipal() {
@@ -45,6 +53,9 @@ export default function LayoutPrincipal() {
 		'Tipos de Cargo': <ModuloTiposCargo filtroGlobal={busquedaGlobal} />,
 		'Cargos Financieros': <ModuloCargosFinancieros />,
 		'Áreas Sociales': <ModuloAreasSociales />,
+		'Inventario Parqueos': <ParqueosPagina filtroGlobal={busquedaGlobal} />,
+		'Llamados de Atención': <LlamadasAtencionPagina filtroGlobal={busquedaGlobal} />,
+		'Propietarios e Inquilinos': <UsuarioPropiedadPagina filtroGlobal={busquedaGlobal} />,
 	};
 
 	const infoModulo = GRUPOS.flatMap((g) => g.modulos).find((m) => m.id === moduloActivo);
