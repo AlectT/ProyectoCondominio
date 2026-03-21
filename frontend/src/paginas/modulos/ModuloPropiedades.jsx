@@ -17,14 +17,7 @@ import {
 	AlertTriangle,
 	Zap,
 } from 'lucide-react';
-import {
-	propiedadesEjemplo,
-	vehiculosEjemplo,
-	invitacionesEjemplo,
-	multasEjemplo,
-	limpiarBusqueda,
-	colorVehiculo,
-} from '../../datos/datosDePrueba.js';
+import { propiedadesEjemplo, limpiarBusqueda } from '../../datos/datosDePrueba.js';
 import { TarjetaMetrica, Etiqueta } from '../../componentes/ui/Etiquetas.jsx';
 import { BuscadorCasa } from '../../componentes/ui/Buscador.jsx';
 import { BtnPrimario, BtnAccion, BotonesModal } from '../../componentes/ui/Botones.jsx';
