@@ -6,6 +6,9 @@ const origenesAceptados = [
 	'http://localhost:3000',
 	'http://localhost:5173',
 	'http://localhost:1000',
+	'http://192.168.140.138:5173',
+	'http://10.26.177.19:5173',
+	'http://192.168.0.9:5173',
 ];
 
 export const middlewareCors = ({ origenes = origenesAceptados } = {}) =>

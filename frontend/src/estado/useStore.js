@@ -9,11 +9,36 @@ const useStore = create(
 			limpiarUsuario: () => set({ usuario: null }),
 
 			temaOscuro: true,
-			toggleTema: () => set((s) => ({ temaOscuro: !s.temaOscuro })),
+
+			// 🔥 EL TRUCO ESTÁ AQUÍ 🔥
+			toggleTema: () =>
+				set((state) => {
+					const nuevoTema = !state.temaOscuro;
+
+					// Le inyectamos o quitamos la clase "dark" al HTML del navegador
+					if (nuevoTema) {
+						document.documentElement.classList.add('dark');
+					} else {
+						document.documentElement.classList.remove('dark');
+					}
+
+					return { temaOscuro: nuevoTema };
+				}),
 		}),
 		{
 			name: 'sesion-condominio', // clave en localStorage
-			partialize: (s) => ({ usuario: s.usuario, temaOscuro: s.temaOscuro }),
+			partialize: (state) => ({ usuario: state.usuario, temaOscuro: state.temaOscuro }),
+
+			// 🔥 Y AQUÍ PARA CUANDO CARGA LA PÁGINA POR PRIMERA VEZ 🔥
+			onRehydrateStorage: () => (state) => {
+				if (state) {
+					if (state.temaOscuro) {
+						document.documentElement.classList.add('dark');
+					} else {
+						document.documentElement.classList.remove('dark');
+					}
+				}
+			},
 		},
 	),
 );

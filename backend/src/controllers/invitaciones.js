@@ -91,17 +91,26 @@ export class InvitacionController {
 
 	// DELETE /invitaciones/:id
 	static async eliminar(req, res) {
+		const { id } = req.params;
 		try {
-			const eliminado = await InvitacionModel.eliminar({
-				id: Number(req.params.id),
-			});
-			if (!eliminado) {
-				return res.status(404).json({ mensaje: 'Invitación no encontrada' });
+			const resultado = await InvitacionModel.eliminar({ id });
+
+			if (!resultado) {
+				return res.status(404).json({ mensaje: 'Invitación no encontrada.' });
 			}
-			res.json({ mensaje: 'Invitación eliminada correctamente' });
+			return res.json({ mensaje: 'Invitación eliminada correctamente.' });
 		} catch (error) {
 			console.error('Error al eliminar invitación:', error);
-			res.status(500).json({ mensaje: 'Error al eliminar la invitación' });
+
+			// 🔥 AQUÍ ATRAPAMOS LA DEFENSA DE ORACLE DE FORMA SEGURA 🔥
+			if (error.message && error.message.includes('ORA-02292')) {
+				return res.status(400).json({
+					mensaje:
+						'No se puede eliminar esta invitación porque ya fue registrada en la bitácora de acceso por un guardia.',
+				});
+			}
+
+			res.status(500).json({ mensaje: 'Error interno al eliminar la invitación.' });
 		}
 	}
 

@@ -1,21 +1,308 @@
+// ============================================================
+// 📁 RUTA: frontend/src/paginas/LoginPagina.jsx
+// ============================================================
+
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-	Building,
-	ShieldCheck,
-	QrCode,
-	AlertTriangle,
-	Sun,
-	Moon,
-	Lock,
-	Mail,
-	Eye,
-	EyeOff,
-} from 'lucide-react';
+import { Lock, User, Eye, EyeOff, Sun, Moon } from 'lucide-react';
 import { CaballoAnimado, AnimacionCarga } from '../componentes/ui/Animaciones.jsx';
 import useStore from '../estado/useStore.js';
 import { usuariosApi } from '../api/usuariosApi.js';
 
+/* ══════════════════════════════════════════════════════════
+   FONDO: constelaciones + orbs flotantes
+══════════════════════════════════════════════════════════ */
+function FondoEspacio({ oscuro }) {
+	const canvasRef = useRef(null);
+	const animRef = useRef(null);
+
+	useEffect(() => {
+		const canvas = canvasRef.current;
+		if (!canvas) return;
+		const ctx = canvas.getContext('2d');
+
+		const resize = () => {
+			canvas.width = window.innerWidth;
+			canvas.height = window.innerHeight;
+		};
+		resize();
+		window.addEventListener('resize', resize);
+
+		// Estrellas estáticas
+		const ESTRELLAS = Array.from({ length: 180 }, () => ({
+			x: Math.random(),
+			y: Math.random(),
+			r: Math.random() * 1.6 + 0.3,
+			brillo: Math.random(),
+			fase: Math.random() * Math.PI * 2,
+			vel: 0.4 + Math.random() * 0.8,
+		}));
+
+		// Constelaciones — grupos de puntos conectados
+		const CONSTELACIONES = [
+			[
+				[0.1, 0.12],
+				[0.18, 0.08],
+				[0.25, 0.14],
+				[0.2, 0.22],
+				[0.12, 0.2],
+			],
+			[
+				[0.7, 0.08],
+				[0.78, 0.05],
+				[0.85, 0.1],
+				[0.82, 0.18],
+				[0.74, 0.16],
+				[0.7, 0.08],
+			],
+			[
+				[0.88, 0.45],
+				[0.93, 0.38],
+				[0.98, 0.44],
+				[0.94, 0.52],
+			],
+			[
+				[0.05, 0.6],
+				[0.12, 0.55],
+				[0.18, 0.62],
+				[0.14, 0.7],
+				[0.06, 0.68],
+			],
+			[
+				[0.55, 0.85],
+				[0.62, 0.8],
+				[0.68, 0.86],
+				[0.64, 0.93],
+			],
+		];
+
+		const dibujar = () => {
+			const W = canvas.width,
+				H = canvas.height;
+			const t = Date.now() / 1000;
+			ctx.clearRect(0, 0, W, H);
+
+			// ── Gradiente de fondo ──────────────────────────
+			const grad = ctx.createLinearGradient(0, 0, W, H);
+			if (oscuro) {
+				grad.addColorStop(0, '#050510');
+				grad.addColorStop(0.4, '#0a0a20');
+				grad.addColorStop(0.7, '#080818');
+				grad.addColorStop(1, '#030308');
+			} else {
+				grad.addColorStop(0, '#e8eaf6');
+				grad.addColorStop(0.4, '#ede7f6');
+				grad.addColorStop(0.7, '#e3f2fd');
+				grad.addColorStop(1, '#f3e5f5');
+			}
+			ctx.fillStyle = grad;
+			ctx.fillRect(0, 0, W, H);
+
+			// ── Orbs de color flotantes (fondo) ────────────
+			const ORBS = [
+				{
+					x: 0.15,
+					y: 0.2,
+					r: 0.28,
+					c: oscuro ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.08)',
+					fase: 0,
+				},
+				{
+					x: 0.82,
+					y: 0.15,
+					r: 0.22,
+					c: oscuro ? 'rgba(16,185,129,0.09)' : 'rgba(16,185,129,0.07)',
+					fase: 1,
+				},
+				{
+					x: 0.7,
+					y: 0.8,
+					r: 0.32,
+					c: oscuro ? 'rgba(139,92,246,0.10)' : 'rgba(139,92,246,0.07)',
+					fase: 2,
+				},
+				{
+					x: 0.1,
+					y: 0.75,
+					r: 0.2,
+					c: oscuro ? 'rgba(236,72,153,0.07)' : 'rgba(236,72,153,0.05)',
+					fase: 3,
+				},
+				{
+					x: 0.5,
+					y: 0.05,
+					r: 0.18,
+					c: oscuro ? 'rgba(59,130,246,0.08)' : 'rgba(59,130,246,0.06)',
+					fase: 4,
+				},
+			];
+			ORBS.forEach((o) => {
+				const ox = (o.x + Math.sin(t * 0.3 + o.fase) * 0.04) * W;
+				const oy = (o.y + Math.cos(t * 0.25 + o.fase) * 0.04) * H;
+				const rr = o.r * Math.min(W, H);
+				const g2 = ctx.createRadialGradient(ox, oy, 0, ox, oy, rr);
+				g2.addColorStop(0, o.c);
+				g2.addColorStop(1, 'transparent');
+				ctx.fillStyle = g2;
+				ctx.beginPath();
+				ctx.arc(ox, oy, rr, 0, Math.PI * 2);
+				ctx.fill();
+			});
+
+			// ── Estrellas titilantes ────────────────────────
+			ESTRELLAS.forEach((s) => {
+				const alpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * s.vel + s.fase));
+				const sx = s.x * W,
+					sy = s.y * H;
+				ctx.beginPath();
+				ctx.arc(sx, sy, s.r, 0, Math.PI * 2);
+				ctx.fillStyle = oscuro
+					? `rgba(255,255,255,${alpha * 0.9})`
+					: `rgba(80,80,120,${alpha * 0.5})`;
+				ctx.fill();
+
+				// Cruz de destellos en estrellas grandes
+				if (s.r > 1.2 && alpha > 0.7) {
+					ctx.strokeStyle = oscuro
+						? `rgba(255,255,255,${(alpha - 0.5) * 0.4})`
+						: `rgba(80,80,120,${(alpha - 0.5) * 0.25})`;
+					ctx.lineWidth = 0.5;
+					const rayo = s.r * 4;
+					ctx.beginPath();
+					ctx.moveTo(sx - rayo, sy);
+					ctx.lineTo(sx + rayo, sy);
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.moveTo(sx, sy - rayo);
+					ctx.lineTo(sx, sy + rayo);
+					ctx.stroke();
+				}
+			});
+
+			// ── Constelaciones ──────────────────────────────
+			CONSTELACIONES.forEach((pts) => {
+				ctx.beginPath();
+				pts.forEach(([px, py], i) => {
+					const cx2 = px * W,
+						cy2 = py * H;
+					i === 0 ? ctx.moveTo(cx2, cy2) : ctx.lineTo(cx2, cy2);
+				});
+				ctx.strokeStyle = oscuro ? 'rgba(129,140,248,0.2)' : 'rgba(99,102,241,0.15)';
+				ctx.lineWidth = 0.8;
+				ctx.stroke();
+
+				// Nodos de constelación
+				pts.forEach(([px, py]) => {
+					ctx.beginPath();
+					ctx.arc(px * W, py * H, 1.8, 0, Math.PI * 2);
+					ctx.fillStyle = oscuro ? 'rgba(165,180,252,0.7)' : 'rgba(99,102,241,0.5)';
+					ctx.fill();
+				});
+			});
+
+			animRef.current = requestAnimationFrame(dibujar);
+		};
+
+		animRef.current = requestAnimationFrame(dibujar);
+		return () => {
+			cancelAnimationFrame(animRef.current);
+			window.removeEventListener('resize', resize);
+		};
+	}, [oscuro]);
+
+	return (
+		<canvas
+			ref={canvasRef}
+			style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', zIndex: 0 }}
+		/>
+	);
+}
+
+/* ══════════════════════════════════════════════════════════
+   FORMAS ORGÁNICAS FLOTANTES (SVG blur)
+══════════════════════════════════════════════════════════ */
+function FormasOrganicas({ oscuro }) {
+	return (
+		<div
+			style={{
+				position: 'fixed',
+				inset: 0,
+				zIndex: 1,
+				pointerEvents: 'none',
+				overflow: 'hidden',
+			}}
+		>
+			{/* Blob superior izquierdo */}
+			<div
+				style={{
+					position: 'absolute',
+					top: '-10%',
+					left: '-8%',
+					width: '45vw',
+					height: '45vw',
+					background: oscuro
+						? 'radial-gradient(ellipse, rgba(99,102,241,0.18) 0%, transparent 70%)'
+						: 'radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 70%)',
+					borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%',
+					filter: 'blur(40px)',
+					animation: 'flotar1 12s ease-in-out infinite',
+				}}
+			/>
+			{/* Blob inferior derecho */}
+			<div
+				style={{
+					position: 'absolute',
+					bottom: '-12%',
+					right: '-10%',
+					width: '50vw',
+					height: '50vw',
+					background: oscuro
+						? 'radial-gradient(ellipse, rgba(139,92,246,0.15) 0%, transparent 70%)'
+						: 'radial-gradient(ellipse, rgba(139,92,246,0.1) 0%, transparent 70%)',
+					borderRadius: '30% 60% 70% 40% / 50% 60% 30% 60%',
+					filter: 'blur(50px)',
+					animation: 'flotar2 15s ease-in-out infinite',
+				}}
+			/>
+			{/* Blob central derecho */}
+			<div
+				style={{
+					position: 'absolute',
+					top: '30%',
+					right: '-5%',
+					width: '35vw',
+					height: '35vw',
+					background: oscuro
+						? 'radial-gradient(ellipse, rgba(16,185,129,0.1) 0%, transparent 70%)'
+						: 'radial-gradient(ellipse, rgba(16,185,129,0.08) 0%, transparent 70%)',
+					borderRadius: '50% 50% 30% 70% / 40% 60% 40% 60%',
+					filter: 'blur(45px)',
+					animation: 'flotar3 18s ease-in-out infinite',
+				}}
+			/>
+			<style>{`
+				@keyframes flotar1 {
+					0%,100% { transform: translate(0,0) rotate(0deg) scale(1); }
+					33%     { transform: translate(3%,4%) rotate(8deg) scale(1.05); }
+					66%     { transform: translate(-2%,2%) rotate(-5deg) scale(0.97); }
+				}
+				@keyframes flotar2 {
+					0%,100% { transform: translate(0,0) rotate(0deg) scale(1); }
+					40%     { transform: translate(-4%,-3%) rotate(-10deg) scale(1.08); }
+					70%     { transform: translate(2%,-5%) rotate(6deg) scale(0.95); }
+				}
+				@keyframes flotar3 {
+					0%,100% { transform: translate(0,0) rotate(0deg) scale(1); }
+					50%     { transform: translate(-6%,4%) rotate(12deg) scale(1.06); }
+				}
+			`}</style>
+		</div>
+	);
+}
+
+/* ══════════════════════════════════════════════════════════
+   LOGIN PRINCIPAL
+══════════════════════════════════════════════════════════ */
 export default function LoginPagina() {
 	const navigate = useNavigate();
 	const { setUsuario, temaOscuro, toggleTema } = useStore();
@@ -27,11 +314,19 @@ export default function LoginPagina() {
 	const [focusPassword, setFocusPassword] = useState(false);
 	const [shake, setShake] = useState(false);
 	const [cargando, setCargando] = useState(false);
+	const [montado, setMontado] = useState(false);
 	const [pupilaX, setPupilaX] = useState(0);
 	const [pupilaY, setPupilaY] = useState(0);
 	const inputRef = useRef(null);
 
+	useEffect(() => {
+		const t = setTimeout(() => setMontado(true), 80);
+		return () => clearTimeout(t);
+	}, []);
+
+	// ── Lógica del caballo (intacta) ─────────────────────
 	const tapado = focusPassword && !mostrarPassword;
+	const asomado = focusPassword && mostrarPassword;
 
 	const actualizarPupila = (val, selStart) => {
 		if (!focusUsuario) return;
@@ -59,30 +354,14 @@ export default function LoginPagina() {
 	}, [focusUsuario, focusPassword]);
 
 	const bodyTransform = tapado
-		? 'scale(0.93) translateY(5px)'
-		: focusUsuario
-			? 'scale(1.03) translateY(-3px) rotate(-2.5deg)'
-			: focusPassword
-				? 'scale(1.03) translateY(-3px) rotate(2.5deg)'
-				: 'scale(1) translateY(0px)';
-
-	const inputBg = (activo) =>
-		activo
-			? temaOscuro
-				? 'rgba(39,39,42,0.7)'
-				: 'rgba(241,245,249,0.9)'
-			: temaOscuro
-				? 'rgba(9,9,11,0.6)'
-				: 'rgba(248,250,252,0.8)';
-
-	const inputBorder = (activo) =>
-		activo
-			? temaOscuro
-				? 'rgba(113,113,122,0.8)'
-				: 'rgba(100,116,139,0.6)'
-			: temaOscuro
-				? 'rgba(63,63,70,0.8)'
-				: 'rgba(203,213,225,0.8)';
+		? 'scale(0.93) translateY(4px)'
+		: asomado
+			? 'scale(1.0) translateY(-2px) rotate(1deg)'
+			: focusUsuario
+				? 'scale(1.03) translateY(-3px) rotate(-2.5deg)'
+				: focusPassword
+					? 'scale(1.03) translateY(-3px) rotate(2.5deg)'
+					: 'scale(1) translateY(0px)';
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -97,8 +376,7 @@ export default function LoginPagina() {
 			setUsuario(res.data);
 			navigate('/dashboard');
 		} catch (err) {
-			const mensaje = err.response?.data?.mensaje ?? 'Error al conectar con el servidor.';
-			alert(mensaje);
+			alert(err.response?.data?.mensaje ?? 'Error al conectar con el servidor.');
 			setShake(true);
 			setTimeout(() => setShake(false), 600);
 		} finally {
@@ -108,344 +386,388 @@ export default function LoginPagina() {
 
 	if (cargando) return <AnimacionCarga mensaje="Ingresando al panel de gestión" />;
 
+	const o = temaOscuro;
+
+	// Glassmorphism styles
+	const glass = {
+		background: o ? 'rgba(15,15,25,0.55)' : 'rgba(255,255,255,0.45)',
+		backdropFilter: 'blur(28px) saturate(1.6)',
+		WebkitBackdropFilter: 'blur(28px) saturate(1.6)',
+		border: o ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(255,255,255,0.7)',
+		boxShadow: o
+			? '0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset, 0 1px 0 rgba(255,255,255,0.07) inset'
+			: '0 24px 64px rgba(80,80,120,0.15), 0 0 0 1px rgba(255,255,255,0.9) inset',
+	};
+
+	const inputStyle = (foco, colorFoco) => ({
+		width: '100%',
+		boxSizing: 'border-box',
+		paddingLeft: '44px',
+		paddingRight: '16px',
+		paddingTop: '14px',
+		paddingBottom: '14px',
+		fontSize: '14px',
+		borderRadius: '16px',
+		outline: 'none',
+		background: foco
+			? o
+				? 'rgba(255,255,255,0.08)'
+				: 'rgba(255,255,255,0.85)'
+			: o
+				? 'rgba(255,255,255,0.04)'
+				: 'rgba(255,255,255,0.55)',
+		border: `1px solid ${foco ? colorFoco : o ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.6)'}`,
+		color: o ? '#f4f4f5' : '#09090b',
+		transition: 'all 0.25s ease',
+		boxShadow: foco ? `0 0 0 3px ${colorFoco}25` : 'none',
+		backdropFilter: 'blur(8px)',
+	});
+
 	return (
 		<div
-			className="flex w-full h-full relative overflow-hidden"
-			style={{ background: temaOscuro ? '#09090b' : '#f1f5f9' }}
+			style={{
+				position: 'relative',
+				minHeight: '100vh',
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'center',
+				overflow: 'hidden',
+			}}
 		>
-			{/* Fondo con grid */}
-			<div
-				className="absolute inset-0"
-				style={{ background: temaOscuro ? '#09090b' : '#f1f5f9' }}
-			>
-				<div
-					style={{
-						position: 'absolute',
-						inset: 0,
-						backgroundImage: temaOscuro
-							? 'linear-gradient(rgba(63,63,70,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(63,63,70,0.15) 1px, transparent 1px)'
-							: 'linear-gradient(rgba(100,116,139,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(100,116,139,0.12) 1px, transparent 1px)',
-						backgroundSize: '40px 40px',
-					}}
-				/>
-			</div>
+			{/* ── Capas de fondo ─────────────────────────── */}
+			<FondoEspacio oscuro={o} />
+			<FormasOrganicas oscuro={o} />
 
-			{/* Botón tema */}
-			<div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 50 }}>
+			{/* ── Toggle tema ────────────────────────────── */}
+			<div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 100 }}>
 				<button
 					onClick={toggleTema}
 					style={{
+						...glass,
 						display: 'flex',
 						alignItems: 'center',
-						gap: '6px',
-						padding: '8px 14px',
+						gap: '7px',
+						padding: '9px 16px',
 						borderRadius: '999px',
-						border: temaOscuro ? '1px solid rgba(63,63,70,0.7)' : '1px solid rgba(100,116,139,0.3)',
-						background: temaOscuro ? 'rgba(24,24,27,0.8)' : 'rgba(255,255,255,0.8)',
-						backdropFilter: 'blur(12px)',
 						cursor: 'pointer',
 						transition: 'all 0.25s ease',
 					}}
 				>
-					{temaOscuro ? (
-						<Sun style={{ width: '14px', height: '14px', color: '#facc15' }} />
+					{o ? (
+						<Sun style={{ width: '14px', height: '14px', color: '#fbbf24' }} />
 					) : (
-						<Moon style={{ width: '14px', height: '14px', color: '#475569' }} />
+						<Moon style={{ width: '14px', height: '14px', color: '#6366f1' }} />
 					)}
 					<span
-						style={{ fontSize: '11px', fontWeight: 600, color: temaOscuro ? '#a1a1aa' : '#475569' }}
+						style={{
+							fontSize: '11px',
+							fontWeight: 700,
+							color: o ? '#a1a1aa' : '#6366f1',
+							letterSpacing: '0.05em',
+						}}
 					>
-						{temaOscuro ? 'Modo día' : 'Modo noche'}
+						{o ? 'Modo día' : 'Modo noche'}
 					</span>
 				</button>
 			</div>
 
-			{/* Panel izquierdo */}
-			<div className="hidden lg:flex flex-col justify-between w-[45%] relative z-10 p-12 border-r border-zinc-800/50">
-				<div>
-					<div className="flex items-center gap-3 mb-16">
-						<div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-lg">
-							<Building className="w-5 h-5 text-zinc-900" />
-						</div>
-						<span className="text-white font-bold text-lg tracking-tight">PuraFé</span>
-					</div>
-					<div className="space-y-6">
-						<h1 className="text-5xl font-black text-white leading-[1.1] tracking-tight">
-							Sistema de
-							<br />
-							<span style={{ color: '#d4d4d8' }}>Gestión</span>
-							<br />
-							<span
-								style={{
-									background: 'linear-gradient(135deg,#ffffff 0%,#71717a 100%)',
-									WebkitBackgroundClip: 'text',
-									WebkitTextFillColor: 'transparent',
-								}}
-							>
-								Residencial
-							</span>
-						</h1>
-						<p className="text-zinc-500 text-base leading-relaxed max-w-sm">
-							Administra propiedades, accesos y residentes desde un solo lugar.
-						</p>
-					</div>
-				</div>
-				<div className="space-y-3">
-					{[
-						{ Icono: Building, text: 'Control de propiedades y cuotas', color: 'text-white' },
-						{ Icono: ShieldCheck, text: 'Seguridad y garita integrada', color: 'text-zinc-300' },
-						{ Icono: QrCode, text: 'Pases QR para visitantes', color: 'text-zinc-400' },
-						{
-							Icono: AlertTriangle,
-							text: 'Gestión de infracciones y multas',
-							color: 'text-zinc-500',
-						},
-					].map(({ Icono, text, color }, i) => (
-						<div key={i} className="flex items-center gap-3">
-							<div className="w-7 h-7 rounded-lg bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center flex-shrink-0">
-								<Icono className="w-3.5 h-3.5 text-zinc-300" />
-							</div>
-							<span className={`text-sm font-medium ${color}`}>{text}</span>
-						</div>
-					))}
-				</div>
-			</div>
-
-			{/* Panel derecho — formulario */}
-			<div className="flex-1 flex items-center justify-center relative z-10 p-6">
+			{/* ══ TARJETA PRINCIPAL (glassmorphism) ══════════ */}
+			<div
+				style={{
+					position: 'relative',
+					zIndex: 10,
+					width: '100%',
+					maxWidth: '420px',
+					margin: '24px',
+					...glass,
+					borderRadius: '32px',
+					padding: '40px 36px 36px',
+					opacity: montado ? 1 : 0,
+					transform: montado ? 'translateY(0) scale(1)' : 'translateY(32px) scale(0.95)',
+					transition: 'opacity 0.7s ease, transform 0.7s cubic-bezier(0.34,1.56,0.64,1)',
+					animation: shake ? 'loginShake 0.55s ease' : undefined,
+				}}
+			>
+				{/* Línea de acento superior */}
 				<div
 					style={{
-						width: '100%',
-						maxWidth: '400px',
-						animation: shake
-							? 'loginShake 0.6s ease'
-							: 'loginFadeIn 0.7s cubic-bezier(0.16,1,0.3,1) both',
+						position: 'absolute',
+						top: 0,
+						left: '15%',
+						right: '15%',
+						height: '1px',
+						background:
+							'linear-gradient(90deg, transparent, rgba(16,185,129,0.8), rgba(99,102,241,0.8), transparent)',
+						borderRadius: '999px',
+					}}
+				/>
+
+				{/* Logo pequeño */}
+				<div
+					style={{
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+						gap: '8px',
+						marginBottom: '4px',
 					}}
 				>
-					<div
+					<span
 						style={{
-							background: temaOscuro ? 'rgba(24,24,27,0.88)' : 'rgba(255,255,255,0.92)',
-							backdropFilter: 'blur(20px)',
-							border: temaOscuro ? '1px solid rgba(63,63,70,0.6)' : '1px solid rgba(226,232,240,0.9)',
-							borderRadius: '24px',
-							padding: '36px',
-							boxShadow: temaOscuro
-								? '0 32px 64px -16px rgba(0,0,0,0.8)'
-								: '0 16px 48px -12px rgba(15,23,42,0.15)',
+							fontSize: '13px',
+							fontWeight: 800,
+							letterSpacing: '-0.3px',
+							color: o ? 'rgba(255,255,255,0.9)' : '#1e1b4b',
 						}}
 					>
-						{/* Caballo */}
-						<div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-							<div
-								style={{
-									transition: 'transform 0.5s cubic-bezier(0.34,1.56,0.64,1)',
-									transform: bodyTransform,
-								}}
-							>
-								<CaballoAnimado
-									tapado={tapado}
-									asomado={mostrarPassword}
-									pupilaX={pupilaX}
-									pupilaY={pupilaY}
-								/>
-							</div>
-						</div>
+						Condominio <span style={{ color: '#10b981' }}>PRUEBA</span>
+					</span>
+				</div>
 
-						<div className="text-center mb-7">
-							<h2
-								style={{
-									fontSize: '22px',
-									fontWeight: 800,
-									color: temaOscuro ? '#fafafa' : '#0f172a',
-									letterSpacing: '-0.5px',
-									marginBottom: '4px',
-								}}
-							>
-								Bienvenido
-							</h2>
-							<p
-								style={{
-									fontSize: '13px',
-									color: temaOscuro ? '#71717a' : '#64748b',
-									fontWeight: 500,
-								}}
-							>
-								Accede al panel administrativo
-							</p>
-						</div>
-
-						<form
-							onSubmit={handleSubmit}
-							style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-						>
-							{/* Campo usuario */}
-							<div>
-								<label
-									style={{
-										display: 'block',
-										fontSize: '11px',
-										fontWeight: 600,
-										color: '#71717a',
-										textTransform: 'uppercase',
-										letterSpacing: '0.08em',
-										marginBottom: '8px',
-									}}
-								>
-									Usuario
-								</label>
-								<div style={{ position: 'relative' }}>
-									<Mail
-										style={{
-											position: 'absolute',
-											left: '14px',
-											top: '50%',
-											transform: 'translateY(-50%)',
-											width: '15px',
-											height: '15px',
-											color: focusUsuario ? '#a1a1aa' : '#52525b',
-											transition: 'color 0.2s',
-										}}
-									/>
-									<input
-										ref={inputRef}
-										type="text"
-										required
-										value={usuario}
-										onChange={(e) => {
-											setUsuarioVal(e.target.value);
-											actualizarPupila(e.target.value, e.target.selectionStart ?? e.target.value.length);
-										}}
-										onKeyUp={(e) =>
-											actualizarPupila(e.target.value, e.target.selectionStart ?? e.target.value.length)
-										}
-										placeholder="nombre de usuario"
-										style={{
-											width: '100%',
-											paddingLeft: '42px',
-											paddingRight: '16px',
-											paddingTop: '12px',
-											paddingBottom: '12px',
-											fontSize: '14px',
-											background: inputBg(focusUsuario),
-											border: `1px solid ${inputBorder(focusUsuario)}`,
-											borderRadius: '12px',
-											color: temaOscuro ? '#fafafa' : '#0f172a',
-											outline: 'none',
-											transition: 'border-color 0.25s, background 0.25s',
-											boxSizing: 'border-box',
-										}}
-										onFocus={() => setFocusUsuario(true)}
-										onBlur={() => setFocusUsuario(false)}
-									/>
-								</div>
-							</div>
-
-							{/* Campo contraseña */}
-							<div>
-								<label
-									style={{
-										display: 'block',
-										fontSize: '11px',
-										fontWeight: 600,
-										color: '#71717a',
-										textTransform: 'uppercase',
-										letterSpacing: '0.08em',
-										marginBottom: '8px',
-									}}
-								>
-									Contraseña
-								</label>
-								<div style={{ position: 'relative' }}>
-									<Lock
-										style={{
-											position: 'absolute',
-											left: '14px',
-											top: '50%',
-											transform: 'translateY(-50%)',
-											width: '15px',
-											height: '15px',
-											color: focusPassword ? '#a1a1aa' : '#52525b',
-											transition: 'color 0.2s',
-										}}
-									/>
-									<input
-										type={mostrarPassword ? 'text' : 'password'}
-										required
-										value={contrasena}
-										onChange={(e) => setContrasena(e.target.value)}
-										placeholder="••••••••"
-										style={{
-											width: '100%',
-											paddingLeft: '42px',
-											paddingRight: '48px',
-											paddingTop: '12px',
-											paddingBottom: '12px',
-											fontSize: '14px',
-											background: inputBg(focusPassword),
-											border: `1px solid ${inputBorder(focusPassword)}`,
-											borderRadius: '12px',
-											color: temaOscuro ? '#fafafa' : '#0f172a',
-											outline: 'none',
-											transition: 'border-color 0.25s, background 0.25s',
-											boxSizing: 'border-box',
-										}}
-										onFocus={() => setFocusPassword(true)}
-										onBlur={() => setFocusPassword(false)}
-									/>
-									<button
-										type="button"
-										onClick={() => setMostrarPassword((p) => !p)}
-										style={{
-											position: 'absolute',
-											right: '12px',
-											top: '50%',
-											transform: 'translateY(-50%)',
-											background: 'none',
-											border: 'none',
-											cursor: 'pointer',
-											padding: '4px',
-											color: mostrarPassword ? '#d4d4d8' : '#52525b',
-											borderRadius: '6px',
-											display: 'flex',
-											alignItems: 'center',
-											justifyContent: 'center',
-										}}
-									>
-										{mostrarPassword ? (
-											<Eye style={{ width: '16px', height: '16px' }} />
-										) : (
-											<EyeOff style={{ width: '16px', height: '16px' }} />
-										)}
-									</button>
-								</div>
-							</div>
-
-							<button
-								type="submit"
-								style={{
-									marginTop: '8px',
-									width: '100%',
-									padding: '14px',
-									fontSize: '14px',
-									fontWeight: 700,
-									borderRadius: '12px',
-									background: 'linear-gradient(135deg, #fafafa 0%, #d4d4d8 100%)',
-									color: '#09090b',
-									border: 'none',
-									cursor: 'pointer',
-									display: 'flex',
-									alignItems: 'center',
-									justifyContent: 'center',
-									gap: '8px',
-								}}
-							>
-								<Lock style={{ width: '15px', height: '15px' }} />
-								Iniciar Sesión
-							</button>
-						</form>
+				{/* ── CABALLO ────────────────────────────────── */}
+				<div style={{ display: 'flex', justifyContent: 'center', marginBottom: '4px' }}>
+					<div
+						style={{
+							transition: 'transform 0.5s cubic-bezier(0.34,1.56,0.64,1)',
+							transform: bodyTransform,
+						}}
+					>
+						<CaballoAnimado tapado={tapado} asomado={asomado} pupilaX={pupilaX} pupilaY={pupilaY} />
 					</div>
 				</div>
+
+				{/* Encabezado */}
+				<div style={{ textAlign: 'center', marginBottom: '28px' }}>
+					<h1
+						style={{
+							fontSize: '26px',
+							fontWeight: 900,
+							letterSpacing: '-0.8px',
+							marginBottom: '6px',
+							color: o ? '#f4f4f5' : '#09090b',
+						}}
+					>
+						Bienvenido
+					</h1>
+					<p
+						style={{
+							fontSize: '13px',
+							color: o ? 'rgba(255,255,255,0.45)' : 'rgba(9,9,11,0.55)',
+							fontWeight: 500,
+						}}
+					>
+						Accede al panel de gestión residencial
+					</p>
+				</div>
+
+				{/* ── FORMULARIO ─────────────────────────────── */}
+				<form
+					onSubmit={handleSubmit}
+					style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}
+				>
+					{/* Usuario */}
+					<div>
+						<label
+							style={{
+								display: 'block',
+								fontSize: '10px',
+								fontWeight: 700,
+								color: o ? 'rgba(255,255,255,0.4)' : 'rgba(9,9,11,0.5)',
+								textTransform: 'uppercase',
+								letterSpacing: '0.18em',
+								marginBottom: '8px',
+							}}
+						>
+							Usuario
+						</label>
+						<div style={{ position: 'relative' }}>
+							<User
+								style={{
+									position: 'absolute',
+									left: '14px',
+									top: '50%',
+									transform: 'translateY(-50%)',
+									width: '15px',
+									height: '15px',
+									color: focusUsuario ? '#10b981' : o ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+									transition: 'color 0.2s',
+								}}
+							/>
+							<input
+								ref={inputRef}
+								type="text"
+								required
+								value={usuario}
+								onChange={(e) => {
+									setUsuarioVal(e.target.value);
+									actualizarPupila(e.target.value, e.target.selectionStart ?? e.target.value.length);
+								}}
+								onKeyUp={(e) =>
+									actualizarPupila(e.target.value, e.target.selectionStart ?? e.target.value.length)
+								}
+								onFocus={() => setFocusUsuario(true)}
+								onBlur={() => setFocusUsuario(false)}
+								placeholder="nombre de usuario"
+								style={inputStyle(focusUsuario, '#10b981')}
+							/>
+						</div>
+					</div>
+
+					{/* Contraseña */}
+					<div>
+						<label
+							style={{
+								display: 'block',
+								fontSize: '10px',
+								fontWeight: 700,
+								color: o ? 'rgba(255,255,255,0.4)' : 'rgba(9,9,11,0.5)',
+								textTransform: 'uppercase',
+								letterSpacing: '0.18em',
+								marginBottom: '8px',
+							}}
+						>
+							Contraseña
+						</label>
+						<div style={{ position: 'relative' }}>
+							<Lock
+								style={{
+									position: 'absolute',
+									left: '14px',
+									top: '50%',
+									transform: 'translateY(-50%)',
+									width: '15px',
+									height: '15px',
+									color: focusPassword ? '#6366f1' : o ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+									transition: 'color 0.2s',
+								}}
+							/>
+							<input
+								type={mostrarPassword ? 'text' : 'password'}
+								required
+								value={contrasena}
+								onChange={(e) => setContrasena(e.target.value)}
+								onFocus={() => setFocusPassword(true)}
+								onBlur={() => setFocusPassword(false)}
+								placeholder="••••••••"
+								style={{ ...inputStyle(focusPassword, '#6366f1'), paddingRight: '48px' }}
+							/>
+							<button
+								type="button"
+								onClick={() => setMostrarPassword((p) => !p)}
+								style={{
+									position: 'absolute',
+									right: '12px',
+									top: '50%',
+									transform: 'translateY(-50%)',
+									background: 'none',
+									border: 'none',
+									cursor: 'pointer',
+									padding: '4px',
+									color: o ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)',
+									display: 'flex',
+									alignItems: 'center',
+									transition: 'color 0.2s',
+								}}
+							>
+								{mostrarPassword ? (
+									<Eye style={{ width: '16px', height: '16px' }} />
+								) : (
+									<EyeOff style={{ width: '16px', height: '16px' }} />
+								)}
+							</button>
+						</div>
+					</div>
+
+					{/* Botón */}
+					<button
+						type="submit"
+						style={{
+							marginTop: '8px',
+							width: '100%',
+							padding: '15px',
+							fontSize: '14px',
+							fontWeight: 800,
+							letterSpacing: '0.03em',
+							borderRadius: '16px',
+							border: 'none',
+							cursor: 'pointer',
+							background: 'linear-gradient(135deg, #10b981 0%, #6366f1 100%)',
+							color: '#fff',
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							gap: '8px',
+							boxShadow: '0 8px 32px rgba(99,102,241,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
+							transition: 'all 0.2s ease',
+						}}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.transform = 'translateY(-2px)';
+							e.currentTarget.style.boxShadow =
+								'0 14px 40px rgba(99,102,241,0.5), 0 0 0 1px rgba(255,255,255,0.15) inset';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.transform = 'translateY(0)';
+							e.currentTarget.style.boxShadow =
+								'0 8px 32px rgba(99,102,241,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset';
+						}}
+						onMouseDown={(e) => {
+							e.currentTarget.style.transform = 'translateY(1px)';
+						}}
+					>
+						<Lock style={{ width: '15px', height: '15px' }} />
+						Iniciar Sesión
+					</button>
+				</form>
+
+				{/* Footer */}
+				<div
+					style={{
+						marginTop: '24px',
+						paddingTop: '18px',
+						borderTop: `1px solid ${o ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+						gap: '8px',
+					}}
+				>
+					<span
+						style={{
+							width: '6px',
+							height: '6px',
+							borderRadius: '50%',
+							background: '#10b981',
+							animation: 'pulsarPunto 2s infinite',
+						}}
+					/>
+					<span
+						style={{
+							fontSize: '11px',
+							fontWeight: 500,
+							color: o ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)',
+						}}
+					>
+						esta es una demo de un sistema de gestión de condominios.
+					</span>
+				</div>
 			</div>
+
+			{/* Keyframes */}
+			<style>{`
+				@keyframes loginShake {
+					0%,100% { transform: translateY(0) scale(1) translateX(0); }
+					15%     { transform: translateY(0) scale(1.01) translateX(-8px); }
+					30%     { transform: translateY(0) scale(0.99) translateX(7px); }
+					45%     { transform: translateY(0) scale(1.01) translateX(-5px); }
+					60%     { transform: translateY(0) scale(1)    translateX(4px); }
+					75%     { transform: translateY(0) scale(1)    translateX(-2px); }
+				}
+				@keyframes pulsarPunto {
+					0%,100% { opacity: 1;   transform: scale(1); }
+					50%     { opacity: 0.4; transform: scale(0.8); }
+				}
+				input::placeholder { color: ${temaOscuro ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.28)'}; }
+			`}</style>
 		</div>
 	);
 }

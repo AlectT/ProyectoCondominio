@@ -11,6 +11,10 @@ import { conectar } from '../config/db.js';
 const ID_TIPO_NORMAL = 1;
 const ID_TIPO_SERVICIO = 2;
 
+// URL base del frontend — el celular usará esta URL al escanear el QR
+// Debe ser la IP de tu red local para que funcione en otros dispositivos
+const FRONTEND_URL = 'http://192.168.0.9:5173';
+
 const consultaBase = `
   SELECT
     i.ID_INVITACION,
@@ -60,7 +64,7 @@ export class InvitacionModel {
 	// ── CREAR ─────────────────────────────────────────────────
 	// RN-I2: tipo Normal (1) o Servicio (2)
 	// RN-I3: Normal expira a las 23:59 del día, Servicio = NULL
-	// RN-I4: se genera un código QR único
+	// RN-I4: se genera un código QR único con URL completa
 	static async crear({ datos }) {
 		const conexion = await conectar();
 		try {
@@ -74,8 +78,10 @@ export class InvitacionModel {
 				fechaExpiracion = hoy;
 			}
 
-			// RN-I4 — código QR único
-			const codigoQR = `QR-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+			// RN-I4 — El QR contiene una URL completa para que el celular
+			//          abra directamente la página de validación al escanear
+			const codigoUnico = `QR-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+			const codigoQR = `${FRONTEND_URL}/garita/validar/${codigoUnico}`;
 
 			const resultado = await conexion.execute(
 				`INSERT INTO INVITACION
@@ -104,7 +110,6 @@ export class InvitacionModel {
 	}
 
 	// ── ACTUALIZAR ────────────────────────────────────────────
-	// Solo se permite editar el nombre del visitante
 	static async actualizar({ id, datos }) {
 		const conexion = await conectar();
 		try {
@@ -171,12 +176,15 @@ export class InvitacionModel {
 	// RN-I4: validación mediante código QR
 	// RN-I5: Normal = un solo uso → ACTIVO = 0 tras escanearse
 	//        Servicio = reutilizable, no cambia estado
+	// NOTA: recibe el código único (QR-xxx), NO la URL completa
 	static async validarQR({ codigoQR }) {
 		const conexion = await conectar();
 		try {
+			// Busca por LIKE porque CODIGO_QR guarda la URL completa
+			// pero el controller le pasa solo el código único
 			const resultado = await conexion.execute(
-				consultaBase + ' WHERE i.CODIGO_QR = :codigoQR',
-				{ codigoQR },
+				consultaBase + ` WHERE i.CODIGO_QR LIKE :codigoQR`,
+				{ codigoQR: `%${codigoQR}` },
 				{ outFormat: oracledb.OUT_FORMAT_OBJECT },
 			);
 
@@ -186,8 +194,9 @@ export class InvitacionModel {
 			// RN-I5: Normal activo → desactivar tras primer uso
 			if (invitacion.ID_TIPO === ID_TIPO_NORMAL && invitacion.ACTIVO === 1) {
 				await conexion.execute(
-					'UPDATE INVITACION SET ACTIVO = 0 WHERE CODIGO_QR = :codigoQR',
-					{ codigoQR },
+					`UPDATE INVITACION SET ACTIVO = 0
+					 WHERE ID_INVITACION = :id`,
+					{ id: invitacion.ID_INVITACION },
 					{ autoCommit: true },
 				);
 				invitacion.ACTIVO = 0;

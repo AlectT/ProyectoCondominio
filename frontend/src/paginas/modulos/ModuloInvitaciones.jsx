@@ -32,18 +32,15 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 	});
 
 	// ── CARGAR DATOS DESDE ORACLE ─────────────────────────────
-	const cargarDatos = async () => {
-		setCargando(true);
+	// Le agregamos un parámetro "silencioso" para que no muestre la pantalla de carga al actualizar en segundo plano
+	const cargarDatos = async (silencioso = false) => {
+		if (!silencioso) setCargando(true);
 		try {
 			const respuesta = await invitacionesApi.obtenerTodas();
 
-			// Normalizar columnas Oracle al formato visual
-			// ACTIVO = 1 → Activo/Pendiente, ACTIVO = 0 → Inactivo/Expirado
 			const datosFormateados = respuesta.data.map((inv) => {
-				// Determinar estado visual según ACTIVO y fechas
 				let estado = 'Activo';
 				if (inv.ACTIVO === 0) {
-					// Si es Normal y ya expiró → Expirado, si no → Inactivo
 					if (inv.ID_TIPO === 1 && inv.FECHA_EXPIRACION) {
 						const expiracion = new Date(inv.FECHA_EXPIRACION);
 						estado = expiracion < new Date() ? 'Expirado' : 'Inactivo';
@@ -56,7 +53,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 					id: inv.ID_INVITACION,
 					idUsuario: inv.ID_USUARIO,
 					idTipo: inv.ID_TIPO,
-					tipo: inv.TIPO_NOMBRE, // 'Normal' o 'Servicio'
+					tipo: inv.TIPO_NOMBRE,
 					visitante: inv.NOMBRE_VISITANTE,
 					codigoQR: inv.CODIGO_QR,
 					activo: inv.ACTIVO,
@@ -74,13 +71,34 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 		} catch (error) {
 			console.error('Error al cargar invitaciones:', error);
 		} finally {
-			setCargando(false);
+			if (!silencioso) setCargando(false);
 		}
 	};
 
+	// 🔥 MAGIA 1: POLLING (TIEMPO REAL SILENCIOSO) 🔥
 	useEffect(() => {
-		cargarDatos();
+		cargarDatos(); // Carga la primera vez con la pantalla de "Cargando..."
+
+		// Configuramos un temporizador que pregunta a Oracle cada 3 segundos si hay cambios
+		const intervalo = setInterval(() => {
+			cargarDatos(true); // El 'true' hace que sea una recarga silenciosa
+		}, 3000);
+
+		// Limpiamos el temporizador si el usuario cambia a otra pantalla
+		return () => clearInterval(intervalo);
 	}, []);
+
+	// 🔥 MAGIA 2: ACTUALIZAR EL QR EN VIVO SI ESTÁ ABIERTO 🔥
+	useEffect(() => {
+		if (modal === 'qr' && seleccion) {
+			// Buscamos si la invitación que estamos viendo en grande acaba de cambiar de estado
+			const invitacionActualizada = datos.find((inv) => inv.id === seleccion.id);
+			if (invitacionActualizada && invitacionActualizada.activo !== seleccion.activo) {
+				// Si cambió (ej. el guardia la acaba de escanear), actualizamos el modal al instante
+				setSeleccion(invitacionActualizada);
+			}
+		}
+	}, [datos, modal, seleccion]);
 
 	// ── FILTRADO ──────────────────────────────────────────────
 	const termino = (busqueda || filtroGlobal).toLowerCase().trim();
@@ -100,19 +118,17 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 
 		try {
 			if (editandoId) {
-				// EDITAR — solo nombre visitante
 				await invitacionesApi.actualizar(editandoId, {
 					nombreVisitante: form.visitante.trim(),
 				});
 			} else {
-				// CREAR
 				await invitacionesApi.crear({
 					nombreVisitante: form.visitante.trim(),
 					tipo: form.tipo,
 					idUsuario: usuario?.ID_USUARIO,
 				});
 			}
-			await cargarDatos();
+			await cargarDatos(true);
 			setModal(null);
 			setEditandoId(null);
 		} catch (error) {
@@ -132,7 +148,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 	const desactivar = async (inv) => {
 		try {
 			await invitacionesApi.desactivar(inv.id);
-			await cargarDatos();
+			await cargarDatos(true);
 		} catch (error) {
 			console.error('Error al desactivar:', error);
 			alert(error.response?.data?.mensaje || 'Error al desactivar la invitación');
@@ -180,7 +196,6 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 
 			{/* TABLA */}
 			<div className="border bg-fondo border-borde rounded-xl overflow-hidden shadow-sm">
-				{/* Barra superior */}
 				<div className="flex items-center justify-between p-4 border-b border-borde bg-tarjeta/50">
 					<BuscadorCasa valor={busqueda} alCambiar={setBusqueda} />
 					<BtnPrimario
@@ -216,26 +231,21 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 							>
 								<Celda>{inv.visitante}</Celda>
 
-								{/* Tipo con color */}
 								<td className="px-4 py-3">
 									<span
 										className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border
-										${
-											inv.tipo === 'Normal'
-												? 'bg-violet-500/10 text-violet-400 border-violet-500/20'
-												: 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20'
-										}`}
+                                        ${
+																																									inv.tipo === 'Normal'
+																																										? 'bg-violet-500/10 text-violet-400 border-violet-500/20'
+																																										: 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20'
+																																								}`}
 									>
 										{inv.tipo}
 									</span>
 								</td>
 
 								<Celda mono>{inv.codigoQR}</Celda>
-
-								{/* Fecha generación */}
 								<td className="px-4 py-3 text-sm text-primario">{inv.fechaGeneracion ?? '—'}</td>
-
-								{/* Vencimiento */}
 								<td className="px-4 py-3 text-sm text-primario">
 									{inv.tipo === 'Servicio' ? (
 										<span className="italic font-normal text-zinc-500 text-xs">Sin vencimiento</span>
@@ -243,16 +253,12 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 										(inv.fechaExpiracion ?? '—')
 									)}
 								</td>
-
-								{/* Estado */}
 								<td className="px-4 py-3">
 									<Etiqueta texto={inv.estado} variante={inv.estado.toLowerCase()} />
 								</td>
 
-								{/* Acciones */}
 								<td className="px-4 py-3">
 									<div className="flex items-center gap-1">
-										{/* Ver QR */}
 										<BtnAccion
 											Icono={QrCode}
 											titulo="Ver código QR"
@@ -262,16 +268,12 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 											}}
 											colorHover="hover:text-sky-400"
 										/>
-
-										{/* Editar */}
 										<BtnAccion
 											Icono={Pencil}
 											titulo="Editar"
 											onClick={() => abrirEditar(inv)}
 											colorHover="hover:text-blue-400"
 										/>
-
-										{/* Invalidar — solo si está activo */}
 										{inv.activo === 1 && (
 											<BtnAccion
 												Icono={Ban}
@@ -280,8 +282,6 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 												colorHover="hover:text-amber-400"
 											/>
 										)}
-
-										{/* Eliminar */}
 										<BtnAccion
 											Icono={Trash2}
 											titulo="Eliminar registro"
@@ -317,7 +317,6 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 							/>
 						</Campo>
 
-						{/* Tipo solo al crear */}
 						{!editandoId && (
 							<Campo etiqueta="Tipo de invitación">
 								<Selector
@@ -330,7 +329,6 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 							</Campo>
 						)}
 
-						{/* Info contextual — RN-I3 / RN-I5 */}
 						{!editandoId && form.tipo === 'Normal' && (
 							<div className="flex gap-2 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
 								<Clock className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
@@ -372,11 +370,11 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 			{modal === 'qr' && seleccion && (
 				<Modal titulo={`Código QR — ${seleccion.visitante}`} alCerrar={() => setModal(null)}>
 					<div className="flex flex-col items-center gap-5">
-						{/* Imagen QR */}
-						<div className="p-4 bg-white rounded-xl shadow-lg relative">
+						<div className="p-4 bg-white rounded-xl shadow-lg relative transition-all duration-500">
+							{/* 🔥 ESTO APARECERÁ AUTOMÁTICAMENTE CUANDO LO ESCANEEN 🔥 */}
 							{seleccion.activo === 0 && (
-								<div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center rounded-xl z-10">
-									<span className="bg-red-500 text-white font-bold px-3 py-1 rounded-full text-xs uppercase tracking-wider">
+								<div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center rounded-xl z-10 animate-in zoom-in-90 duration-300">
+									<span className="bg-red-500 text-white font-bold px-3 py-1 rounded-full text-xs uppercase tracking-wider shadow-lg">
 										{seleccion.estado}
 									</span>
 								</div>
@@ -388,7 +386,6 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 							/>
 						</div>
 
-						{/* Detalles */}
 						<div className="w-full space-y-0">
 							{[
 								['Código', seleccion.codigoQR],
@@ -407,12 +404,15 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 									className="flex justify-between py-3 border-b border-borde/50 last:border-0"
 								>
 									<span className="text-xs text-secundario">{k}</span>
-									<span className="text-sm font-bold text-primario font-mono">{v}</span>
+									<span
+										className={`text-sm font-bold font-mono ${k === 'Estado' && v === 'Inactivo' ? 'text-red-400' : 'text-primario'}`}
+									>
+										{v}
+									</span>
 								</div>
 							))}
 						</div>
 
-						{/* Botón invalidar desde modal */}
 						{seleccion.activo === 1 && (
 							<button
 								onClick={() => {
@@ -421,7 +421,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 								}}
 								className="w-full px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded-lg text-xs font-bold transition-colors"
 							>
-								Invalidar este QR
+								Invalidar este QR manualmente
 							</button>
 						)}
 					</div>
@@ -441,7 +441,10 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 							setAEliminar(null);
 						} catch (error) {
 							console.error('Error al eliminar:', error);
-							alert(error.response?.data?.mensaje || 'Error al eliminar la invitación');
+							const msgError =
+								error.response?.data?.mensaje || 'Error al intentar eliminar la invitación';
+							alert(`⚠️ ALERTA DE SEGURIDAD:\n\n${msgError}`);
+							setAEliminar(null);
 						}
 					}}
 				/>
