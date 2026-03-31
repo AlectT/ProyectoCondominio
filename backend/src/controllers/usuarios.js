@@ -116,8 +116,8 @@ export class UsuarioController {
 
 		res.cookie('token_sesion', token, {
 			httpOnly: true,
-			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
+			secure: false, // ← false en desarrollo (localhost no es HTTPS)
+			sameSite: 'lax', // ← lax permite envío entre puertos en localhost
 			maxAge: 8 * 60 * 60 * 1000,
 		});
 

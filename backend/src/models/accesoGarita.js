@@ -1,34 +1,35 @@
 import oracledb from 'oracledb';
 import { conectar } from '../config/db.js';
-import { ca } from 'zod/v4/locales';
 
 const consultaBase = `
   SELECT
-	ac.ID_ACCESO,
-	ac.ID_GUARDIA,
-	ac.TIPO_DOCUMENTO,
-	ac.NUMERO_DOCUMENTO,
-	ac.NOMBRE_COMPLETO_REAL,
-	ac.HORA_INGRESO,
-	ac.OBSERVACIONES,
-	i.ID_USUARIO,
-	i.ID_TIPO,
+    ac.ID_ACCESO,
+    ac.ID_GUARDIA,
+    ac.TIPO_DOCUMENTO,
+    ac.NUMERO_DOCUMENTO,
+    ac.NOMBRE_COMPLETO_REAL,
+    ac.HORA_INGRESO,
+    ac.OBSERVACIONES,
+    i.ID_USUARIO,
+    i.ID_TIPO,
     i.NOMBRE_VISITANTE,
-	i.FECHA_GENERACION,
-	i.FECHA_EXPIRACION,
-	i.ACTIVO
-	FROM ACCESO_VISITANTE ac JOIN INVITACION i ON ac.ID_INVITACION = i.ID_INVITACION
+    i.FECHA_GENERACION,
+    i.FECHA_EXPIRACION,
+    i.ACTIVO
+    FROM ACCESO_VISITANTE ac JOIN INVITACION i ON ac.ID_INVITACION = i.ID_INVITACION
 `;
 
 export class AccesoGaritaModel {
 	static async obtenerTodos() {
 		const conexion = await conectar();
 		try {
-			const parametros = {};
-
-			const resultado = await conexion.execute(consultaBase, parametros, {
-				outFormat: oracledb.OUT_FORMAT_OBJECT,
-			});
+			const resultado = await conexion.execute(
+				consultaBase,
+				{},
+				{
+					outFormat: oracledb.OUT_FORMAT_OBJECT,
+				},
+			);
 			return resultado.rows;
 		} catch (error) {
 			console.error('Error al obtener todas las invitaciones:', error);
@@ -52,31 +53,51 @@ export class AccesoGaritaModel {
 		}
 	}
 
+	static async validarQr({ codigoQr }) {
+		const conexion = await conectar();
+		try {
+			const resultado = await conexion.execute(
+				`SELECT i.ID_INVITACION, i.NOMBRE_VISITANTE, ti.NOMBRE AS TIPO,
+                        i.ACTIVO, i.FECHA_EXPIRACION
+                 FROM INVITACION i
+                 JOIN TIPO_INVITACION ti ON i.ID_TIPO = ti.ID_TIPO
+                 WHERE i.CODIGO_QR LIKE :codigoQr`,
+				{ codigoQr: `%${codigoQr}` },
+				{ outFormat: oracledb.OUT_FORMAT_OBJECT },
+			);
+			return resultado.rows[0] ?? null;
+		} finally {
+			await conexion.close();
+		}
+	}
+
 	static async crear({ datos }) {
 		const conexion = await conectar();
 		try {
-			const {
-				idInvitacion,
-				idGuardia,
-				tipoDocumento,
-				numeroDocumento,
-				nombreCompletoReal,
-				observaciones,
-			} = datos;
+			// Aseguramos que atrape la variable, se llame nombreReal o nombreCompletoReal
+			const nombreVisitante = datos.nombreCompletoReal || datos.nombreReal;
 
 			const resultado = await conexion.execute(
-				`INSERT INTO ACCESO_VISITANTE (ID_INVITACION, ID_GUARDIA, TIPO_DOCUMENTO, NUMERO_DOCUMENTO, NOMBRE_COMPLETO_REAL, OBSERVACIONES) VALUES(:idInvitacion, :idGuardia, :tipoDocumento, :numeroDocumento, :nombreCompletoReal, :observaciones) RETURNING ID_ACCESO INTO :idAcceso`,
+				`INSERT INTO ACCESO_VISITANTE
+                    (ID_INVITACION, ID_GUARDIA, TIPO_DOCUMENTO,
+                     NUMERO_DOCUMENTO, NOMBRE_COMPLETO_REAL, OBSERVACIONES)
+                 VALUES
+                    (:idInvitacion, :idGuardia, :tipoDocumento,
+                     :numeroDocumento, :nombreCompletoReal, :observaciones)
+                 RETURNING ID_ACCESO INTO :idAcceso`,
 				{
-					idInvitacion,
-					idGuardia,
-					tipoDocumento,
-					numeroDocumento,
-					nombreCompletoReal,
-					observaciones,
+					idInvitacion: Number(datos.idInvitacion),
+					// 🔥 EL TRUCO ESTÁ AQUÍ: Si viene vacío, asigna 1 por defecto
+					idGuardia: Number(datos.idGuardia) || 1,
+					tipoDocumento: datos.tipoDocumento,
+					numeroDocumento: datos.numeroDocumento,
+					nombreCompletoReal: nombreVisitante,
+					observaciones: datos.observaciones || null,
 					idAcceso: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT },
 				},
 				{ autoCommit: true },
 			);
+
 			const nuevoId = resultado.outBinds.idAcceso[0];
 			return AccesoGaritaModel.obtenerPorId({ id: nuevoId });
 		} finally {
@@ -107,13 +128,14 @@ export class AccesoGaritaModel {
 			}
 
 			if (setCampos.length === 0) return null;
+
 			await conexion.execute(
 				`UPDATE ACCESO_VISITANTE SET ${setCampos.join(', ')} WHERE ID_ACCESO = :id`,
 				parametros,
 				{ autoCommit: true },
 			);
 
-			return AccesoGaritaModel.obtenerPorId({ id: id });
+			return AccesoGaritaModel.obtenerPorId({ id });
 		} finally {
 			await conexion.close();
 		}

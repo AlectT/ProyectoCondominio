@@ -1,26 +1,26 @@
+// ============================================================
+// 📁 RUTA: frontend/tailwind.config.js
+// ============================================================
+
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
-  theme: {
-    extend: {
-      // Configuración de tipografías importadas de Google Fonts
-      fontFamily: {
-        sans: ['Inter', 'sans-serif'], 
-        title: ['Montserrat', 'sans-serif'], 
-      },
-      // Paleta de colores personalizada (Tema Oscuro - Shadboard)
-      colors: {
-        fondo: '#09090b',       // Fondo principal oscuro
-        tarjeta: '#18181b',     // Fondo para contenedores y paneles
-        borde: '#27272a',       // Color para líneas divisorias y bordes
-        primario: '#fafafa',    // Texto principal de alto contraste
-        secundario: '#a1a1aa',  // Texto descriptivo y elementos inactivos
-        acento: '#ffffff',      // Elementos interactivos y botones
-      }
-    },
-  },
-  plugins: [],
-}
+	content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+	theme: {
+		extend: {
+			fontFamily: {
+				sans: ['Inter', 'sans-serif'],
+				title: ['Montserrat', 'sans-serif'],
+			},
+			// Colores apuntan a variables CSS → cambian automáticamente con el tema
+			colors: {
+				fondo: 'var(--color-fondo)',
+				tarjeta: 'var(--color-tarjeta)',
+				borde: 'var(--color-borde)',
+				primario: 'var(--color-primario)',
+				secundario: 'var(--color-secundario)',
+				acento: 'var(--color-acento)',
+			},
+		},
+	},
+	plugins: [],
+};

@@ -2,6 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   VARIABLES DE TEMA — se aplican automáticamente según clase
+   .dark en el <html> (modo oscuro) o sin clase (modo claro)
+============================================================ */
+
+/* ── MODO OSCURO (default) ───────────────────────────────── */
+:root {
+	--color-fondo: #09090b;
+	--color-tarjeta: #18181b;
+	--color-borde: #27272a;
+	--color-primario: #fafafa;
+	--color-secundario: #a1a1aa;
+	--color-acento: #ffffff;
+}
+
+/* ── MODO CLARO ──────────────────────────────────────────── */
+:root.claro {
+	--color-fondo: #f4f4f5;
+	--color-tarjeta: #ffffff;
+	--color-borde: #e4e4e7;
+	--color-primario: #09090b;
+	--color-secundario: #71717a;
+	--color-acento: #18181b;
+}
+
+/* ============================================================
+   BASE
+============================================================ */
 body {
-	@apply bg-fondo text-primario antialiased;
+	background-color: var(--color-fondo);
+	color: var(--color-primario);
+	@apply antialiased;
+	transition:
+		background-color 0.3s ease,
+		color 0.3s ease;
+}
+
+/* ============================================================
+   SCROLLBAR PERSONALIZADO
+============================================================ */
+.custom-scrollbar::-webkit-scrollbar {
+	width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+	background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+	background: var(--color-borde);
+	border-radius: 99px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: var(--color-secundario);
 }

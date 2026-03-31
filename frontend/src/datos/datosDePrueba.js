@@ -236,7 +236,7 @@ export const GRUPOS = [
 		titulo: 'Residencial & Accesos',
 		IconoGrupo: Home,
 		modulos: [
-			{ id: 'Gestión de Propiedades', Icono: Building, propio: false, roles: ['Administrador'] },
+			{ id: 'Gestión de Propiedades', Icono: Building, propio: true, roles: ['Administrador'] },
 			{
 				id: 'Directorio Residentes',
 				Icono: Users,
@@ -246,13 +246,13 @@ export const GRUPOS = [
 			{
 				id: 'Control Vehicular',
 				Icono: Car,
-				propio: false,
+				propio: true,
 				roles: ['Administrador', 'Guardia', 'Residente'],
 			},
 			{
 				id: 'Pases de Visita (QR)',
 				Icono: QrCode,
-				propio: false,
+				propio: true,
 				roles: ['Administrador', 'Guardia', 'Residente'],
 			},
 			{
@@ -270,7 +270,7 @@ export const GRUPOS = [
 			{
 				id: 'Punto de Ingreso',
 				Icono: ShieldCheck,
-				propio: false,
+				propio: true,
 				roles: ['Administrador', 'Guardia'],
 			},
 			{
@@ -288,7 +288,7 @@ export const GRUPOS = [
 			{
 				id: 'Asignación de Espacios',
 				Icono: ArrowLeftRight,
-				propio: false,
+				propio: true,
 				roles: ['Administrador'],
 			},
 		],
@@ -303,7 +303,7 @@ export const GRUPOS = [
 				propio: true,
 				roles: ['Administrador', 'Residente'],
 			},
-			{ id: 'Historial Financiero', Icono: Zap, propio: false, roles: ['Administrador'] },
+			{ id: 'Historial Financiero', Icono: Zap, propio: true, roles: ['Administrador'] },
 			{
 				id: 'Llamados de Atención',
 				Icono: PhoneCall,
@@ -313,7 +313,7 @@ export const GRUPOS = [
 			{
 				id: 'Infracciones y Multas',
 				Icono: AlertTriangle,
-				propio: false,
+				propio: true,
 				roles: ['Administrador', 'Guardia', 'Residente'],
 			},
 			{
@@ -334,7 +334,7 @@ export const GRUPOS = [
 		titulo: 'Operaciones & Soporte',
 		IconoGrupo: Briefcase,
 		modulos: [
-			{ id: 'Mantenimiento de Áreas', Icono: Trees, propio: false, roles: ['Administrador'] },
+			{ id: 'Mantenimiento de Áreas', Icono: Trees, propio: true, roles: ['Administrador'] },
 			{
 				id: 'Reservas de Áreas',
 				Icono: CalendarDays,
@@ -347,13 +347,7 @@ export const GRUPOS = [
 				propio: true,
 				roles: ['Administrador', 'Residente'],
 			},
-			{
-  				id: 'Áreas Sociales',
-  				Icono: Trees,
-  				propio: true,
-  				roles: ['Administrador'],
-			},
-			{ id: 'Catálogos del Sistema', Icono: Layers, propio: false, roles: ['Administrador'] },
+			{ id: 'Catálogos del Sistema', Icono: Layers, propio: true, roles: ['Administrador'] },
 		],
 	},
 ];

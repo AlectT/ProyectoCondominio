@@ -1,13 +1,9 @@
-import instancia from './axios';
+import instancia from './axios.js';
 
 export const accesoGaritaApi = {
-	obtenerTodos: () => instancia.get('/accesoGarita'),
+	// Validar el código QR
+	validarQr: (qr) => instancia.get(`/accesoGarita/validar/${qr}`),
 
-	obtenerPorId: (id) => instancia.get(`/accesoGarita/${id}`),
-
-	crear: (datos) => instancia.post('/accesoGarita', datos),
-
-	actualizar: (id, datos) => instancia.patch(`/accesoGarita/${id}`, datos),
-
-	eliminar: (id) => instancia.delete(`/accesoGarita/${id}`),
+	// Registrar el acceso en la bitácora (ahora apunta a /registrar)
+	registrar: (datos) => instancia.post('/accesoGarita/registrar', datos),
 };
