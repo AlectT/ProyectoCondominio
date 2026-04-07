@@ -21,61 +21,61 @@ import {
 	Zap,
 } from 'lucide-react';
 
-// ─── PROPIEDADES ───────────────────────────────────────────────────────────
-export const propiedadesEjemplo = [
-	{
-		id: 1,
-		numero: 'A-101',
-		categoria: 'Básica',
-		cuota: 500,
-		estado: 'Activo',
-		propietario: 'Carlos Méndez',
-		inquilino: null,
-		parqueos: 1,
-	},
-	{
-		id: 2,
-		numero: 'B-205',
-		categoria: 'Intermedia',
-		cuota: 800,
-		estado: 'Activo',
-		propietario: 'Laura Cifuentes',
-		inquilino: 'Mario Vides',
-		parqueos: 2,
-	},
-	{
-		id: 3,
-		numero: 'C-310',
-		categoria: 'Completa',
-		cuota: 1200,
-		estado: 'Activo',
-		propietario: 'Roberto Lima',
-		inquilino: null,
-		parqueos: 3,
-	},
-	{
-		id: 4,
-		numero: 'A-102',
-		categoria: 'Básica',
-		cuota: 500,
-		estado: 'Inactivo',
-		propietario: '—',
-		inquilino: null,
-		parqueos: 0,
-	},
-	{
-		id: 5,
-		numero: 'D-401',
-		categoria: 'Intermedia',
-		cuota: 800,
-		estado: 'Activo',
-		propietario: 'María García',
-		inquilino: 'Andrea Solís',
-		parqueos: 2,
-	},
-];
+//─── PROPIEDADES ───────────────────────────────────────────────────────────
+// export const propiedadesEjemplo = [
+// 	{
+// 		id: 1,
+// 		numero: 'A-101',
+// 		categoria: 'Básica',
+// 		cuota: 500,
+// 		estado: 'Activo',
+// 		propietario: 'Carlos Méndez',
+// 		inquilino: null,
+// 		parqueos: 1,
+// 	},
+// 	{
+// 		id: 2,
+// 		numero: 'B-205',
+// 		categoria: 'Intermedia',
+// 		cuota: 800,
+// 		estado: 'Activo',
+// 		propietario: 'Laura Cifuentes',
+// 		inquilino: 'Mario Vides',
+// 		parqueos: 2,
+// 	},
+// 	{
+// 		id: 3,
+// 		numero: 'C-310',
+// 		categoria: 'Completa',
+// 		cuota: 1200,
+// 		estado: 'Activo',
+// 		propietario: 'Roberto Lima',
+// 		inquilino: null,
+// 		parqueos: 3,
+// 	},
+// 	{
+// 		id: 4,
+// 		numero: 'A-102',
+// 		categoria: 'Básica',
+// 		cuota: 500,
+// 		estado: 'Inactivo',
+// 		propietario: '—',
+// 		inquilino: null,
+// 		parqueos: 0,
+// 	},
+// 	{
+// 		id: 5,
+// 		numero: 'D-401',
+// 		categoria: 'Intermedia',
+// 		cuota: 800,
+// 		estado: 'Activo',
+// 		propietario: 'María García',
+// 		inquilino: 'Andrea Solís',
+// 		parqueos: 2,
+// 	},
+// ];
 
-// ─── VEHÍCULOS ─────────────────────────────────────────────────────────────
+//─── VEHÍCULOS ─────────────────────────────────────────────────────────────
 export const vehiculosEjemplo = [
 	{
 		id: 1,
@@ -120,48 +120,48 @@ export const vehiculosEjemplo = [
 ];
 
 // ─── INVITACIONES / PASES QR ───────────────────────────────────────────────
-export const invitacionesEjemplo = [
-	{
-		id: 1,
-		visitante: 'Juan Pérez',
-		tipo: 'Normal',
-		residente: 'Carlos Méndez',
-		propiedad: 'A-101',
-		fecha: '2025-07-15',
-		estado: 'Pendiente',
-		codigo: 'QR-001',
-	},
-	{
-		id: 2,
-		visitante: 'Ana López',
-		tipo: 'Servicio',
-		residente: 'Mario Vides',
-		propiedad: 'B-205',
-		fecha: null,
-		estado: 'Pendiente',
-		codigo: 'QR-002',
-	},
-	{
-		id: 3,
-		visitante: 'Pedro Castillo',
-		tipo: 'Normal',
-		residente: 'Roberto Lima',
-		propiedad: 'C-310',
-		fecha: '2024-01-01',
-		estado: 'Expirado',
-		codigo: 'QR-003',
-	},
-	{
-		id: 4,
-		visitante: 'Sofía Ramos',
-		tipo: 'Servicio',
-		residente: 'Andrea Solís',
-		propiedad: 'D-401',
-		fecha: null,
-		estado: 'Inactivo',
-		codigo: 'QR-004',
-	},
-];
+// export const invitacionesEjemplo = [
+// 	{
+// 		id: 1,
+// 		visitante: 'Juan Pérez',
+// 		tipo: 'Normal',
+// 		residente: 'Carlos Méndez',
+// 		propiedad: 'A-101',
+// 		fecha: '2025-07-15',
+// 		estado: 'Pendiente',
+// 		codigo: 'QR-001',
+// 	},
+// 	{
+// 		id: 2,
+// 		visitante: 'Ana López',
+// 		tipo: 'Servicio',
+// 		residente: 'Mario Vides',
+// 		propiedad: 'B-205',
+// 		fecha: null,
+// 		estado: 'Pendiente',
+// 		codigo: 'QR-002',
+// 	},
+// 	{
+// 		id: 3,
+// 		visitante: 'Pedro Castillo',
+// 		tipo: 'Normal',
+// 		residente: 'Roberto Lima',
+// 		propiedad: 'C-310',
+// 		fecha: '2024-01-01',
+// 		estado: 'Expirado',
+// 		codigo: 'QR-003',
+// 	},
+// 	{
+// 		id: 4,
+// 		visitante: 'Sofía Ramos',
+// 		tipo: 'Servicio',
+// 		residente: 'Andrea Solís',
+// 		propiedad: 'D-401',
+// 		fecha: null,
+// 		estado: 'Inactivo',
+// 		codigo: 'QR-004',
+// 	},
+// ];
 
 // ─── MULTAS ────────────────────────────────────────────────────────────────
 export const multasEjemplo = [
@@ -195,40 +195,40 @@ export const multasEjemplo = [
 ];
 
 // ─── NOTIFICACIONES ────────────────────────────────────────────────────────
-export const notificacionesEjemplo = [
-	{
-		id: 1,
-		tipo: 'alerta',
-		titulo: 'Multa automática',
-		desc: 'Propiedad A-101 excedió límite de llamados.',
-		tiempo: 'Hace 2 min',
-		moduloDestino: 'Infracciones y Multas',
-	},
-	{
-		id: 2,
-		tipo: 'info',
-		titulo: 'Visita registrada',
-		desc: 'QR-001 escaneado en garita principal.',
-		tiempo: 'Hace 15 min',
-		moduloDestino: 'Pases de Visita (QR)',
-	},
-	{
-		id: 3,
-		tipo: 'exito',
-		titulo: 'Pago procesado',
-		desc: 'Cuota de mantenimiento C-310 liquidada.',
-		tiempo: 'Hace 1 hora',
-		moduloDestino: 'Control de Cuotas',
-	},
-	{
-		id: 4,
-		tipo: 'info',
-		titulo: 'Propiedad registrada',
-		desc: 'Se ha creado la propiedad E-501.',
-		tiempo: 'Ayer',
-		moduloDestino: 'Gestión de Propiedades',
-	},
-];
+// export const notificacionesEjemplo = [
+// 	{
+// 		id: 1,
+// 		tipo: 'alerta',
+// 		titulo: 'Multa automática',
+// 		desc: 'Propiedad A-101 excedió límite de llamados.',
+// 		tiempo: 'Hace 2 min',
+// 		moduloDestino: 'Infracciones y Multas',
+// 	},
+// 	{
+// 		id: 2,
+// 		tipo: 'info',
+// 		titulo: 'Visita registrada',
+// 		desc: 'QR-001 escaneado en garita principal.',
+// 		tiempo: 'Hace 15 min',
+// 		moduloDestino: 'Pases de Visita (QR)',
+// 	},
+// 	{
+// 		id: 3,
+// 		tipo: 'exito',
+// 		titulo: 'Pago procesado',
+// 		desc: 'Cuota de mantenimiento C-310 liquidada.',
+// 		tiempo: 'Hace 1 hora',
+// 		moduloDestino: 'Control de Cuotas',
+// 	},
+// 	{
+// 		id: 4,
+// 		tipo: 'info',
+// 		titulo: 'Propiedad registrada',
+// 		desc: 'Se ha creado la propiedad E-501.',
+// 		tiempo: 'Ayer',
+// 		moduloDestino: 'Gestión de Propiedades',
+// 	},
+// ];
 
 // ─── MENÚ LATERAL + RBAC ──────────────────────────────────────────────────
 export const GRUPOS = [
@@ -323,11 +323,11 @@ export const GRUPOS = [
 				roles: ['Administrador'],
 			},
 			{
- 				 id: 'Cargos Financieros',
-  				Icono: CreditCard,
-  				roles: ['Administrador'],
-  				propio: true	
-			}
+				id: 'Cargos Financieros',
+				Icono: CreditCard,
+				roles: ['Administrador'],
+				propio: true,
+			},
 		],
 	},
 	{

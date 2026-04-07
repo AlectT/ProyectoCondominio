@@ -27,10 +27,10 @@ import { enrutadorAreasSociales } from './routes/areasSociales.js';
 const aplicacion = express();
 
 // 2. LUEGO ponemos el "espía" para que la terminal hable
-aplicacion.use((req, res, next) => {
-	console.log(`📥 [${req.method}] -> ${req.url}`);
-	next();
-});
+// aplicacion.use((req, res, next) => {
+// 	console.log(`📥 [${req.method}] -> ${req.url}`);
+// 	next();
+// });
 
 // Middlewares
 aplicacion.use(json());
@@ -43,7 +43,7 @@ aplicacion.use('/tickets', enrutadorTickets);
 aplicacion.use('/usuarios', enrutadorUsuarios);
 aplicacion.use('/parqueos', enrutadorParqueos);
 aplicacion.use('/llamadasAtencion', enrutadorLlamadasAtencion);
-aplicacion.use('/multas', enrutadorMultas);
+// aplicacion.use('/multas', enrutadorMultas);
 aplicacion.use('/accesoGarita', enrutadorAccesoGarita);
 aplicacion.use('/tipos-cargo', enrutadorTiposCargo);
 aplicacion.use('/cargos-financieros', enrutadorCargosFinancieros);

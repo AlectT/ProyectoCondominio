@@ -4,8 +4,8 @@ export const verificarRol =
 		const rolUsuario = req.usuario?.ROL?.trim().toLowerCase();
 		const rolesNormalizados = rolesPermitidos.map((rol) => rol.trim().toLowerCase());
 
-		console.log('ROL USUARIO:', req.usuario?.ROL);
-		console.log('ROLES PERMITIDOS:', rolesPermitidos);
+		// console.log('ROL USUARIO:', req.usuario?.ROL);
+		// console.log('ROLES PERMITIDOS:', rolesPermitidos);
 
 		if (!rolUsuario) {
 			return res.status(401).json({ mensaje: 'No autenticado.' });

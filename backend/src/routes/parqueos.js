@@ -8,7 +8,6 @@ export const enrutadorParqueos = Router();
 // Todas las rutas requieren estar autenticado
 enrutadorParqueos.use(autenticacion);
 
-// Solo el administrador puede crear, actualizar y eliminar tickets
 enrutadorParqueos.get(
 	'/',
 	verificarRol('Administrador', 'Guardia', 'Colaborador'),

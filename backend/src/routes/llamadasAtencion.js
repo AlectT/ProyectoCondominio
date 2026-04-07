@@ -11,40 +11,40 @@ enrutadorLlamadasAtencion.use(autenticacion);
 // Solo el administrador puede crear, actualizar y eliminar tickets
 enrutadorLlamadasAtencion.get(
 	'/',
-	verificarRol('Administrador', 'Guardia'),
+	verificarRol('Administrador', 'Guardia', 'Residente'),
 	LlamadasAtencionController.obtenerTodos,
 );
 enrutadorLlamadasAtencion.post(
 	'/',
-	verificarRol('Administrador'),
+	verificarRol('Administrador', 'Guardia'),
 	LlamadasAtencionController.crear,
 );
 
 enrutadorLlamadasAtencion.get(
 	'/agrupados',
-	verificarRol('Administrador'),
+	verificarRol('Administrador', 'Guardia', 'Residente'),
 	LlamadasAtencionController.agrupados,
 );
 
 enrutadorLlamadasAtencion.get(
 	'/agrupados/:id',
-	verificarRol('Administrador'),
+	verificarRol('Administrador', 'Guardia', 'Residente'),
 	LlamadasAtencionController.obtenerPorIdAgrupados,
 );
 
 enrutadorLlamadasAtencion.get(
 	'/:id',
-	verificarRol('Administrador', 'Guardia'),
+	verificarRol('Administrador', 'Guardia', 'Residente'),
 	LlamadasAtencionController.obtenerPorId,
 );
 
 enrutadorLlamadasAtencion.put(
 	'/:id',
-	verificarRol('Administrador'),
+	verificarRol('Administrador', 'Guardia'),
 	LlamadasAtencionController.actualizar,
 );
 enrutadorLlamadasAtencion.delete(
 	'/:id',
-	verificarRol('Administrador'),
+	verificarRol('Administrador', 'Guardia'),
 	LlamadasAtencionController.eliminar,
 );

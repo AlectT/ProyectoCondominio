@@ -20,7 +20,8 @@ export function Topbar({
 	const cerrarSesion = async () => {
 		try {
 			await usuariosApi.logout();
-		} catch (_) {
+		} catch (_error) {
+			console.error('Error al cerrar sesión:', _error);
 		} finally {
 			limpiarUsuario();
 			navigate('/login');
