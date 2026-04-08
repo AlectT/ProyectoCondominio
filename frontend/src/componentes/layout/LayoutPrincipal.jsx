@@ -7,7 +7,6 @@ import { Sidebar } from './Sidebar.jsx';
 import { Topbar } from './Topbar.jsx';
 import { ModuloPendiente } from '../ModuloPendiente.jsx';
 import { GRUPOS } from '../../datos/datosDePrueba.js';
-import useStore from '../../estado/useStore.js';
 import ModuloTiposCargo from '../../paginas/modulos/ModuloTiposCargo.jsx';
 import ModuloCargosFinancieros from '../../paginas/modulos/ModuloCargosFinancieros.jsx';
 import ModuloAreasSociales from '../../paginas/modulos/ModuloAreasSociales.jsx';
@@ -23,8 +22,7 @@ import ModuloPropiedades from '../../paginas/modulos/ModuloPropiedades.jsx';
 import ModuloCategorias from '../../paginas/modulos/ModuloCategorias.jsx';
 import ModuloVinculaciones from '../../paginas/modulos/ModuloVinculaciones.jsx';
 import ModuloInvitaciones from '../../paginas/modulos/ModuloInvitaciones.jsx';
-import ModuloVehiculos from '../../paginas/modulos/ModuloVehiculos.jsx';
-import ModuloMulta from '../../paginas/modulos/ModuloMulta.jsx';
+// import ModuloMulta from '../../paginas/modulos/ModuloMulta.jsx';
 import PantallaBienvenida from '../../paginas/modulos/PantallaBienvenida.jsx';
 import LlamadasAtencionPagina from '../../Paginas/LlamadasAtencionPagina.jsx';
 import AccesoGaritaPagina from '../../Paginas/accesoGaritaPagina.jsx';
@@ -35,7 +33,6 @@ const SUBTITULOS = {
 	'Categorías de Propiedad': 'Catálogo de tipos de propiedad, cuotas y parqueos',
 	'Vinculación Usuario-Propiedad': 'Control de propietarios e inquilinos por unidad',
 	'Directorio Residentes': 'Gestión de usuarios del sistema',
-	'Control Vehicular': 'Padrón oficial de vehículos asociados a casas',
 	'Pases de Visita (QR)': 'Generación de códigos de acceso temporales',
 	'Infracciones y Multas': 'Bitácora de faltas y control de sanciones',
 	'Mesa de Ayuda': 'Gestión de tickets asignados al personal',
@@ -57,9 +54,8 @@ export default function LayoutPrincipal() {
 		'Gestión de Propiedades': <ModuloPropiedades filtroGlobal={busquedaGlobal} />,
 		'Categorías de Propiedad': <ModuloCategorias filtroGlobal={busquedaGlobal} />,
 		'Vinculación Usuario-Propiedad': <ModuloVinculaciones filtroGlobal={busquedaGlobal} />,
-		'Control Vehicular': <ModuloVehiculos filtroGlobal={busquedaGlobal} />,
 		'Pases de Visita (QR)': <ModuloInvitaciones filtroGlobal={busquedaGlobal} />,
-		'Infracciones y Multas': <ModuloMulta filtroGlobal={busquedaGlobal} />,
+		// 'Infracciones y Multas': <ModuloMulta filtroGlobal={busquedaGlobal} />,
 		'Directorio Residentes': <UsuariosPagina filtroGlobal={busquedaGlobal} />,
 		'Mesa de Ayuda': <TicketsPagina filtroGlobal={busquedaGlobal} />,
 		'Tipos de Cargo': <ModuloTiposCargo filtroGlobal={busquedaGlobal} />,

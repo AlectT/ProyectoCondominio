@@ -21,104 +21,6 @@ import {
 	Zap,
 } from 'lucide-react';
 
-//─── PROPIEDADES ───────────────────────────────────────────────────────────
-// export const propiedadesEjemplo = [
-// 	{
-// 		id: 1,
-// 		numero: 'A-101',
-// 		categoria: 'Básica',
-// 		cuota: 500,
-// 		estado: 'Activo',
-// 		propietario: 'Carlos Méndez',
-// 		inquilino: null,
-// 		parqueos: 1,
-// 	},
-// 	{
-// 		id: 2,
-// 		numero: 'B-205',
-// 		categoria: 'Intermedia',
-// 		cuota: 800,
-// 		estado: 'Activo',
-// 		propietario: 'Laura Cifuentes',
-// 		inquilino: 'Mario Vides',
-// 		parqueos: 2,
-// 	},
-// 	{
-// 		id: 3,
-// 		numero: 'C-310',
-// 		categoria: 'Completa',
-// 		cuota: 1200,
-// 		estado: 'Activo',
-// 		propietario: 'Roberto Lima',
-// 		inquilino: null,
-// 		parqueos: 3,
-// 	},
-// 	{
-// 		id: 4,
-// 		numero: 'A-102',
-// 		categoria: 'Básica',
-// 		cuota: 500,
-// 		estado: 'Inactivo',
-// 		propietario: '—',
-// 		inquilino: null,
-// 		parqueos: 0,
-// 	},
-// 	{
-// 		id: 5,
-// 		numero: 'D-401',
-// 		categoria: 'Intermedia',
-// 		cuota: 800,
-// 		estado: 'Activo',
-// 		propietario: 'María García',
-// 		inquilino: 'Andrea Solís',
-// 		parqueos: 2,
-// 	},
-// ];
-
-//─── VEHÍCULOS ─────────────────────────────────────────────────────────────
-export const vehiculosEjemplo = [
-	{
-		id: 1,
-		placa: 'P-123ABC',
-		marca: 'Toyota',
-		modelo: 'Corolla',
-		color: 'Blanco',
-		responsable: 'Carlos Méndez',
-		propiedad: 'A-101',
-		estado: 'Activo',
-	},
-	{
-		id: 2,
-		placa: 'P-456DEF',
-		marca: 'Honda',
-		modelo: 'Civic',
-		color: 'Gris',
-		responsable: 'Mario Vides',
-		propiedad: 'B-205',
-		estado: 'Activo',
-	},
-	{
-		id: 3,
-		placa: 'P-789GHI',
-		marca: 'Chevrolet',
-		modelo: 'Spark',
-		color: 'Rojo',
-		responsable: 'Roberto Lima',
-		propiedad: 'C-310',
-		estado: 'Activo',
-	},
-	{
-		id: 4,
-		placa: 'P-321JKL',
-		marca: 'Suzuki',
-		modelo: 'Swift',
-		color: 'Azul',
-		responsable: 'Andrea Solís',
-		propiedad: 'D-401',
-		estado: 'Inactivo',
-	},
-];
-
 // ─── INVITACIONES / PASES QR ───────────────────────────────────────────────
 // export const invitacionesEjemplo = [
 // 	{
@@ -244,12 +146,6 @@ export const GRUPOS = [
 				roles: ['Administrador', 'Guardia'],
 			},
 			{
-				id: 'Control Vehicular',
-				Icono: Car,
-				propio: true,
-				roles: ['Administrador', 'Guardia', 'Residente'],
-			},
-			{
 				id: 'Pases de Visita (QR)',
 				Icono: QrCode,
 				propio: true,
@@ -355,17 +251,3 @@ export const GRUPOS = [
 // ─── UTILIDADES ───────────────────────────────────────────────────────────
 export const limpiarBusqueda = (str) =>
 	str ? str.toString().replace(/[-\s]/g, '').toLowerCase() : '';
-
-export function colorVehiculo(color) {
-	const mapa = {
-		Rojo: { bg: '#ef4444', text: '#fff', border: 'transparent' },
-		Azul: { bg: '#3b82f6', text: '#fff', border: 'transparent' },
-		Gris: { bg: '#6b7280', text: '#fff', border: 'transparent' },
-		Verde: { bg: '#22c55e', text: '#fff', border: 'transparent' },
-		Negro: { bg: '#18181b', text: '#fff', border: '#52525b' },
-		Amarillo: { bg: '#eab308', text: '#000', border: 'transparent' },
-		Naranja: { bg: '#f97316', text: '#fff', border: 'transparent' },
-		Blanco: { bg: '#ffffff', text: '#000', border: '#27272a' },
-	};
-	return mapa[color] ?? { bg: '#3f3f46', text: '#d4d4d8', border: 'transparent' };
-}

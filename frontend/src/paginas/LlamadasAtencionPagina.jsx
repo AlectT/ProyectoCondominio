@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Plus, Eye, Pencil, Trash2, PhoneCall } from 'lucide-react';
 import { useLlamadasAtencion } from '../hooks/useLlamadasAtencion.js';
-import { usuariosApi } from '../api/usuariosApi.js';
+import { propiedadesApi } from '../api/propiedadesApi.js';
+
+import { tiposCargoApi } from '../api/tiposCargo.js';
 import { TarjetaMetrica, Etiqueta } from '../componentes/ui/Etiquetas.jsx';
 import { BuscadorCasa } from '../componentes/ui/Buscador.jsx';
 import { BtnPrimario, BtnAccion, BotonesModal } from '../componentes/ui/Botones.jsx';
@@ -10,6 +12,7 @@ import { Modal, ModalConfirmacion } from '../componentes/ui/Modales.jsx';
 import { Campo, Entrada, Selector } from '../componentes/ui/Formularios.jsx';
 import { extraerError } from '../utilidades/extraerError.js';
 import useStore from '../estado/useStore.js';
+import { formatearFecha } from '../utilidades/formatearFecha.js';
 
 const limpiar = (str) => str?.toString().toLowerCase().replace(/\s/g, '') ?? '';
 
@@ -26,19 +29,24 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 	const [seleccion, setSeleccion] = useState(null);
 	const [aEliminar, setAEliminar] = useState(null);
 	const [errorModal, setErrorModal] = useState('');
-	const [personal, setPersonal] = useState([]);
+	const [propiedades, setPropiedades] = useState([]);
+	const [cargos, setCargos] = useState([]);
 
 	// Cargar guardias y colaboradores activos al montar
 	useEffect(() => {
-		usuariosApi
+		propiedadesApi
+			.obtenerTodas()
+			.then((res) => {
+				setPropiedades(res.data);
+			})
+			.catch((e) => console.error('Error al cargar propiedades:', extraerError(e)));
+
+		tiposCargoApi
 			.obtenerTodos()
 			.then((res) => {
-				const filtrados = res.data.filter(
-					(u) => (u.ROL === 'Guardia' || u.ROL === 'Colaborador') && u.ACTIVO === 1,
-				);
-				setPersonal(filtrados);
+				setCargos(res.data);
 			})
-			.catch(() => setPersonal([]));
+			.catch((e) => console.error('Error al cargar tipos de cargo:', extraerError(e)));
 	}, []);
 
 	const [form, setForm] = useState({
@@ -71,6 +79,7 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 			idPropiedad: la.ID_PROPIEDAD,
 			idTipoCargo: la.ID_TIPO_CARGO,
 			descripcion: la.DESCRIPCION,
+			idAdmin: usuario.ID_USUARIO,
 		});
 		setErrorModal('');
 		setModal('editar');
@@ -90,6 +99,7 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 				idPropiedad: Number(form.idPropiedad),
 				idTipoCargo: Number(form.idTipoCargo),
 				descripcion: form.descripcion,
+				idAdmin: usuario.ID_USUARIO,
 			};
 
 			if (modal === 'crear') {
@@ -139,7 +149,7 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 					)}
 				</div>
 				<table className="w-full">
-					<CabeceraTabla columnas={['#', 'Cantidad', 'Propiedad', 'Descripción', 'Acciones']} />
+					<CabeceraTabla columnas={['#', 'Cargo', 'Descripción', 'Fecha', 'Acciones']} />
 					<tbody>
 						{filtrados.map((la, index) => (
 							<Fila
@@ -147,10 +157,10 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 								seleccionada={filaActiva === la.ID_LLAMADO}
 								onClick={() => setFilaActiva(filaActiva === la.ID_LLAMADO ? null : la.ID_LLAMADO)}
 							>
-								<Celda mono>{index}</Celda>
-								<Celda>{la.CANTIDAD}</Celda>
-								<Celda>{la.NUMERO_PROPIEDAD}</Celda>
+								<Celda mono>{index + 1}</Celda>
+								<Celda>{la.NOMBRE}</Celda>
 								<Celda>{la.DESCRIPCION}</Celda>
+								<Celda>{formatearFecha(la.FECHA_EMISION)}</Celda>
 								<td className="px-4 py-3">
 									<div className="flex items-center gap-1">
 										<BtnAccion onClick={() => abrirVer(la)} Icono={Eye} titulo="Ver" />
@@ -177,7 +187,7 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 			{/* Modal crear/editar */}
 			{(modal === 'crear' || modal === 'editar') && (
 				<Modal
-					titulo={modal === 'crear' ? 'Nueva llamada' : 'Editaa llamada'}
+					titulo={modal === 'crear' ? 'Nueva llamada' : 'Editar llamada'}
 					alCerrar={() => setModal(null)}
 				>
 					<form onSubmit={guardar} className="space-y-4">
@@ -186,12 +196,12 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 								<Selector
 									required
 									value={form.idPropiedad}
-									onChange={(e) => setForm({ ...form, idPropiedad: e.target.value })}
+									onChange={(e) => setForm({ ...form, idPropiedad: Number(e.target.value) })}
 								>
 									<option value="">Seleccionar...</option>
-									{personal.map((u) => (
-										<option key={u.ID_USUARIO} value={u.ID_USUARIO}>
-											{u.NOMBRE_USUARIO} — {u.NOMBRE} {u.APELLIDO} ({u.ROL})
+									{propiedades.map((p) => (
+										<option key={p.ID_PROPIEDAD} value={p.ID_PROPIEDAD}>
+											{p.NUMERO_PROPIEDAD}
 										</option>
 									))}
 								</Selector>
@@ -200,12 +210,12 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 								<Selector
 									required
 									value={form.idTipoCargo}
-									onChange={(e) => setForm({ ...form, idTipoCargo: e.target.value })}
+									onChange={(e) => setForm({ ...form, idTipoCargo: Number(e.target.value) })}
 								>
 									<option value="">Seleccionar...</option>
-									{personal.map((u) => (
-										<option key={u.ID_USUARIO} value={u.ID_USUARIO}>
-											{u.NOMBRE_USUARIO} — {u.NOMBRE} {u.APELLIDO} ({u.ROL})
+									{cargos.map((c) => (
+										<option key={c.ID_TIPO_CARGO} value={c.ID_TIPO_CARGO}>
+											{c.NOMBRE}
 										</option>
 									))}
 								</Selector>
@@ -235,8 +245,9 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 				<Modal titulo="Detalle de la llamada" alCerrar={() => setModal(null)}>
 					<div className="space-y-3 text-sm">
 						{[
-							['No. Propiedad', seleccion.NUMERO_PROPIEDAD],
+							['Cargo', seleccion.NOMBRE],
 							['Descripcion', seleccion.DESCRIPCION],
+							['Fecha de Emisión', formatearFecha(seleccion.FECHA_EMISION)],
 						].map(([lbl, val]) => (
 							<div key={lbl} className="flex justify-between border-b border-borde pb-2">
 								<span className="text-secundario">{lbl}</span>
@@ -250,8 +261,8 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 			{/* Modal confirmación eliminar */}
 			{aEliminar && (
 				<ModalConfirmacion
-					titulo="¿Eliminar parqueo?"
-					mensaje={`Se eliminará el parqueo "${aEliminar.ID_PROPIEDAD}" de forma permanente.`}
+					titulo="¿Eliminar llamado?"
+					mensaje={`Se eliminará el llamado "${aEliminar.ID_LLAMADO}" de forma permanente.`}
 					onConfirmar={confirmarEliminar}
 					onCancelar={() => setAEliminar(null)}
 				/>

@@ -1,24 +1,13 @@
 import { useState, useEffect } from 'react';
-import {
-	Plus,
-	Eye,
-	Pencil,
-	Trash2,
-	Ticket,
-	Clock,
-	CheckCircle,
-	XCircle,
-	History,
-	CarFront,
-} from 'lucide-react';
+import { Plus, Eye, Pencil, Trash2, Clock, XCircle, CarFront } from 'lucide-react';
 import { useParqueos } from '../hooks/useParqueo.js';
-import { usuariosApi } from '../api/usuariosApi.js';
+import { propiedadesApi } from '../api/propiedadesApi.js';
 import { TarjetaMetrica, Etiqueta } from '../componentes/ui/Etiquetas.jsx';
 import { BuscadorCasa } from '../componentes/ui/Buscador.jsx';
 import { BtnPrimario, BtnAccion, BotonesModal } from '../componentes/ui/Botones.jsx';
 import { CabeceraTabla, Fila, Celda, PieTabla } from '../componentes/ui/Tablas.jsx';
 import { Modal, ModalConfirmacion } from '../componentes/ui/Modales.jsx';
-import { Campo, Entrada, Selector } from '../componentes/ui/Formularios.jsx';
+import { Campo, Selector } from '../componentes/ui/Formularios.jsx';
 import { extraerError } from '../utilidades/extraerError.js';
 import useStore from '../estado/useStore.js';
 
@@ -36,19 +25,16 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 	const [seleccion, setSeleccion] = useState(null);
 	const [aEliminar, setAEliminar] = useState(null);
 	const [errorModal, setErrorModal] = useState('');
-	const [personal, setPersonal] = useState([]);
+	const [propiedades, setPropiedades] = useState([]);
 
 	// Cargar guardias y colaboradores activos al montar
 	useEffect(() => {
-		usuariosApi
-			.obtenerTodos()
+		propiedadesApi
+			.obtenerTodas()
 			.then((res) => {
-				const filtrados = res.data.filter(
-					(u) => (u.ROL === 'Guardia' || u.ROL === 'Colaborador') && u.ACTIVO === 1,
-				);
-				setPersonal(filtrados);
+				setPropiedades(res.data);
 			})
-			.catch(() => setPersonal([]));
+			.catch((e) => console.error('Error al cargar propiedades:', extraerError(e)));
 	}, []);
 
 	const [form, setForm] = useState({
@@ -221,9 +207,9 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 									onChange={(e) => setForm({ ...form, idPropiedad: e.target.value })}
 								>
 									<option value="">Seleccionar...</option>
-									{personal.map((u) => (
-										<option key={u.ID_USUARIO} value={u.ID_USUARIO}>
-											{u.NOMBRE_USUARIO} — {u.NOMBRE} {u.APELLIDO} ({u.ROL})
+									{propiedades.map((p) => (
+										<option key={p.ID_PROPIEDAD} value={p.ID_PROPIEDAD}>
+											{p.NUMERO_PROPIEDAD}
 										</option>
 									))}
 								</Selector>
@@ -254,14 +240,14 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 								required
 								type="radio"
 								value={'Activo'}
-								onChange={(e) => setForm({ ...form, activo: e.target.value })}
+								onChange={() => setForm({ ...form, activo: 1 })}
 								checked
 							/>
 							<input
 								required
 								type="radio"
 								value={'Inactivo'}
-								onChange={(e) => setForm({ ...form, activo: e.target.value })}
+								onChange={() => setForm({ ...form, activo: 0 })}
 							/>
 						</Campo>
 						{errorModal && <p className="text-red-400 text-xs">{errorModal}</p>}

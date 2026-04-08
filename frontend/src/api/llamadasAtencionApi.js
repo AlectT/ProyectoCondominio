@@ -11,7 +11,7 @@ export const llamadasAtencionApi = {
 
 	crear: (datos) => instancia.post('/llamadasAtencion', datos),
 
-	actualizar: (id, datos) => instancia.patch(`/llamadasAtencion/${id}`, datos),
+	actualizar: (id, datos) => instancia.put(`/llamadasAtencion/${id}`, datos),
 
 	eliminar: (id) => instancia.delete(`/llamadasAtencion/${id}`),
 };

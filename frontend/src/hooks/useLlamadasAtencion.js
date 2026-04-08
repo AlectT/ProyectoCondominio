@@ -10,7 +10,7 @@ export function useLlamadasAtencion() {
 		setCargando(true);
 		setError(null);
 		try {
-			const res = await llamadasAtencionApi.obtenerTodosAgrupados();
+			const res = await llamadasAtencionApi.obtenerTodos();
 			setLlamadasAtencion(res.data);
 		} catch (err) {
 			setError(err.response?.data?.mensaje ?? 'Error al cargar llamadasAtencion.');

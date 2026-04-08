@@ -9,8 +9,9 @@ const consultaBase = `
     la.ID_ADMIN,
     la.ID_TIPO_CARGO,
     la.DESCRIPCION,
-    la.FECHA_EMISION
-    FROM LLAMADO_ATENCION la
+    la.FECHA_EMISION,
+    tc.NOMBRE
+    FROM LLAMADO_ATENCION la JOIN TIPO_CARGO tc ON la.ID_TIPO_CARGO = tc.ID_TIPO_CARGO
 `;
 
 export class LlamadasAtencionModel {
