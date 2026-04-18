@@ -1,7 +1,7 @@
--- =============================================================================
+﻿-- =============================================================================
 -- SCRIPT DE LIMPIEZA
--- Elimina todas las tablas, triggers e índices del esquema anterior
--- Ejecutar antes del DDL si ya existe una versión previa
+-- Elimina todas las tablas, triggers e Ã­ndices del esquema anterior
+-- Ejecutar antes del DDL si ya existe una versiÃ³n previa
 -- =============================================================================
 BEGIN EXECUTE IMMEDIATE 'DROP TRIGGER trg_ticket_historial';        EXCEPTION WHEN OTHERS THEN NULL; END;
 /
@@ -75,10 +75,10 @@ BEGIN EXECUTE IMMEDIATE 'DROP TABLE ROL                 CASCADE CONSTRAINTS'; EX
 
 
 -- =============================================================================
--- ESQUEMA DE BASE DE DATOS - SISTEMA DE GESTIÓN DE CONDOMINIO
+-- ESQUEMA DE BASE DE DATOS - SISTEMA DE GESTIÃ“N DE CONDOMINIO
 -- Motor: Oracle Database
 -- Principio: DAG (sin dependencias circulares)
--- Versión: 3.0
+-- VersiÃ³n: 3.0
 -- =============================================================================
 
 
@@ -96,7 +96,7 @@ CREATE TABLE ROL (
     CONSTRAINT uq_rol_nombre  UNIQUE (nombre)
 );
 
--- Categorías de propiedad — define cuota mensual y cantidad de parqueos (RN-P5)
+-- CategorÃ­as de propiedad â€” define cuota mensual y cantidad de parqueos (RN-P5)
 CREATE TABLE CATEGORIA_PROPIEDAD (
     id_categoria    NUMBER          GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nombre          VARCHAR2(50)    NOT NULL,
@@ -108,7 +108,7 @@ CREATE TABLE CATEGORIA_PROPIEDAD (
     CONSTRAINT uq_cat_nombre    UNIQUE (nombre)
 );
 
--- Áreas sociales predefinidas — no se pueden agregar (RN-A1, RN-A4)
+-- Ãreas sociales predefinidas â€” no se pueden agregar (RN-A1, RN-A4)
 CREATE TABLE AREA_SOCIAL (
     id_area         NUMBER          GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nombre          VARCHAR2(100)   NOT NULL,
@@ -123,8 +123,8 @@ CREATE TABLE AREA_SOCIAL (
 );
 
 -- Tipos de cargo financiero (RN-F1)
--- es_multa = 1: cargo de tipo multa con monto fijo del catálogo
--- es_multa = 0: monto calculado dinámicamente (cuota, mora, reserva)
+-- es_multa = 1: cargo de tipo multa con monto fijo del catÃ¡logo
+-- es_multa = 0: monto calculado dinÃ¡micamente (cuota, mora, reserva)
 CREATE TABLE TIPO_CARGO (
     id_tipo_cargo   NUMBER          GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nombre          VARCHAR2(50)    NOT NULL,
@@ -138,7 +138,7 @@ CREATE TABLE TIPO_CARGO (
     CONSTRAINT chk_tipo_cargo_activo CHECK (activo IN (0,1))
 );
 
--- Tipos de invitación (RN-I2)
+-- Tipos de invitaciÃ³n (RN-I2)
 CREATE TABLE TIPO_INVITACION (
     id_tipo     NUMBER          GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nombre      VARCHAR2(50)    NOT NULL,
@@ -155,7 +155,7 @@ CREATE TABLE PRIORIDAD_TICKET (
     CONSTRAINT uq_prio_nivel  UNIQUE (nivel)
 );
 
--- Configuración dinámica del sistema (RN-C1)
+-- ConfiguraciÃ³n dinÃ¡mica del sistema (RN-C1)
 CREATE TABLE CONFIGURACION (
     id_config   NUMBER          GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     clave       VARCHAR2(100)   NOT NULL,
@@ -220,7 +220,7 @@ CREATE TABLE PARQUEO (
     CONSTRAINT chk_parqueo_activo CHECK (activo IN (0,1))
 );
 
--- Trigger: valida máximo de parqueos según categoría de propiedad (RN-P5)
+-- Trigger: valida mÃ¡ximo de parqueos segÃºn categorÃ­a de propiedad (RN-P5)
 CREATE OR REPLACE TRIGGER trg_max_parqueos
 BEFORE INSERT ON PARQUEO
 FOR EACH ROW
@@ -239,14 +239,14 @@ BEGIN
 
     IF v_actuales >= v_max_parqueos THEN
         RAISE_APPLICATION_ERROR(-20001,
-            'RN-P5: La propiedad ya alcanzó el máximo de parqueos permitidos por su categoría.');
+            'RN-P5: La propiedad ya alcanzÃ³ el mÃ¡ximo de parqueos permitidos por su categorÃ­a.');
     END IF;
 END;
 /
 
 
 -- =============================================================================
--- NIVEL 3: VINCULACIÓN USUARIO-PROPIEDAD (RN-U5, RN-P2, RN-P4)
+-- NIVEL 3: VINCULACIÃ“N USUARIO-PROPIEDAD (RN-U5, RN-P2, RN-P4)
 -- =============================================================================
 
 CREATE TABLE USUARIO_PROPIEDAD (
@@ -265,7 +265,7 @@ CREATE TABLE USUARIO_PROPIEDAD (
     CONSTRAINT uq_up_tipo      UNIQUE (id_propiedad, tipo_vinculo)
 );
 
--- Trigger: máximo 2 usuarios activos por propiedad (RN-U5)
+-- Trigger: mÃ¡ximo 2 usuarios activos por propiedad (RN-U5)
 CREATE OR REPLACE TRIGGER trg_max_usuarios_propiedad
 BEFORE INSERT ON USUARIO_PROPIEDAD
 FOR EACH ROW
@@ -278,7 +278,7 @@ BEGIN
 
     IF v_count >= 2 THEN
         RAISE_APPLICATION_ERROR(-20002,
-            'RN-U5: Una propiedad no puede tener más de 2 usuarios vinculados (propietario + inquilino).');
+            'RN-U5: Una propiedad no puede tener mÃ¡s de 2 usuarios vinculados (propietario + inquilino).');
     END IF;
 END;
 /
@@ -308,7 +308,7 @@ CREATE TABLE CARGO (
 -- NIVEL 5: PAGOS (RN-F2, RN-F4, RN-F5, RN-F6, RN-F7)
 -- =============================================================================
 
--- Cabecera del pago — una boleta cubre todos los cargos pendientes (RN-F7)
+-- Cabecera del pago â€” una boleta cubre todos los cargos pendientes (RN-F7)
 CREATE TABLE PAGO (
     id_pago         NUMBER          GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_propiedad    NUMBER          NOT NULL,
@@ -323,7 +323,7 @@ CREATE TABLE PAGO (
     CONSTRAINT chk_pago_monto    CHECK (monto_total > 0)
 );
 
--- Detalle del pago — desglose por cargo
+-- Detalle del pago â€” desglose por cargo
 CREATE TABLE PAGO_DETALLE (
     id_detalle      NUMBER          GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_pago         NUMBER          NOT NULL,
@@ -406,7 +406,7 @@ END;
 
 
 -- =============================================================================
--- NIVEL 6: RESERVAS (RN-R1 … RN-R8, RN-X4)
+-- NIVEL 6: RESERVAS (RN-R1 â€¦ RN-R8, RN-X4)
 -- El pago de la reserva se registra en PAGO antes de crear la RESERVA
 -- RESERVA guarda el numero_boleta como referencia visual (RN-X4)
 -- =============================================================================
@@ -427,7 +427,7 @@ CREATE TABLE RESERVA (
     CONSTRAINT chk_reserva_estado CHECK (estado IN ('APARTADA','CANCELADA'))
 );
 
--- Auditoría de cancelaciones de reservas por administrador (RN-AU1, RN-AU2)
+-- AuditorÃ­a de cancelaciones de reservas por administrador (RN-AU1, RN-AU2)
 CREATE TABLE AUDITORIA_RESERVA (
     id_auditoria    NUMBER          GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_reserva      NUMBER          NOT NULL,
@@ -469,7 +469,7 @@ BEGIN
 END;
 /
 
--- Trigger: bloquea reserva si el usuario está inactivo (RN-X3)
+-- Trigger: bloquea reserva si el usuario estÃ¡ inactivo (RN-X3)
 CREATE OR REPLACE TRIGGER trg_reserva_usuario_activo
 BEFORE INSERT ON RESERVA
 FOR EACH ROW
@@ -487,7 +487,7 @@ BEGIN
 END;
 /
 
--- Trigger: valida que el área no esté reservada en ese horario (RN-R3)
+-- Trigger: valida que el Ã¡rea no estÃ© reservada en ese horario (RN-R3)
 CREATE OR REPLACE TRIGGER trg_area_disponible
 BEFORE INSERT ON RESERVA
 FOR EACH ROW
@@ -504,14 +504,14 @@ BEGIN
 
     IF v_conflicto > 0 THEN
         RAISE_APPLICATION_ERROR(-20007,
-            'RN-R3: El área ya está reservada en ese horario.');
+            'RN-R3: El Ã¡rea ya estÃ¡ reservada en ese horario.');
     END IF;
 END;
 /
 
 
 -- =============================================================================
--- NIVEL 7: INVITACIONES (RN-I1 … RN-I5)
+-- NIVEL 7: INVITACIONES (RN-I1 â€¦ RN-I5)
 -- =============================================================================
 
 CREATE TABLE INVITACION (
@@ -521,7 +521,7 @@ CREATE TABLE INVITACION (
     nombre_visitante    VARCHAR2(150)   NOT NULL,
     codigo_qr           VARCHAR2(500)   NOT NULL,
     fecha_generacion    DATE            DEFAULT SYSDATE NOT NULL,
-    -- NULL = invitación de Servicio sin expiración (RN-I3)
+    -- NULL = invitaciÃ³n de Servicio sin expiraciÃ³n (RN-I3)
     fecha_expiracion    DATE,
     activo              NUMBER(1)       DEFAULT 1 NOT NULL,
     CONSTRAINT fk_inv_usuario FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario),
@@ -532,7 +532,7 @@ CREATE TABLE INVITACION (
 
 
 -- =============================================================================
--- NIVEL 8: CONTROL DE ACCESO (RN-AC1 … RN-AC5)
+-- NIVEL 8: CONTROL DE ACCESO (RN-AC1 â€¦ RN-AC5)
 -- =============================================================================
 
 CREATE TABLE ACCESO_VISITANTE (
@@ -549,7 +549,7 @@ CREATE TABLE ACCESO_VISITANTE (
     CONSTRAINT chk_acceso_doc    CHECK (tipo_documento IN ('DPI','Licencia'))
 );
 
--- Trigger: valida que la invitación esté activa y no haya expirado (RN-I3, RN-I5)
+-- Trigger: valida que la invitaciÃ³n estÃ© activa y no haya expirado (RN-I3, RN-I5)
 CREATE OR REPLACE TRIGGER trg_validar_invitacion
 BEFORE INSERT ON ACCESO_VISITANTE
 FOR EACH ROW
@@ -566,17 +566,17 @@ BEGIN
 
     IF v_activo = 0 THEN
         RAISE_APPLICATION_ERROR(-20008,
-            'RN-I5: Esta invitación ha sido desactivada.');
+            'RN-I5: Esta invitaciÃ³n ha sido desactivada.');
     END IF;
 
     IF v_tipo = 'Normal' AND TRUNC(SYSDATE) > TRUNC(v_expiracion) THEN
         RAISE_APPLICATION_ERROR(-20009,
-            'RN-I3: Esta invitación ha expirado.');
+            'RN-I3: Esta invitaciÃ³n ha expirado.');
     END IF;
 END;
 /
 
--- Trigger: desactiva la invitación Normal tras su uso (RN-I5)
+-- Trigger: desactiva la invitaciÃ³n Normal tras su uso (RN-I5)
 CREATE OR REPLACE TRIGGER trg_desactivar_inv_normal
 AFTER INSERT ON ACCESO_VISITANTE
 FOR EACH ROW
@@ -597,9 +597,9 @@ END;
 
 
 -- =============================================================================
--- NIVEL 9: LLAMADOS DE ATENCIÓN (RN-C2, RN-F1, RN-AU1)
+-- NIVEL 9: LLAMADOS DE ATENCIÃ“N (RN-C2, RN-F1, RN-AU1)
 -- id_tipo_cargo referencia solo registros con es_multa = 1
--- Al 3er llamado del mismo tipo se genera multa con monto del catálogo
+-- Al 3er llamado del mismo tipo se genera multa con monto del catÃ¡logo
 -- El contador se reinicia cada 3 llamados
 -- =============================================================================
 
@@ -628,12 +628,12 @@ BEGIN
 
     IF v_es_multa = 0 THEN
         RAISE_APPLICATION_ERROR(-20010,
-            'Un llamado de atención solo puede referencia un tipo de cargo de tipo multa.');
+            'Un llamado de atenciÃ³n solo puede referencia un tipo de cargo de tipo multa.');
     END IF;
 END;
 /
 
--- Trigger: al 3er llamado del mismo tipo genera multa automáticamente y reinicia contador (RN-F1)
+-- Trigger: al 3er llamado del mismo tipo genera multa automÃ¡ticamente y reinicia contador (RN-F1)
 CREATE OR REPLACE TRIGGER trg_tercer_llamado_multa
 FOR INSERT ON LLAMADO_ATENCION
 COMPOUND TRIGGER
@@ -655,10 +655,11 @@ COMPOUND TRIGGER
         v_llamados(v_idx).id_tipo_cargo := :NEW.id_tipo_cargo;
     END AFTER EACH ROW;
 
-    AFTER STATEMENT IS
+        AFTER STATEMENT IS
         v_count  NUMBER;
         v_monto  NUMBER;
         v_nombre VARCHAR2(50);
+        v_nombre_norm VARCHAR2(100);
     BEGIN
         -- El INSERT ya terminó. La tabla es estable. 
         -- Procesamos los registros guardados en memoria.
@@ -670,21 +671,24 @@ COMPOUND TRIGGER
             WHERE id_propiedad  = v_llamados(i).id_propiedad
               AND id_tipo_cargo = v_llamados(i).id_tipo_cargo;
 
-            -- Si es múltiplo de 3, generamos la multa
-            IF v_count > 0 AND MOD(v_count, 3) = 0 THEN
-                
-                SELECT monto, nombre INTO v_monto, v_nombre
-                FROM TIPO_CARGO
-                WHERE id_tipo_cargo = v_llamados(i).id_tipo_cargo;
+            SELECT monto, nombre, LOWER(REPLACE(nombre, ' ', ''))
+              INTO v_monto, v_nombre, v_nombre_norm
+            FROM TIPO_CARGO
+            WHERE id_tipo_cargo = v_llamados(i).id_tipo_cargo;
 
-                INSERT INTO CARGO (id_propiedad, id_tipo_cargo, monto, descripcion, estado)
-                VALUES (
-                    v_llamados(i).id_propiedad,
-                    v_llamados(i).id_tipo_cargo,
-                    v_monto,
-                    'Multa automática: 3er llamado por ' || v_nombre,
-                    'PENDIENTE'
-                );
+            -- Solo aplica para estos tres tipos
+            IF v_nombre_norm IN ('multaexcesodevelocidad', 'multaperros', 'multaalquiler') THEN
+                -- Si es múltiplo de 3, generamos la multa
+                IF v_count > 0 AND MOD(v_count, 3) = 0 THEN
+                    INSERT INTO CARGO (id_propiedad, id_tipo_cargo, monto, descripcion, estado)
+                    VALUES (
+                        v_llamados(i).id_propiedad,
+                        v_llamados(i).id_tipo_cargo,
+                        v_monto,
+                        'Multa automática: 3er llamado por ' || v_nombre,
+                        'PENDIENTE'
+                    );
+                END IF;
             END IF;
             
         END LOOP;
@@ -757,7 +761,7 @@ BEGIN
 END;
 /
 
--- Trigger: registra historial automáticamente al cambiar estado
+-- Trigger: registra historial automÃ¡ticamente al cambiar estado
 CREATE OR REPLACE TRIGGER trg_ticket_historial
 AFTER UPDATE OF estado ON TICKET
 FOR EACH ROW
@@ -781,48 +785,54 @@ INSERT INTO ROL (nombre, descripcion) VALUES ('Administrador', 'Gestiona el cond
 INSERT INTO ROL (nombre, descripcion) VALUES ('Guardia',       'Control de acceso y seguridad');
 INSERT INTO ROL (nombre, descripcion) VALUES ('Colaborador',   'Limpieza y mantenimiento');
 
--- Tipos de invitación (RN-I2)
+-- Tipos de invitaciÃ³n (RN-I2)
 INSERT INTO TIPO_INVITACION (nombre, descripcion)
-    VALUES ('Normal',   'Visita personal de un solo uso, expira a las 23:59 del día');
+    VALUES ('Normal',   'Visita personal de un solo uso, expira a las 23:59 del dÃ­a');
 INSERT INTO TIPO_INVITACION (nombre, descripcion)
-    VALUES ('Servicio', 'Empleado doméstico o proveedor, reutilizable hasta desactivación');
+    VALUES ('Servicio', 'Empleado domÃ©stico o proveedor, reutilizable hasta desactivaciÃ³n');
 
 -- Tipos de cargo (RN-F1)
--- Cargos calculados dinámicamente (es_multa = 0, monto = 0)
+-- Cargos calculados dinÃ¡micamente (es_multa = 0, monto = 0)
 INSERT INTO TIPO_CARGO (nombre, descripcion, monto, es_multa)
     VALUES ('Cuota condominio', 'Pago mensual obligatorio por propiedad',         0, 0);
 INSERT INTO TIPO_CARGO (nombre, descripcion, monto, es_multa)
-    VALUES ('Mora',             'Recargo automático por cuota no pagada al día 11', 0, 0);
+    VALUES ('Mora',             'Recargo automÃ¡tico por cuota no pagada al dÃ­a 11', 0, 0);
 INSERT INTO TIPO_CARGO (nombre, descripcion, monto, es_multa)
-    VALUES ('Reserva de área',  'Pago por uso de área social',                    0, 0);
+    VALUES ('Reserva de Ã¡rea',  'Pago por uso de Ã¡rea social',                    0, 0);
 
 -- Multas con monto fijo (es_multa = 1)
 INSERT INTO TIPO_CARGO (nombre, descripcion, monto, es_multa)
     VALUES ('Multa ruido excesivo',      'Ruido fuera de horario permitido',         200.00, 1);
 INSERT INTO TIPO_CARGO (nombre, descripcion, monto, es_multa)
-    VALUES ('Multa daño áreas comunes',  'Daño a instalaciones del condominio',      500.00, 1);
+    VALUES ('Multa daÃ±o Ã¡reas comunes',  'DaÃ±o a instalaciones del condominio',      500.00, 1);
 INSERT INTO TIPO_CARGO (nombre, descripcion, monto, es_multa)
-    VALUES ('Multa mascotas sin correa', 'Mascota sin correa en áreas comunes',      150.00, 1);
+    VALUES ('Multa mascotas sin correa', 'Mascota sin correa en Ã¡reas comunes',      150.00, 1);
 INSERT INTO TIPO_CARGO (nombre, descripcion, monto, es_multa)
-    VALUES ('Multa basura incorrecta',   'Depósito incorrecto de basura',            100.00, 1);
+    VALUES ('Multa basura incorrecta',   'DepÃ³sito incorrecto de basura',            100.00, 1);
+INSERT INTO TIPO_CARGO (nombre, descripcion, monto, es_multa)
+    VALUES ('Multa exceso de velocidad', 'Exceso de velocidad dentro del condominio', 300.00, 1);
+INSERT INTO TIPO_CARGO (nombre, descripcion, monto, es_multa)
+    VALUES ('Multa perros',              'Perros sueltos o sin control',              200.00, 1);
+INSERT INTO TIPO_CARGO (nombre, descripcion, monto, es_multa)
+    VALUES ('Multa alquiler',            'Alquiler no autorizado o subarrendamiento', 400.00, 1);
 
--- Categorías de propiedad (RN-P5)
+-- CategorÃ­as de propiedad (RN-P5)
 INSERT INTO CATEGORIA_PROPIEDAD (nombre, descripcion,                    max_parqueos, cuota_mensual)
-    VALUES ('Básica',     'Unidad residencial estándar',                 1,            500.00);
+    VALUES ('BÃ¡sica',     'Unidad residencial estÃ¡ndar',                 1,            375.00);
 INSERT INTO CATEGORIA_PROPIEDAD (nombre, descripcion,                    max_parqueos, cuota_mensual)
     VALUES ('Intermedia', 'Unidad con espacio adicional',                2,            800.00);
 INSERT INTO CATEGORIA_PROPIEDAD (nombre, descripcion,                    max_parqueos, cuota_mensual)
     VALUES ('Completa',   'Unidad amplia con todas las amenidades',      3,            1200.00);
 
--- Áreas sociales fijas (RN-A1, RN-A2)
+-- Ãreas sociales fijas (RN-A1, RN-A2)
 INSERT INTO AREA_SOCIAL (nombre, descripcion, hora_apertura, hora_cierre, precio_por_hora)
-    VALUES ('Salón Social',         'Salón para eventos y reuniones',  '08:00','22:00', 50.00);
+    VALUES ('SalÃ³n Social',         'SalÃ³n para eventos y reuniones',  '08:00','22:00', 50.00);
 INSERT INTO AREA_SOCIAL (nombre, descripcion, hora_apertura, hora_cierre, precio_por_hora)
-    VALUES ('Cancha de Fútbol',     'Cancha de fútbol 7',              '08:00','22:00', 30.00);
+    VALUES ('Cancha de FÃºtbol',     'Cancha de fÃºtbol 7',              '08:00','22:00', 30.00);
 INSERT INTO AREA_SOCIAL (nombre, descripcion, hora_apertura, hora_cierre, precio_por_hora)
     VALUES ('Cancha de Basketball', 'Cancha de basketball techada',    '08:00','22:00', 25.00);
 INSERT INTO AREA_SOCIAL (nombre, descripcion, hora_apertura, hora_cierre, precio_por_hora)
-    VALUES ('Piscina',              'Piscina con área de descanso',    '08:00','22:00', 20.00);
+    VALUES ('Piscina',              'Piscina con Ã¡rea de descanso',    '08:00','22:00', 20.00);
 
 -- Prioridades de ticket
 INSERT INTO PRIORIDAD_TICKET (nombre, nivel) VALUES ('Baja',    1);
@@ -830,11 +840,11 @@ INSERT INTO PRIORIDAD_TICKET (nombre, nivel) VALUES ('Media',   2);
 INSERT INTO PRIORIDAD_TICKET (nombre, nivel) VALUES ('Alta',    3);
 INSERT INTO PRIORIDAD_TICKET (nombre, nivel) VALUES ('Urgente', 4);
 
--- Configuración dinámica (RN-C1)
+-- ConfiguraciÃ³n dinÃ¡mica (RN-C1)
 INSERT INTO CONFIGURACION (clave, valor, descripcion, tipo_dato)
-    VALUES ('DIA_GENERACION_CUOTA', '1',  'Día del mes en que se genera la cuota mensual',     'NUMBER');
+    VALUES ('DIA_GENERACION_CUOTA', '1',  'DÃ­a del mes en que se genera la cuota mensual',     'NUMBER');
 INSERT INTO CONFIGURACION (clave, valor, descripcion, tipo_dato)
-    VALUES ('DIA_GENERACION_MORA',  '11', 'Día del mes en que se genera la mora si hay deuda', 'NUMBER');
+    VALUES ('DIA_GENERACION_MORA',  '11', 'DÃ­a del mes en que se genera la mora si hay deuda', 'NUMBER');
 INSERT INTO CONFIGURACION (clave, valor, descripcion, tipo_dato)
     VALUES ('PORCENTAJE_MORA',      '5',  'Porcentaje de mora sobre la cuota mensual',         'NUMBER');
 
@@ -843,3 +853,6 @@ COMMIT;
 -- =============================================================================
 -- FIN DEL ESQUEMA v3.0
 -- =============================================================================
+
+
+
