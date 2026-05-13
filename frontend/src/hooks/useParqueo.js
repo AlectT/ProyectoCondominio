@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { parqueosApi } from '../Api/parqueosApi';
+import { parqueosApi } from '../api/parqueosApi';
 
 export function useParqueos() {
 	const [parqueos, setParqueos] = useState([]);

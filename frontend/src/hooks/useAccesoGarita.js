@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { accesoGaritaApi } from '../Api/accesoGaritaApi';
+import { accesoGaritaApi } from '../api/accesoGaritaApi';
 
 export function useAccesoGarita() {
 	const [accesoGarita, setAccesoGarita] = useState([]);
