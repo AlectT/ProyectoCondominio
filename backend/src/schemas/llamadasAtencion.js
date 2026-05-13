@@ -31,7 +31,9 @@ const esquemaLlamadasAtencion = z.object({
 			invalid_type_error: 'La descripcion debe ser una cadena de texto.',
 		})
 		.min(2)
-		.max(500),
+		.max(500)
+		.optional()
+		.nullable(),
 });
 
 export function validarLlamadasAtencion(entrada) {

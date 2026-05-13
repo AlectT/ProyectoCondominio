@@ -223,7 +223,7 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 									required
 									value={form.numeroParqueo}
 									onChange={(e) => setForm({ ...form, numeroParqueo: e.target.value })}
-									placeholder="Detalle del parqueo"
+									placeholder="Ej. A1"
 									className="w-full px-3 py-2 text-sm border rounded-lg bg-fondo border-borde text-primario placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
 								/>
 							</Campo>
@@ -233,38 +233,115 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 								required
 								value={form.descripcion}
 								onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
-								placeholder="Detalle del parqueo"
+								placeholder="Información extra del parqueo"
 								rows={3}
 								className="w-full px-3 py-2 text-sm border rounded-lg bg-fondo border-borde text-primario placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
 							/>
 						</Campo>
 						<Campo etiqueta="Estado">
 							<br />
-							<Celda>
-								<Etiqueta texto={'Activo'} variante={'activo'} />
-								<input
-									name="activo"
-									id="activo"
-									required
-									type="radio"
-									value={1}
-									onChange={() => setForm({ ...form, activo: 1 })}
-									checked={form.activo === 1}
-								/>
-							</Celda>
+							<div className="estado-container">
+								<label className={`estado-opcion ${form.activo === 1 ? 'activo-seleccionado' : ''}`}>
+									<input
+										type="radio"
+										name="activo"
+										checked={form.activo === 1}
+										onChange={() => setForm({ ...form, activo: 1 })}
+									/>
 
-							<Celda>
-								<Etiqueta texto={'Inactivo'} variante={'inactivo'} />
-								<input
-									name="activo"
-									id="activo"
-									required
-									type="radio"
-									value={0}
-									onChange={() => setForm({ ...form, activo: 0 })}
-									checked={form.activo === 0}
-								/>
-							</Celda>
+									<span className="estado-dot"></span>
+									<span>Activo</span>
+								</label>
+
+								<label className={`estado-opcion ${form.activo === 0 ? 'inactivo-seleccionado' : ''}`}>
+									<input
+										type="radio"
+										name="activo"
+										checked={form.activo === 0}
+										onChange={() => setForm({ ...form, activo: 0 })}
+									/>
+
+									<span className="estado-dot"></span>
+									<span>Inactivo</span>
+								</label>
+
+								<style jsx>{`
+									.estado-container {
+										display: flex;
+										gap: 14px;
+										margin-top: 10px;
+									}
+
+									.estado-opcion {
+										display: flex;
+										align-items: center;
+										gap: 8px;
+
+										padding: 10px 18px;
+										border-radius: 999px;
+
+										background: #23232b;
+										border: 1px solid #3a3a46;
+
+										color: #b8b8c2;
+										font-size: 14px;
+										font-weight: 600;
+
+										cursor: pointer;
+										transition: all 0.2s ease;
+
+										user-select: none;
+									}
+
+									/* OCULTAR RADIO ORIGINAL */
+									.estado-opcion input[type='radio'] {
+										display: none;
+									}
+
+									.estado-dot {
+										width: 10px;
+										height: 10px;
+										border-radius: 50%;
+										background: #777;
+
+										transition: all 0.2s ease;
+									}
+
+									/* HOVER */
+									.estado-opcion:hover {
+										transform: translateY(-1px);
+										border-color: #555;
+									}
+
+									/* ACTIVO */
+									.activo-seleccionado {
+										background: rgba(0, 255, 140, 0.12);
+										border-color: rgba(0, 255, 140, 0.4);
+										color: #61ffb0;
+
+										box-shadow: 0 0 12px rgba(0, 255, 140, 0.15);
+									}
+
+									.activo-seleccionado .estado-dot {
+										background: #00ff88;
+										box-shadow: 0 0 10px #00ff88;
+									}
+
+									/* INACTIVO */
+									.inactivo-seleccionado {
+										background: rgba(255, 90, 90, 0.12);
+										border-color: rgba(255, 90, 90, 0.4);
+										color: #ff9090;
+
+										box-shadow: 0 0 12px rgba(255, 90, 90, 0.12);
+									}
+
+									.inactivo-seleccionado .estado-dot {
+										background: #ff5a5a;
+										box-shadow: 0 0 10px #ff5a5a;
+									}
+								`}</style>
+							</div>
 						</Campo>
 						{errorModal && <p className="text-red-400 text-xs">{errorModal}</p>}
 						<BotonesModal

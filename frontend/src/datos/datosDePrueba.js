@@ -164,12 +164,6 @@ export const GRUPOS = [
 		IconoGrupo: ShieldAlert,
 		modulos: [
 			{
-				id: 'Bitácora de Seguridad',
-				Icono: BookOpen,
-				propio: true,
-				roles: ['Administrador', 'Guardia'],
-			},
-			{
 				id: 'Inventario Parqueos',
 				Icono: ParkingCircle,
 				propio: true,

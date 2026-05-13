@@ -25,7 +25,6 @@ import ModuloInvitaciones from '../../paginas/modulos/ModuloInvitaciones.jsx';
 // import ModuloMulta from '../../paginas/modulos/ModuloMulta.jsx';
 import PantallaBienvenida from '../../paginas/modulos/PantallaBienvenida.jsx';
 import LlamadasAtencionPagina from '../../Paginas/LlamadasAtencionPagina.jsx';
-import AccesoGaritaPagina from '../../Paginas/accesoGaritaPagina.jsx';
 import UsuarioPropiedadPagina from '../../Paginas/usuarioPropiedadPagina.jsx';
 
 const SUBTITULOS = {
@@ -42,7 +41,6 @@ const SUBTITULOS = {
 	'Inventario Parqueos': 'Inventario de parqueos disponibles',
 	'Llamados de Atención': 'Listado de llamadas de atención acumuladas',
 	'Propietarios e Inquilinos': 'Control de inquilinos y propietarios',
-	'Bitácora de Seguridad': 'Bitácora y registro de las personas que han ingresado.',
 };
 
 export default function LayoutPrincipal() {
@@ -65,7 +63,6 @@ export default function LayoutPrincipal() {
 		'Inventario Parqueos': <ParqueosPagina filtroGlobal={busquedaGlobal} />,
 		'Llamados de Atención': <LlamadasAtencionPagina filtroGlobal={busquedaGlobal} />,
 		'Propietarios e Inquilinos': <UsuarioPropiedadPagina filtroGlobal={busquedaGlobal} />,
-		'Bitácora de Seguridad': <AccesoGaritaPagina filtroGlobal={busquedaGlobal} />,
 	};
 
 	const infoModulo = GRUPOS.flatMap((g) => g.modulos).find((m) => m.id === moduloActivo);

@@ -22,7 +22,9 @@ const esquemaParqueo = z.object({
 			invalid_type_error: 'La descripcion debe ser una cadena de texto.',
 		})
 		.min(1)
-		.max(200),
+		.max(200)
+		.optional()
+		.nullable(),
 
 	activo: z
 		.number({

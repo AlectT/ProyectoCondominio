@@ -257,7 +257,7 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 								required
 								value={form.descripcion}
 								onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
-								placeholder="Detalle del parqueo"
+								placeholder="Agregue una pequeña descripción del motivo del llamado de atención..."
 								rows={3}
 								className="w-full px-3 py-2 text-sm border rounded-lg bg-fondo border-borde text-primario placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
 							/>
