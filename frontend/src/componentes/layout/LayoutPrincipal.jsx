@@ -13,11 +13,10 @@ import ModuloAreasSociales from '../../paginas/modulos/ModuloAreasSociales.jsx';
 import PagosPagina from '../../paginas/PagosPagina.jsx';
 import ReservasPagina from '../../paginas/ReservasPagina.jsx';
 
-
 // Módulos propios conectados al backend
 import UsuariosPagina from '../../paginas/UsuariosPagina.jsx';
 import TicketsPagina from '../../paginas/TicketsPagina.jsx';
-import ParqueosPagina from '../../Paginas/ParqueosPagina.jsx';
+import ParqueosPagina from '../../paginas/ParqueosPagina.jsx';
 
 // Módulos de compañeros (datos de prueba)
 import ModuloPropiedades from '../../paginas/modulos/ModuloPropiedades.jsx';
@@ -26,8 +25,8 @@ import ModuloVinculaciones from '../../paginas/modulos/ModuloVinculaciones.jsx';
 import ModuloInvitaciones from '../../paginas/modulos/ModuloInvitaciones.jsx';
 // import ModuloMulta from '../../paginas/modulos/ModuloMulta.jsx';
 import PantallaBienvenida from '../../paginas/modulos/PantallaBienvenida.jsx';
-import LlamadasAtencionPagina from '../../Paginas/LlamadasAtencionPagina.jsx';
-import UsuarioPropiedadPagina from '../../Paginas/usuarioPropiedadPagina.jsx';
+import LlamadasAtencionPagina from '../../paginas/LlamadasAtencionPagina.jsx';
+import UsuarioPropiedadPagina from '../../paginas/usuarioPropiedadPagina.jsx';
 
 const SUBTITULOS = {
 	'Gestión de Propiedades': 'Administración general de unidades y responsables',

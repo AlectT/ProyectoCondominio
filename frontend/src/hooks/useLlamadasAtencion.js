@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { llamadasAtencionApi } from '../Api/llamadasAtencionApi';
+import { llamadasAtencionApi } from '../api/llamadasAtencionApi';
 
 export function useLlamadasAtencion() {
 	const [llamadasAtencion, setLlamadasAtencion] = useState([]);
