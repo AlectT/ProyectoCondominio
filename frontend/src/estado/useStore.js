@@ -10,7 +10,6 @@ const useStore = create(
 
 			temaOscuro: true,
 
-			// 🔥 EL TRUCO ESTÁ AQUÍ 🔥
 			toggleTema: () =>
 				set((state) => {
 					const nuevoTema = !state.temaOscuro;
