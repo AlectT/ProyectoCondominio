@@ -2,10 +2,8 @@ import {
 	Building,
 	Car,
 	QrCode,
-	AlertTriangle,
 	Users,
 	ParkingCircle,
-	Trees,
 	CalendarDays,
 	PhoneCall,
 	ArrowLeftRight,
@@ -21,117 +19,6 @@ import {
 	Zap,
 } from 'lucide-react';
 
-// ─── INVITACIONES / PASES QR ───────────────────────────────────────────────
-// export const invitacionesEjemplo = [
-// 	{
-// 		id: 1,
-// 		visitante: 'Juan Pérez',
-// 		tipo: 'Normal',
-// 		residente: 'Carlos Méndez',
-// 		propiedad: 'A-101',
-// 		fecha: '2025-07-15',
-// 		estado: 'Pendiente',
-// 		codigo: 'QR-001',
-// 	},
-// 	{
-// 		id: 2,
-// 		visitante: 'Ana López',
-// 		tipo: 'Servicio',
-// 		residente: 'Mario Vides',
-// 		propiedad: 'B-205',
-// 		fecha: null,
-// 		estado: 'Pendiente',
-// 		codigo: 'QR-002',
-// 	},
-// 	{
-// 		id: 3,
-// 		visitante: 'Pedro Castillo',
-// 		tipo: 'Normal',
-// 		residente: 'Roberto Lima',
-// 		propiedad: 'C-310',
-// 		fecha: '2024-01-01',
-// 		estado: 'Expirado',
-// 		codigo: 'QR-003',
-// 	},
-// 	{
-// 		id: 4,
-// 		visitante: 'Sofía Ramos',
-// 		tipo: 'Servicio',
-// 		residente: 'Andrea Solís',
-// 		propiedad: 'D-401',
-// 		fecha: null,
-// 		estado: 'Inactivo',
-// 		codigo: 'QR-004',
-// 	},
-// ];
-
-// ─── MULTAS ────────────────────────────────────────────────────────────────
-// export const multasEjemplo = [
-// 	{
-// 		id: 1,
-// 		propiedad: 'A-101',
-// 		residente: 'Carlos Méndez',
-// 		infraccion: 'Ruido nocturno',
-// 		llamados: 3,
-// 		estado: 'PENDIENTE',
-// 		fecha: '2025-07-01',
-// 	},
-// 	{
-// 		id: 2,
-// 		propiedad: 'B-205',
-// 		residente: 'Laura Cifuentes',
-// 		infraccion: 'Mascotas sin bozal',
-// 		llamados: 3,
-// 		estado: 'PAGADO',
-// 		fecha: '2025-06-15',
-// 	},
-// 	{
-// 		id: 3,
-// 		propiedad: 'C-310',
-// 		residente: 'Roberto Lima',
-// 		infraccion: 'Basura fuera de hora',
-// 		llamados: 6,
-// 		estado: 'PENDIENTE',
-// 		fecha: '2025-07-08',
-// 	},
-// ];
-
-// ─── NOTIFICACIONES ────────────────────────────────────────────────────────
-// export const notificacionesEjemplo = [
-// 	{
-// 		id: 1,
-// 		tipo: 'alerta',
-// 		titulo: 'Multa automática',
-// 		desc: 'Propiedad A-101 excedió límite de llamados.',
-// 		tiempo: 'Hace 2 min',
-// 		moduloDestino: 'Infracciones y Multas',
-// 	},
-// 	{
-// 		id: 2,
-// 		tipo: 'info',
-// 		titulo: 'Visita registrada',
-// 		desc: 'QR-001 escaneado en garita principal.',
-// 		tiempo: 'Hace 15 min',
-// 		moduloDestino: 'Pases de Visita (QR)',
-// 	},
-// 	{
-// 		id: 3,
-// 		tipo: 'exito',
-// 		titulo: 'Pago procesado',
-// 		desc: 'Cuota de mantenimiento C-310 liquidada.',
-// 		tiempo: 'Hace 1 hora',
-// 		moduloDestino: 'Control de Cuotas',
-// 	},
-// 	{
-// 		id: 4,
-// 		tipo: 'info',
-// 		titulo: 'Propiedad registrada',
-// 		desc: 'Se ha creado la propiedad E-501.',
-// 		tiempo: 'Ayer',
-// 		moduloDestino: 'Gestión de Propiedades',
-// 	},
-// ];
-
 // ─── MENÚ LATERAL + RBAC ──────────────────────────────────────────────────
 export const GRUPOS = [
 	{
@@ -144,6 +31,12 @@ export const GRUPOS = [
 				Icono: Users,
 				propio: true,
 				roles: ['Administrador', 'Guardia'],
+			},
+			{
+				id: 'Control Vehicular',
+				Icono: Car,
+				propio: true,
+				roles: ['Administrador', 'Guardia', 'Residente'],
 			},
 			{
 				id: 'Pases de Visita (QR)',
@@ -170,10 +63,22 @@ export const GRUPOS = [
 		IconoGrupo: ShieldAlert,
 		modulos: [
 			{
+				id: 'Punto de Ingreso',
+				Icono: ShieldCheck,
+				propio: true,
+				roles: ['Administrador', 'Guardia'],
+			},
+			{
 				id: 'Bitácora de Seguridad',
 				Icono: BookOpen,
 				propio: true,
 				roles: ['Administrador', 'Guardia'],
+			},
+			{
+				id: 'Asignación de Espacios',
+				Icono: ArrowLeftRight,
+				propio: true,
+				roles: ['Administrador'],
 			},
 		],
 	},
@@ -186,6 +91,18 @@ export const GRUPOS = [
 				Icono: CreditCard,
 				propio: true,
 				roles: ['Administrador', 'Residente'],
+			},
+			{
+				id: 'Historial Financiero',
+				Icono: Zap,
+				propio: false,
+				roles: ['Administrador'],
+			},
+			{
+				id: 'Llamados de Atención',
+				Icono: PhoneCall,
+				propio: true,
+				roles: ['Administrador', 'Guardia'],
 			},
 			{
 				id: 'Tipos de Cargo',

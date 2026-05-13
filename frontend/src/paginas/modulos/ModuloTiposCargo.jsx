@@ -41,6 +41,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 			setDatos(respuesta.data);
 		} catch (error) {
 			console.error('Error al cargar tipos de cargo:', error);
+			toast.error('No se pudieron cargar los tipos de cargo.');
 		} finally {
 			setCargando(false);
 		}
@@ -140,30 +141,10 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 	return (
 		<div className="space-y-6 animate-in fade-in duration-300">
 			<div className="grid grid-cols-4 gap-4">
-				<TarjetaMetrica
-					etiqueta="Total conceptos"
-					valor={total}
-					Icono={Layers}
-					fondo="bg-zinc-800"
-				/>
-				<TarjetaMetrica
-					etiqueta="Multas"
-					valor={multas}
-					Icono={ShieldAlert}
-					fondo="bg-red-500/10"
-				/>
-				<TarjetaMetrica
-					etiqueta="Dinámicos"
-					valor={dinamicos}
-					Icono={Coins}
-					fondo="bg-sky-500/10"
-				/>
-				<TarjetaMetrica
-					etiqueta="Activos"
-					valor={activos}
-					Icono={CheckCircle}
-					fondo="bg-emerald-500/10"
-				/>
+				<TarjetaMetrica etiqueta="Total conceptos" valor={total} Icono={Layers} fondo="bg-zinc-800" />
+				<TarjetaMetrica etiqueta="Multas" valor={multas} Icono={ShieldAlert} fondo="bg-red-500/10" />
+				<TarjetaMetrica etiqueta="Dinámicos" valor={dinamicos} Icono={Coins} fondo="bg-sky-500/10" />
+				<TarjetaMetrica etiqueta="Activos" valor={activos} Icono={CheckCircle} fondo="bg-emerald-500/10" />
 			</div>
 
 			<div className="border bg-fondo border-borde rounded-xl overflow-hidden shadow-sm">
@@ -175,9 +156,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 				</div>
 
 				<table className="w-full">
-					<CabeceraTabla
-						columnas={['Nombre', 'Descripción', 'Monto', 'Tipo', 'Estado', 'Acciones']}
-					/>
+					<CabeceraTabla columnas={['Nombre', 'Descripción', 'Monto', 'Tipo', 'Estado', 'Acciones']} />
 					<tbody>
 						{filtrados.map((tipo, i) => (
 							<Fila
@@ -189,9 +168,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 								}
 							>
 								<Celda mono>{tipo.NOMBRE}</Celda>
-
 								<Celda>{tipo.DESCRIPCION || 'Sin descripción'}</Celda>
-
 								<Celda>
 									{Number(tipo.MONTO) > 0 ? `Q${Number(tipo.MONTO).toFixed(2)}` : 'Dinámico'}
 								</Celda>
@@ -271,8 +248,8 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 										})
 									}
 								>
-									<option value={0}>Cargo dinámico</option>
-									<option value={1}>Multa fija</option>
+									<option value={0}>Dinámico</option>
+									<option value={1}>Multa</option>
 								</Selector>
 							</Campo>
 						</div>
@@ -281,7 +258,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 							<Entrada
 								value={form.descripcion}
 								onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
-								placeholder="Descripción del concepto financiero"
+								placeholder="Ej: Ruido fuera de horario permitido"
 							/>
 						</Campo>
 
@@ -297,7 +274,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 										monto: e.target.value === '' ? '' : Number(e.target.value),
 									})
 								}
-								placeholder="0.00"
+								placeholder="Ej: 250.00"
 								required
 							/>
 						</Campo>
