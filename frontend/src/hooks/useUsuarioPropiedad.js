@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { usuariosPropiedadApi } from '../Api/usuarioPropiedadApi';
+import { usuariosPropiedadApi } from '../api/usuarioPropiedadApi';
 
 export function useUsuarioPropiedad() {
 	const [up, setUP] = useState([]);
