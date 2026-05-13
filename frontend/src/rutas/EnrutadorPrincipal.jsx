@@ -5,7 +5,7 @@ import GaritaPagina from '../paginas/GaritaPagina.jsx';
 import LayoutPrincipal from '../componentes/layout/LayoutPrincipal.jsx';
 import ParqueosPagina from '../paginas/ParqueosPagina.jsx';
 import LlamadasAtencionPagina from '../paginas/LlamadasAtencionPagina.jsx';
-import UsuarioPropiedadPagina from '../Paginas/usuarioPropiedadPagina.jsx';
+import UsuarioPropiedadPagina from '../paginas/usuarioPropiedadPagina.jsx';
 
 // Importamos la nueva pantalla de bienvenida
 import PantallaBienvenida from '../paginas/modulos/PantallaBienvenida.jsx';
