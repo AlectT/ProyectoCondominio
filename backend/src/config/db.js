@@ -1,10 +1,22 @@
 import oracledb from 'oracledb';
-import { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_SERVICE } from './config.js';
+import {
+	DB_USER,
+	DB_PASSWORD,
+	DB_HOST,
+	DB_PORT,
+	DB_SERVICE,
+	DB_SSL,
+	IS_PRODUCTION,
+} from './config.js';
 
 const configuracionDB = {
 	user: DB_USER,
 	password: DB_PASSWORD,
 	connectString: `${DB_HOST}:${DB_PORT}/${DB_SERVICE}`,
+	...(DB_SSL && {
+		ssl: true,
+		sslServerDNMatch: IS_PRODUCTION,
+	}),
 };
 
 export async function conectar() {
