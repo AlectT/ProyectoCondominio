@@ -1,3 +1,4 @@
+import { extraerError } from '../../utilidades/extraerError.js';
 // ============================================================
 // 📁 RUTA: frontend/src/paginas/modulos/ModuloCategorias.jsx
 // ============================================================
@@ -91,7 +92,8 @@ export default function ModuloCategorias({ filtroGlobal = '' }) {
 			await cargarDatos();
 			setModal(null);
 		} catch (error) {
-			toast.error(error.response?.data?.mensaje || 'Error al guardar la categoría.');
+			const msj = extraerError(error) || 'Error al guardar la categoría.';
+			toast.error(msj);
 		}
 	};
 
@@ -102,7 +104,8 @@ export default function ModuloCategorias({ filtroGlobal = '' }) {
 			setAEliminar(null);
 			toast.success('Categoría eliminada exitosamente');
 		} catch (error) {
-			toast.error(error.response?.data?.mensaje || 'Error al eliminar.');
+			const msj = extraerError(error) || 'Error al eliminar.';
+			toast.error(msj);
 		}
 	};
 

@@ -1,3 +1,4 @@
+import { extraerError } from '../../utilidades/extraerError.js';
 // ============================================================
 // 📁 RUTA: frontend/src/paginas/modulos/ModuloPropiedades.jsx
 // ============================================================
@@ -107,7 +108,8 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 			setModal(null);
 			setEditandoId(null);
 		} catch (error) {
-			toast.error(error.response?.data?.mensaje || 'Error al guardar la propiedad');
+			const msj = extraerError(error) || 'Error al guardar la propiedad';
+			toast.error(msj);
 		}
 	};
 
@@ -373,7 +375,8 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 							setAEliminar(null);
 							toast.success('Propiedad eliminada correctamente');
 						} catch (error) {
-							toast.error(error.response?.data?.mensaje || 'Error al eliminar en la BD.');
+							const msj = extraerError(error) || 'Error al eliminar en la BD.';
+			toast.error(msj);
 						}
 					}}
 				/>

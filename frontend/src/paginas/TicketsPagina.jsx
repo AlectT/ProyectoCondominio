@@ -149,8 +149,9 @@ export default function TicketsPagina({ filtroGlobal = '' }) {
 			}
 			setModal(null);
 		} catch (err) {
-			setErrorModal(extraerError(err));
-			toast.error('Error al guardar el ticket');
+			const msj = extraerError(err) || 'Error al guardar el ticket';
+			setErrorModal(msj);
+			toast.error(msj);
 		}
 	};
 
@@ -159,8 +160,9 @@ export default function TicketsPagina({ filtroGlobal = '' }) {
 			await eliminar(aEliminar.ID_TICKET);
 			toast.success('Ticket eliminado exitosamente');
 		} catch (err) {
-			console.error('Error al eliminar:', extraerError(err));
-			toast.error('Error al eliminar el ticket');
+			const msj = extraerError(err) || 'Error al eliminar el ticket';
+			console.error('Error al eliminar el ticket:', msj);
+			toast.error(msj);
 		}
 		setAEliminar(null);
 	};
@@ -295,7 +297,7 @@ export default function TicketsPagina({ filtroGlobal = '' }) {
 								required
 								value={form.titulo}
 								onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-								placeholder="Descripción corta del ticket"
+								placeholder="Ej: Fuga de agua en área de piscina"
 							/>
 						</Campo>
 						<Campo etiqueta="Descripción">
@@ -303,7 +305,7 @@ export default function TicketsPagina({ filtroGlobal = '' }) {
 								required
 								value={form.descripcion}
 								onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
-								placeholder="Detalle del problema o tarea"
+								placeholder="Ej: Se reporta una fuga considerable en el tubo principal cerca de las duchas. Requiere atención inmediata."
 								rows={3}
 								className="w-full px-3 py-2 text-sm border rounded-lg bg-fondo border-borde text-primario placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
 							/>
@@ -336,7 +338,7 @@ export default function TicketsPagina({ filtroGlobal = '' }) {
 								<Entrada
 									value={form.notasCierre}
 									onChange={(e) => setForm({ ...form, notasCierre: e.target.value })}
-									placeholder="Resumen de la resolución"
+									placeholder="Ej: Se cambió la tubería dañada y se probó la presión"
 								/>
 							</Campo>
 						)}

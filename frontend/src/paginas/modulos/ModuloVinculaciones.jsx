@@ -1,3 +1,4 @@
+import { extraerError } from '../../utilidades/extraerError.js';
 // ============================================================
 // 📁 RUTA: frontend/src/paginas/modulos/ModuloVinculaciones.jsx
 // ============================================================
@@ -109,7 +110,8 @@ export default function ModuloVinculaciones({ filtroGlobal = '' }) {
 			await cargarTodo();
 			setModal(null);
 		} catch (error) {
-			toast.error(error.response?.data?.mensaje || 'Error al guardar el vínculo.');
+			const msj = extraerError(error) || 'Error al guardar el vínculo.';
+			toast.error(msj);
 		}
 	};
 
@@ -120,7 +122,8 @@ export default function ModuloVinculaciones({ filtroGlobal = '' }) {
 			await cargarTodo();
 			toast.success('Estado de vínculo actualizado');
 		} catch (error) {
-			toast.error('Error al cambiar el estado.');
+			const msj = extraerError(error) || 'Error al cambiar el estado.';
+			toast.error(msj);
 		}
 	};
 
@@ -131,7 +134,8 @@ export default function ModuloVinculaciones({ filtroGlobal = '' }) {
 			setAEliminar(null);
 			toast.success('Vínculo eliminado exitosamente');
 		} catch (error) {
-			toast.error(error.response?.data?.mensaje || 'Error al eliminar.');
+			const msj = extraerError(error) || 'Error al eliminar.';
+			toast.error(msj);
 		}
 	};
 

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useUsuarioPropiedad } from '../hooks/useUsuarioPropiedad.js';
 import { usuariosApi } from '../api/usuariosApi.js';
+import { propiedadesApi } from '../api/propiedadesApi.js';
 import { TarjetaMetrica, Etiqueta } from '../componentes/ui/Etiquetas.jsx';
 import { BuscadorCasa } from '../componentes/ui/Buscador.jsx';
 import { BtnPrimario, BtnAccion, BotonesModal } from '../componentes/ui/Botones.jsx';
@@ -43,6 +44,7 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 	const [aEliminar, setAEliminar] = useState(null);
 	const [errorModal, setErrorModal] = useState('');
 	const [personal, setPersonal] = useState([]);
+	const [propiedades, setPropiedades] = useState([]);
 
 	useEffect(() => {
 		usuariosApi
@@ -120,8 +122,9 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 			}
 			setModal(null);
 		} catch (err) {
-			setErrorModal(extraerError(err));
-			toast.error('Error al guardar el vínculo');
+			const msj = extraerError(err) || 'Error al guardar el vínculo';
+			setErrorModal(msj);
+			toast.error(msj);
 		}
 	};
 
@@ -130,8 +133,9 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 			await eliminar(aEliminar.ID_USUARIO_PROPIEDAD);
 			toast.success('Vínculo eliminado exitosamente');
 		} catch (err) {
-			console.error('Error al eliminar:', extraerError(err));
-			toast.error('Error al eliminar el vínculo');
+			const msj = extraerError(err) || 'Error al eliminar el vínculo';
+			console.error('Error al eliminar el vínculo:', msj);
+			toast.error(msj);
 		}
 		setAEliminar(null);
 	};
@@ -235,9 +239,9 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 									onChange={(e) => setForm({ ...form, idPropiedad: e.target.value })}
 								>
 									<option value="">Seleccionar...</option>
-									{personal.map((u) => (
-										<option key={u.ID_USUARIO} value={u.ID_USUARIO}>
-											{u.NOMBRE_USUARIO} — {u.NOMBRE} {u.APELLIDO} ({u.ROL})
+									{propiedades.map((p) => (
+										<option key={p.ID_PROPIEDAD} value={p.ID_PROPIEDAD}>
+											{p.NUMERO_PROPIEDAD}
 										</option>
 									))}
 								</Selector>
@@ -255,11 +259,10 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 							</Campo>
 							<Campo etiqueta="Fecha Fin">
 								<input
-									type="text"
+									type="date"
 									required
 									value={form.fechaFin}
 									onChange={(e) => setForm({ ...form, fechaFin: e.target.value })}
-									placeholder="Fecha de pago"
 									className="w-full px-3 py-2 text-sm border rounded-lg bg-fondo border-borde text-primario placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
 								/>
 							</Campo>

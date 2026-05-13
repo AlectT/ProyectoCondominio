@@ -122,8 +122,9 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 			cargarPagos();
 			toast.success('Pago registrado exitosamente');
 		} catch (err) {
-			setErrorModal(extraerError(err));
-			toast.error('Error al registrar el pago');
+			const msj = extraerError(err) || 'Error al registrar el pago';
+			setErrorModal(msj);
+			toast.error(msj);
 		}
 	};
 

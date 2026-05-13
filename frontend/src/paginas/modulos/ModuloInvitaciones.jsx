@@ -1,3 +1,4 @@
+import { extraerError } from '../../utilidades/extraerError.js';
 // ============================================================
 // 📁 RUTA: frontend/src/paginas/modulos/ModuloInvitaciones.jsx
 // ============================================================
@@ -124,7 +125,8 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 			setEditandoId(null);
 		} catch (error) {
 			console.error('Error al guardar:', error);
-			toast.error(error.response?.data?.mensaje || 'Error al guardar la invitación');
+			const msj = extraerError(error) || 'Error al guardar la invitación';
+			toast.error(msj);
 		}
 	};
 
@@ -141,7 +143,8 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 			toast.success('Pase QR invalidado correctamente');
 		} catch (error) {
 			console.error('Error al desactivar:', error);
-			toast.error(error.response?.data?.mensaje || 'Error al desactivar la invitación');
+			const msj = extraerError(error) || 'Error al desactivar la invitación';
+			toast.error(msj);
 		}
 	};
 

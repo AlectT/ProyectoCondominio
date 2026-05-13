@@ -106,8 +106,9 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 			}
 			setModal(null);
 		} catch (err) {
-			setErrorModal(extraerError(err));
-			toast.error('Error al guardar el parqueo');
+			const msj = extraerError(err) || 'Error al guardar el parqueo';
+			setErrorModal(msj);
+			toast.error(msj);
 		}
 	};
 
@@ -116,8 +117,9 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 			await eliminar(aEliminar.ID_PARQUEO);
 			toast.success('Parqueo eliminado exitosamente');
 		} catch (err) {
-			console.error('Error al eliminar:', extraerError(err));
-			toast.error('Error al eliminar el parqueo');
+			const msj = extraerError(err) || 'Error al eliminar el parqueo';
+			console.error('Error al eliminar el parqueo:', msj);
+			toast.error(msj);
 		}
 		setAEliminar(null);
 	};
@@ -228,7 +230,7 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 									required
 									value={form.numeroParqueo}
 									onChange={(e) => setForm({ ...form, numeroParqueo: e.target.value })}
-									placeholder="Ej. A1"
+									placeholder="Ej: P-101"
 									className="w-full px-3 py-2 text-sm border rounded-lg bg-fondo border-borde text-primario placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
 								/>
 							</Campo>
@@ -238,7 +240,7 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 								required
 								value={form.descripcion}
 								onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
-								placeholder="Información extra del parqueo"
+								placeholder="Ej: Parqueo techado en sótano 1"
 								rows={3}
 								className="w-full px-3 py-2 text-sm border rounded-lg bg-fondo border-borde text-primario placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
 							/>

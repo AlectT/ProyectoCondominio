@@ -100,8 +100,9 @@ export default function UsuariosPagina({ filtroGlobal = '' }) {
 			}
 			setModal(null);
 		} catch (err) {
-			setErrorModal(extraerError(err));
-			toast.error('Error al guardar el usuario');
+			const msj = extraerError(err) || 'Error al guardar el usuario';
+			setErrorModal(msj);
+			toast.error(msj);
 		}
 	};
 
@@ -110,8 +111,9 @@ export default function UsuariosPagina({ filtroGlobal = '' }) {
 			await desactivar(aDesactivar.ID_USUARIO);
 			toast.success('Usuario desactivado exitosamente');
 		} catch (err) {
-			console.error('Error al desactivar:', extraerError(err));
-			toast.error('Error al desactivar el usuario');
+			const msj = extraerError(err) || 'Error al desactivar el usuario';
+			console.error('Error al desactivar:', msj);
+			toast.error(msj);
 		}
 		setADesactivar(null);
 	};

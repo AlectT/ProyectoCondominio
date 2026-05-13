@@ -115,8 +115,9 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 			}
 			setModal(null);
 		} catch (err) {
-			setErrorModal(extraerError(err));
-			toast.error('Ocurrió un error al guardar la llamada de atención');
+			const msj = extraerError(err) || 'Ocurrió un error al guardar la llamada de atención';
+			setErrorModal(msj);
+			toast.error(msj);
 		}
 	};
 
@@ -125,8 +126,9 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 			await eliminar(aEliminar.ID_LLAMADO);
 			toast.success('Llamada de atención eliminada con éxito');
 		} catch (err) {
-			console.error('Error al eliminar:', extraerError(err));
-			toast.error('No se pudo eliminar la llamada de atención');
+			const msj = extraerError(err) || 'No se pudo eliminar la llamada de atención';
+			console.error('No se pudo eliminar la llamada de atención:', msj);
+			toast.error(msj);
 		}
 		setAEliminar(null);
 	};

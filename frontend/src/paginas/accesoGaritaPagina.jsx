@@ -102,8 +102,9 @@ export default function AccesoGaritaPagina({ filtroGlobal = '' }) {
 			}
 			setModal(null);
 		} catch (err) {
-			setErrorModal(extraerError(err));
-			toast.error('Ocurrió un error al guardar el acceso');
+			const msj = extraerError(err) || 'Ocurrió un error al guardar el acceso';
+			setErrorModal(msj);
+			toast.error(msj);
 		}
 	};
 
@@ -112,8 +113,9 @@ export default function AccesoGaritaPagina({ filtroGlobal = '' }) {
 			await eliminar(aEliminar.ID_ACCESO);
 			toast.success('El registro se eliminó con éxito');
 		} catch (err) {
-			console.error('Error al eliminar:', extraerError(err));
-			toast.error('No se pudo eliminar el registro');
+			const msj = extraerError(err) || 'No se pudo eliminar el registro';
+			console.error('No se pudo eliminar el registro:', msj);
+			toast.error(msj);
 		}
 		setAEliminar(null);
 	};
