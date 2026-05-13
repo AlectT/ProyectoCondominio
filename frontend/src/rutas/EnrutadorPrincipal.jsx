@@ -3,8 +3,8 @@ import { RutaProtegida } from './RutaProtegida.jsx';
 import LoginPagina from '../paginas/LoginPagina.jsx';
 import GaritaPagina from '../paginas/GaritaPagina.jsx';
 import LayoutPrincipal from '../componentes/layout/LayoutPrincipal.jsx';
-import ParqueosPagina from '../Paginas/ParqueosPagina.jsx';
-import LlamadasAtencionPagina from '../Paginas/LlamadasAtencionPagina.jsx';
+import ParqueosPagina from '../paginas/ParqueosPagina.jsx';
+import LlamadasAtencionPagina from '../paginas/LlamadasAtencionPagina.jsx';
 import UsuarioPropiedadPagina from '../Paginas/usuarioPropiedadPagina.jsx';
 
 // Importamos la nueva pantalla de bienvenida
