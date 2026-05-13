@@ -21,7 +21,6 @@ import { middlewareCors } from './middlewares/cors.js';
 import { PORT } from './config/config.js';
 import { enrutadorCargosFinancieros } from './routes/cargosFinancieros.js';
 import { enrutadorAreasSociales } from './routes/areasSociales.js';
-// import { enrutadorMultas } from './routes/multas.js';
 
 // 1. PRIMERO creamos la aplicación
 const aplicacion = express();
@@ -43,13 +42,11 @@ aplicacion.use('/tickets', enrutadorTickets);
 aplicacion.use('/usuarios', enrutadorUsuarios);
 aplicacion.use('/parqueos', enrutadorParqueos);
 aplicacion.use('/llamadasAtencion', enrutadorLlamadasAtencion);
-// aplicacion.use('/multas', enrutadorMultas);
 aplicacion.use('/accesoGarita', enrutadorAccesoGarita);
 aplicacion.use('/tipos-cargo', enrutadorTiposCargo);
 aplicacion.use('/cargos-financieros', enrutadorCargosFinancieros);
 aplicacion.use('/areas-sociales', enrutadorAreasSociales);
 aplicacion.use('/usuarioPropiedad', enrutadorUsuarioPropiedad);
-// aplicacion.use('/multas', enrutadorMultas);
 aplicacion.use('/reservas', enrutadorReservas);
 aplicacion.use('/pagos', enrutadorPagos);
 

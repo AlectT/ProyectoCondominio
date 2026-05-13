@@ -13,6 +13,11 @@ import ModuloAreasSociales from '../../paginas/modulos/ModuloAreasSociales.jsx';
 import PagosPagina from '../../paginas/PagosPagina.jsx';
 import ReservasPagina from '../../paginas/ReservasPagina.jsx';
 
+<<<<<<< Updated upstream
+=======
+
+// Módulos propios conectados al backend
+>>>>>>> Stashed changes
 import UsuariosPagina from '../../paginas/UsuariosPagina.jsx';
 import TicketsPagina from '../../paginas/TicketsPagina.jsx';
 import ParqueosPagina from '../../Paginas/ParqueosPagina.jsx';

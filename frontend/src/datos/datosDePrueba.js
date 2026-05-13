@@ -146,6 +146,15 @@ export const GRUPOS = [
 				roles: ['Administrador', 'Guardia'],
 			},
 			{
+<<<<<<< Updated upstream
+=======
+				id: 'Control Vehicular',
+				Icono: Car,
+				propio: true,
+				roles: ['Administrador', 'Guardia', 'Residente'],
+			},
+			{
+>>>>>>> Stashed changes
 				id: 'Pases de Visita (QR)',
 				Icono: QrCode,
 				propio: true,
@@ -170,11 +179,35 @@ export const GRUPOS = [
 		IconoGrupo: ShieldAlert,
 		modulos: [
 			{
+<<<<<<< Updated upstream
+=======
+				id: 'Punto de Ingreso',
+				Icono: ShieldCheck,
+				propio: true,
+				roles: ['Administrador', 'Guardia'],
+			},
+			{
+>>>>>>> Stashed changes
 				id: 'Bitácora de Seguridad',
 				Icono: BookOpen,
 				propio: true,
 				roles: ['Administrador', 'Guardia'],
 			},
+<<<<<<< Updated upstream
+=======
+			{
+				id: 'Inventario Parqueos',
+				Icono: ParkingCircle,
+				propio: true,
+				roles: ['Administrador', 'Guardia'],
+			},
+			{
+				id: 'Asignación de Espacios',
+				Icono: ArrowLeftRight,
+				propio: true,
+				roles: ['Administrador'],
+			},
+>>>>>>> Stashed changes
 		],
 	},
 	{
@@ -184,8 +217,26 @@ export const GRUPOS = [
 			{
 				id: 'Control de Cuotas',
 				Icono: CreditCard,
+<<<<<<< Updated upstream
 				propio: true,
 				roles: ['Administrador', 'Residente'],
+=======
+				propio: true,
+				roles: ['Administrador', 'Residente'],
+			},
+			{ id: 'Historial Financiero', Icono: Zap, propio: false, roles: ['Administrador'] },
+			{
+				id: 'Llamados de Atención',
+				Icono: PhoneCall,
+				propio: true,
+				roles: ['Administrador', 'Guardia'],
+			},
+			{
+				id: 'Infracciones y Multas',
+				Icono: AlertTriangle,
+				propio: true,
+				roles: ['Administrador', 'Guardia', 'Residente'],
+>>>>>>> Stashed changes
 			},
 			{
 				id: 'Tipos de Cargo',
