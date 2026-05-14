@@ -33,12 +33,6 @@ export const GRUPOS = [
 				roles: ['Administrador', 'Guardia'],
 			},
 			{
-				id: 'Control Vehicular',
-				Icono: Car,
-				propio: true,
-				roles: ['Administrador', 'Guardia', 'Residente'],
-			},
-			{
 				id: 'Pases de Visita (QR)',
 				Icono: QrCode,
 				propio: true,
@@ -59,30 +53,6 @@ export const GRUPOS = [
 		],
 	},
 	{
-		titulo: 'Seguridad & Garita',
-		IconoGrupo: ShieldAlert,
-		modulos: [
-			{
-				id: 'Punto de Ingreso',
-				Icono: ShieldCheck,
-				propio: true,
-				roles: ['Administrador', 'Guardia'],
-			},
-			{
-				id: 'Bitácora de Seguridad',
-				Icono: BookOpen,
-				propio: true,
-				roles: ['Administrador', 'Guardia'],
-			},
-			{
-				id: 'Asignación de Espacios',
-				Icono: ArrowLeftRight,
-				propio: true,
-				roles: ['Administrador'],
-			},
-		],
-	},
-	{
 		titulo: 'Finanzas & Disciplina',
 		IconoGrupo: Wallet,
 		modulos: [
@@ -91,12 +61,6 @@ export const GRUPOS = [
 				Icono: CreditCard,
 				propio: true,
 				roles: ['Administrador', 'Residente'],
-			},
-			{
-				id: 'Historial Financiero',
-				Icono: Zap,
-				propio: false,
-				roles: ['Administrador'],
 			},
 			{
 				id: 'Llamados de Atención',
