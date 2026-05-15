@@ -6,7 +6,7 @@
 		"start": "node --env-file=.env.production src/app.js",
 		"dev": "node --watch --env-file=.env src/app.js",
 		"test:db": "node --env-file=.env src/tests/probarConexion.js",
-		"test:admin": "node src/tests/usuarioAdmin.js"
+		"test:admin": "node --env-file=.env src/tests/usuarioAdmin.js"
 	},
 	"keywords": [],
 	"author": "",
