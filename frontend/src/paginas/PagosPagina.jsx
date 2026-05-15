@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { usePagos } from '../hooks/usePagos.js';
 import { pagosApi } from '../api/pagosApi.js';
+import { propiedadesApi } from '../api/propiedadesApi.js';
 import { TarjetaMetrica, Etiqueta } from '../componentes/ui/Etiquetas.jsx';
 import { BuscadorCasa } from '../componentes/ui/Buscador.jsx';
 import { BtnPrimario, BtnAccion, BotonesModal } from '../componentes/ui/Botones.jsx';
@@ -55,6 +56,27 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 	const [cargandoDetalle, setCargandoDetalle] = useState(false);
 
 	const debounceRef = useRef(null);
+	const [propiedades, setPropiedades] = useState([]);
+	const [cargandoPropiedades, setCargandoPropiedades] = useState(false);
+
+	useEffect(() => {
+		if (modal === 'crear' && esAdmin) {
+			const obtenerPropiedades = async () => {
+				setCargandoPropiedades(true);
+				try {
+					// Usamos tu API con Axios
+					const res = await propiedadesApi.obtenerTodas();
+					// Axios encapsula la respuesta en ".data"
+					setPropiedades(res.data);
+				} catch (err) {
+					toast.error('Error al cargar propiedades');
+				} finally {
+					setCargandoPropiedades(false);
+				}
+			};
+			obtenerPropiedades();
+		}
+	}, [modal, esAdmin]);
 
 	const [form, setForm] = useState({
 		idPropiedad: '',
@@ -406,9 +428,33 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 			<div className="border bg-fondo border-borde rounded-xl overflow-hidden shadow-sm">
 				<div className="flex items-center justify-between p-4 border-b border-borde bg-tarjeta/50">
 					<BuscadorCasa valor={busqueda} alCambiar={setBusqueda} />
-					<BtnPrimario onClick={abrirCrear}>
-						<Plus className="w-4 h-4" /> Registrar Pago
-					</BtnPrimario>
+					<div className="flex gap-2">
+						{esAdmin && (
+							<button
+								onClick={async () => {
+									if (
+										window.confirm(
+											'¿Estás seguro de generar el cobro mensual para TODAS las propiedades activas?',
+										)
+									) {
+										try {
+											await propiedadesApi.generarCuotasMensuales();
+											toast.success('Cuotas mensuales generadas exitosamente');
+											cargarPagos();
+										} catch (e) {
+											toast.error('Error al generar las cuotas');
+										}
+									}
+								}}
+								className="flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase text-amber-400 bg-amber-400/10 hover:bg-amber-400/20 transition-colors border border-amber-400/20 rounded-lg"
+							>
+								<Clock className="w-4 h-4" /> Generar Cuotas
+							</button>
+						)}
+						<BtnPrimario onClick={abrirCrear}>
+							<Plus className="w-4 h-4" /> Registrar Pago
+						</BtnPrimario>
+					</div>
 				</div>
 
 				<table className="w-full">
@@ -463,14 +509,22 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 				<Modal titulo="Registrar Pago" alCerrar={() => setModal(null)}>
 					<form onSubmit={guardar} className="space-y-5">
 						{esAdmin && (
-							<Campo etiqueta="ID de Propiedad">
-								<Entrada
-									type="number"
-									placeholder="Ej: 5"
+							<Campo etiqueta="Seleccionar Propiedad">
+								<select
+									className="w-full bg-fondo border border-borde rounded-lg px-3 py-2 text-sm text-primario focus:border-emerald-500 outline-none"
 									value={form.idPropiedad}
 									onChange={(e) => setForm({ ...form, idPropiedad: e.target.value })}
 									required
-								/>
+								>
+									<option value="">
+										{cargandoPropiedades ? 'Cargando...' : 'Seleccione una propiedad'}
+									</option>
+									{propiedades.map((p) => (
+										<option key={p.ID_PROPIEDAD} value={p.ID_PROPIEDAD}>
+											Propiedad {p.NUMERO_PROPIEDAD}
+										</option>
+									))}
+								</select>
 							</Campo>
 						)}
 

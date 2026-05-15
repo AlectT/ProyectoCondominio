@@ -28,7 +28,6 @@ const useStore = create(
 			name: 'sesion-condominio', // clave en localStorage
 			partialize: (state) => ({ usuario: state.usuario, temaOscuro: state.temaOscuro }),
 
-			// 🔥 Y AQUÍ PARA CUANDO CARGA LA PÁGINA POR PRIMERA VEZ 🔥
 			onRehydrateStorage: () => (state) => {
 				if (state) {
 					if (state.temaOscuro) {
