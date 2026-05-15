@@ -419,7 +419,52 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 										<Celda mono>{index + 1}</Celda>
 										<Celda>{la.NUMERO_PROPIEDAD}</Celda>
 										<Celda>{la.DESCRIPCION}</Celda>
-										<Celda>{la.CANTIDAD}</Celda>
+										<Celda>
+											<div className="warning-level">
+												{[1, 2, 3].map((level) => (
+													<span
+														key={level}
+														className={`warning-dot ${la.CANTIDAD >= level ? 'active' : ''}`}
+													/>
+												))}
+											</div>
+
+											<style jsx>{`
+												.cantidad-cell {
+													text-align: left;
+												}
+
+												.warning-level {
+													display: flex;
+													justify-content: left;
+													align-items: center;
+													gap: 10px;
+												}
+
+												.warning-dot {
+													width: 13px;
+													height: 13px;
+													border-radius: 50%;
+
+													background: rgba(255, 255, 255, 0.84);
+
+													border: 1px solid rgba(255, 255, 255, 0.18);
+
+													transition: all 0.25s ease;
+												}
+
+												.warning-dot.active {
+													border: 1px solid #fff;
+													background: #ff3b3b;
+
+													border-color: #ff5a5a;
+
+													box-shadow:
+														0 0 8px rgba(255, 59, 59, 0.45),
+														0 0 18px rgba(255, 59, 59, 0.15);
+												}
+											`}</style>
+										</Celda>
 										<td className="px-4 py-3">
 											<div className="flex items-center gap-1">
 												<BtnAccion onClick={() => abrirVer(la)} Icono={Eye} titulo="Ver" />
