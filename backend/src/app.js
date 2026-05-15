@@ -14,7 +14,7 @@ import { enrutadorInvitaciones } from './routes/invitaciones.js';
 import { enrutadorPropiedades } from './routes/propiedades.js';
 import { enrutadorCategorias } from './routes/categoriasPropiedad.js';
 import { enrutadorVinculaciones } from './routes/usuariosPropiedades.js';
-
+import reportesRoutes from './routes/reportes.routes.js';
 import { enrutadorPagos } from './routes/pagos.js';
 import { enrutadorUsuarioPropiedad } from './routes/usuarioPropiedad.js';
 import { middlewareCors } from './middlewares/cors.js';
@@ -58,6 +58,7 @@ aplicacion.use('/invitaciones', enrutadorInvitaciones);
 aplicacion.use('/propiedades', enrutadorPropiedades);
 aplicacion.use('/categorias-propiedad', enrutadorCategorias);
 aplicacion.use('/vinculaciones', enrutadorVinculaciones);
+aplicacion.use('/api/reportes', reportesRoutes);
 
 // Iniciar servidor
 if (process.env.NODE_ENV !== 'test') {

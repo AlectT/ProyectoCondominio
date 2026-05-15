@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { Sidebar } from './Sidebar.jsx';
 import { Topbar } from './Topbar.jsx';
+// import { useNavigate } from 'react-router-dom';
 import { ModuloPendiente } from '../ModuloPendiente.jsx';
 import { GRUPOS } from '../../datos/datosDePrueba.js';
 import ModuloTiposCargo from '../../paginas/modulos/ModuloTiposCargo.jsx';
@@ -27,6 +28,8 @@ import ModuloInvitaciones from '../../paginas/modulos/ModuloInvitaciones.jsx';
 import PantallaBienvenida from '../../paginas/modulos/PantallaBienvenida.jsx';
 import LlamadasAtencionPagina from '../../paginas/LlamadasAtencionPagina.jsx';
 import UsuarioPropiedadPagina from '../../paginas/usuarioPropiedadPagina.jsx';
+import Reportes from '../../pages/Reportes.jsx';
+import DashboardLayout from '../../components/reports/DashboardLayout.jsx';
 
 const SUBTITULOS = {
 	'Gestión de Propiedades': 'Administración general de unidades y responsables',
@@ -42,12 +45,14 @@ const SUBTITULOS = {
 	'Inventario Parqueos': 'Inventario de parqueos disponibles',
 	'Llamados de Atención': 'Listado de llamadas de atención acumuladas',
 	'Propietarios e Inquilinos': 'Control de inquilinos y propietarios',
+	'Reportes Condominio': 'Análisis visual de datos financieros y de uso',
 };
 
 export default function LayoutPrincipal() {
 	const [moduloActivo, setModuloActivo] = useState(null);
 	const [busquedaGlobal, setBusquedaGlobal] = useState('');
 
+	// const navigate = useNavigate();
 	const VISTAS = {
 		'Gestión de Propiedades': <ModuloPropiedades filtroGlobal={busquedaGlobal} />,
 		'Categorías de Propiedad': <ModuloCategorias filtroGlobal={busquedaGlobal} />,
@@ -64,6 +69,7 @@ export default function LayoutPrincipal() {
 		'Inventario Parqueos': <ParqueosPagina filtroGlobal={busquedaGlobal} />,
 		'Llamados de Atención': <LlamadasAtencionPagina filtroGlobal={busquedaGlobal} />,
 		'Propietarios e Inquilinos': <UsuarioPropiedadPagina filtroGlobal={busquedaGlobal} />,
+		'Reportes Condominio': <Reportes />,
 	};
 
 	const infoModulo = GRUPOS.flatMap((g) => g.modulos).find((m) => m.id === moduloActivo);

@@ -100,6 +100,18 @@ export const GRUPOS = [
 			},
 		],
 	},
+	{
+		titulo: 'Reportería & Análisis',
+		IconoGrupo: ShieldCheck,
+		modulos: [
+			{
+				id: 'Reportes Condominio',
+				Icono: BookOpen,
+				propio: true,
+				roles: ['Administrador'],
+			},
+		],
+	},
 ];
 
 // ─── UTILIDADES ───────────────────────────────────────────────────────────
