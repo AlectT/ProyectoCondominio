@@ -56,8 +56,16 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 				setPersonal(filtrados);
 			})
 			.catch(() => setPersonal([]));
+
+		propiedadesApi
+			.obtenerTodas()
+			.then((res) => {
+				setPropiedades(res.data);
+			})
+			.catch(() => setPropiedades([]));
 	}, []);
 
+	// console.log(propiedades);
 	const [form, setForm] = useState({
 		idUsuario: '',
 		idPropiedad: '',
@@ -105,13 +113,18 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 		e.preventDefault();
 		setErrorModal('');
 		try {
+			const fecha = form.fechaFin;
+			const [anio, mes, dia] = fecha.split('-');
+			const fechaFormateada = `${dia}-${mes}-${anio}`;
 			const datosAEnviar = {
 				...form,
 				idUsuario: Number(form.idUsuario),
 				idPropiedad: Number(form.idPropiedad),
 				tipoVinculo: form.tipoVinculo,
-				fechaFin: form.fechaFin,
+				fechaFin: fechaFormateada,
 			};
+
+			console.log(datosAEnviar);
 
 			if (modal === 'crear') {
 				await crear(datosAEnviar);
