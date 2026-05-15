@@ -28,19 +28,6 @@ export default function EnrutadorPrincipal() {
 				<Route path="/parqueos" element={<ParqueosPagina />} />
 				<Route path="/llamadasAtencion" element={<LlamadasAtencionPagina />} />
 				<Route path="/usuarioPropiedad" element={<UsuarioPropiedadPagina />} />
-
-				<Route path="/dashboard" element={<DashboardLayout />}>
-					<Route path="reportes" element={<Reportes />} />
-
-					<Route path="reportes/pagos" element={<Reportes />} />
-
-					<Route path="reportes/moras" element={<Reportes />} />
-
-					<Route path="reportes/reservas" element={<Reportes />} />
-
-					<Route path="reportes/multas" element={<Reportes />} />
-				</Route>
-
 				<Route path="/garita/validar/:codigo" element={<GaritaPagina />} />
 
 				{/* Rutas protegidas */}
