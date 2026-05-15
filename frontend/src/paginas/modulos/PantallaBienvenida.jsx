@@ -620,7 +620,7 @@ export default function PantallaBienvenida({ setModuloActivo }) {
 					activas: d.filter((p) => p.ACTIVO === 1).length,
 				}));
 			})
-			.catch(() => {});
+			.catch(() => { });
 		invitacionesApi
 			.obtenerTodas()
 			.then((r) => {
@@ -631,7 +631,7 @@ export default function PantallaBienvenida({ setModuloActivo }) {
 					qrActivos: d.filter((i) => i.ACTIVO === 1).length,
 				}));
 			})
-			.catch(() => {});
+			.catch(() => { });
 	}, []);
 
 	const CARDS = [
@@ -809,20 +809,20 @@ export default function PantallaBienvenida({ setModuloActivo }) {
 					{(usuario?.ROL === 'Administrador' ||
 						usuario?.ROL === 'Guardia' ||
 						usuario?.ROL === 'Residente') && (
-						<button
-							onClick={() => setModuloActivo?.('Pases de Visita (QR)')}
-							className="flex-1 p-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/8 hover:bg-emerald-500/15 hover:border-emerald-400/40 transition-all duration-200 group flex flex-col items-center justify-center gap-2 relative overflow-hidden"
-						>
-							<div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
-							<div className="w-11 h-11 rounded-xl bg-emerald-500/15 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-								<QrCode className="w-5 h-5 text-emerald-400" />
-							</div>
-							<div className="text-center">
-								<p className="text-xs font-bold text-emerald-400">Generar Pase</p>
-								<p className="text-[10px] text-secundario">Acceso QR</p>
-							</div>
-						</button>
-					)}
+							<button
+								onClick={() => setModuloActivo?.('Pases de Visita (QR)')}
+								className="flex-1 p-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/8 hover:bg-emerald-500/15 hover:border-emerald-400/40 transition-all duration-200 group flex flex-col items-center justify-center gap-2 relative overflow-hidden"
+							>
+								<div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+								<div className="w-11 h-11 rounded-xl bg-emerald-500/15 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+									<QrCode className="w-5 h-5 text-emerald-400" />
+								</div>
+								<div className="text-center">
+									<p className="text-xs font-bold text-emerald-400">Generar Pase</p>
+									<p className="text-[10px] text-secundario">Acceso QR</p>
+								</div>
+							</button>
+						)}
 
 					{usuario?.ROL === 'Administrador' && (
 						<button
@@ -879,26 +879,6 @@ export default function PantallaBienvenida({ setModuloActivo }) {
 				<p className="text-xs text-secundario flex-1">
 					Selecciona un módulo en el menú lateral para gestionar el condominio.
 				</p>
-				<div className="flex items-center gap-4 text-[10px] font-mono text-secundario flex-shrink-0">
-					<span className="flex items-center gap-1.5">
-						<span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-						Oracle DB
-					</span>
-					<span className="flex items-center gap-1.5">
-						<span
-							className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"
-							style={{ animationDelay: '0.5s' }}
-						/>
-						Backend API
-					</span>
-					<span className="flex items-center gap-1.5">
-						<span
-							className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse"
-							style={{ animationDelay: '1s' }}
-						/>
-						Frontend
-					</span>
-				</div>
 			</div>
 
 			<style>{`

@@ -495,7 +495,7 @@ export default function LoginPagina() {
 							color: o ? 'rgba(255,255,255,0.9)' : '#1e1b4b',
 						}}
 					>
-						Condominio <span style={{ color: '#10b981' }}>PRUEBA</span>
+						Condominio <span style={{ color: '#10b981' }}>PuraFe</span>
 					</span>
 				</div>
 
@@ -708,15 +708,6 @@ export default function LoginPagina() {
 							animation: 'pulsarPunto 2s infinite',
 						}}
 					/>
-					<span
-						style={{
-							fontSize: '11px',
-							fontWeight: 500,
-							color: o ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)',
-						}}
-					>
-						esta es una demo de un sistema de gestión de condominios.
-					</span>
 				</div>
 			</div>
 
