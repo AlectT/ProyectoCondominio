@@ -365,6 +365,7 @@ BEGIN
             'RN-F4: Solo usuarios vinculados a la propiedad pueden registrar pagos.');
     END IF;
 END;
+/
 
 -- Trigger: valida que el pago incluya TODOS los cargos pendientes ANTES de insertar (RN-F7)
 -- Se ejecuta BEFORE para evitar el bug de leer cargos ya marcados como PAGADO
@@ -773,7 +774,22 @@ BEGIN
 END;
 /
 
+-- ... (vienen los triggers anteriores)
 
+CREATE OR REPLACE PROCEDURE prc_generar_cuotas_mensuales IS
+    v_id_tipo_cuota NUMBER;
+BEGIN
+    SELECT id_tipo_cargo INTO v_id_tipo_cuota FROM TIPO_CARGO WHERE LOWER(nombre) = 'cuota condominio';
+    FOR rec IN (
+        SELECT p.id_propiedad, cp.cuota_mensual FROM PROPIEDAD p
+        JOIN CATEGORIA_PROPIEDAD cp ON p.id_categoria = cp.id_categoria WHERE p.activo = 1
+    ) LOOP
+        INSERT INTO CARGO (id_propiedad, id_tipo_cargo, monto, descripcion, estado)
+        VALUES (rec.id_propiedad, v_id_tipo_cuota, rec.cuota_mensual, 'Cuota mensual de condominio (Manual)', 'PENDIENTE');
+    END LOOP;
+    COMMIT;
+END;
+/
 
 -- =============================================================================
 -- DATOS SEMILLA
@@ -853,6 +869,3 @@ COMMIT;
 -- =============================================================================
 -- FIN DEL ESQUEMA v3.0
 -- =============================================================================
-
-
-

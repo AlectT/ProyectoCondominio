@@ -17,3 +17,6 @@ enrutadorPropiedades.post('/', propiedadesController.crear);
 enrutadorPropiedades.patch('/:id', propiedadesController.actualizar);
 
 enrutadorPropiedades.delete('/:id', propiedadesController.eliminar);
+
+// POST: Generar cuotas mensuales (Procedimiento almacenado)
+enrutadorPropiedades.post('/generar-cuotas', propiedadesController.generarCuotasMensuales);

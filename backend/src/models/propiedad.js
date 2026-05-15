@@ -124,4 +124,16 @@ export class PropiedadModel {
 			await conexion.close();
 		}
 	}
+	static async generarCuotasMensuales() {
+		const conexion = await conectar();
+		try {
+			await conexion.execute('BEGIN prc_generar_cuotas_mensuales; END;');
+			return true;
+		} catch (error) {
+			console.error('Error al ejecutar el procedimiento de cuotas:', error);
+			throw error;
+		} finally {
+			await conexion.close();
+		}
+	}
 }

@@ -85,4 +85,16 @@ export const propiedadesController = {
 				.json({ mensaje: 'Error interno al intentar eliminar en la base de datos.' });
 		}
 	},
+	generarCuotasMensuales: async (req, res) => {
+		try {
+			console.log(`[Backend] -> Ejecutando generación manual de cuotas mensuales...`);
+			await PropiedadModel.generarCuotasMensuales(); // Solucionado: Ahora usa el modelo correcto
+			console.log(`[Backend] -> Éxito: Cuotas mensuales generadas en Oracle.`);
+
+			res.json({ mensaje: 'Cuotas mensuales generadas correctamente.' });
+		} catch (error) {
+			console.error('[Backend] -> Error al generar cuotas:', error);
+			res.status(500).json({ mensaje: 'Error interno al generar las cuotas mensuales.' });
+		}
+	},
 };
