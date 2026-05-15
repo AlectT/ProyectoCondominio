@@ -28,6 +28,7 @@ import useStore from '../estado/useStore.js';
 import { toast } from 'sonner';
 
 const ESTADOS = ['ABIERTO', 'EN_PROGRESO', 'RESUELTO', 'CERRADO', 'CANCELADO'];
+const PRIORIDADES = { 1: 'Baja', 2: 'Media', 3: 'Alta', 4: 'Urgente' };
 
 const limpiar = (str) => str?.toString().toLowerCase().replace(/\s/g, '') ?? '';
 
@@ -165,6 +166,11 @@ export default function TicketsPagina({ filtroGlobal = '' }) {
 			toast.error(msj);
 		}
 		setAEliminar(null);
+	};
+
+	const obtenerNombreAsignado = (id) => {
+		const usuarioAsignado = personal.find((u) => u.ID_USUARIO === id);
+		return usuarioAsignado ? `${usuarioAsignado.NOMBRE} ${usuarioAsignado.APELLIDO}` : id;
 	};
 
 	if (cargando)
@@ -442,11 +448,13 @@ export default function TicketsPagina({ filtroGlobal = '' }) {
 							>
 								<Celda mono>{t.ID_TICKET}</Celda>
 								<Celda>{t.TITULO}</Celda>
-								<Celda>{t.NOMBRE_ASIGNADO ?? t.ID_ASIGNADO_A}</Celda>
+								<Celda>{t.NOMBRE_ASIGNADO ?? obtenerNombreAsignado(t.ID_ASIGNADO_A)}</Celda>
 								<Celda>
 									<Etiqueta texto={t.ESTADO} />
 								</Celda>
-								<Celda>{t.ID_PRIORIDAD}</Celda>
+								<Celda>
+									<Etiqueta texto={PRIORIDADES[t.ID_PRIORIDAD] || t.ID_PRIORIDAD} />
+								</Celda>
 								<Celda>{t.FECHA_LIMITE ? formatearFecha(t.FECHA_LIMITE) : '—'}</Celda>
 								<td className="px-4 py-3">
 									<div className="flex items-center gap-1">
@@ -572,8 +580,11 @@ export default function TicketsPagina({ filtroGlobal = '' }) {
 							['Título', seleccion.TITULO],
 							['Descripción', seleccion.DESCRIPCION],
 							['Estado', seleccion.ESTADO],
-							['Prioridad', seleccion.ID_PRIORIDAD],
-							['Asignado a', seleccion.NOMBRE_ASIGNADO ?? seleccion.ID_ASIGNADO_A],
+							['Prioridad', PRIORIDADES[seleccion.ID_PRIORIDAD] || seleccion.ID_PRIORIDAD],
+							[
+								'Asignado a',
+								seleccion.NOMBRE_ASIGNADO ?? obtenerNombreAsignado(seleccion.ID_ASIGNADO_A),
+							],
 							['Fecha límite', seleccion.FECHA_LIMITE ? formatearFecha(seleccion.FECHA_LIMITE) : '—'],
 							['Notas cierre', seleccion.NOTAS_CIERRE ?? '—'],
 						].map(([lbl, val]) => (
