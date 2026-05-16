@@ -50,7 +50,7 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 		usuariosApi
 			.obtenerTodos()
 			.then((res) => {
-				const filtrados = res.data.filter((u) => u.ROL !== 'Residente' && u.ACTIVO === 1);
+				const filtrados = res.data.filter((u) => u.ROL === 'Residente' && u.ACTIVO === 1);
 				setPersonal(filtrados);
 			})
 			.catch(() => setPersonal([]));
