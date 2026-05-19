@@ -1,4 +1,4 @@
-import { Save } from 'lucide-react'
+import { Save, X } from 'lucide-react'
 
 export function BtnPrimario({ children, onClick }) {
   return (
@@ -33,16 +33,16 @@ export function BotonesModal({ alCancelar, alGuardar, textoGuardar = 'Guardar', 
       <button
         type="button"
         onClick={alCancelar}
-        className="flex-1 px-4 py-2 text-sm border rounded-lg border-borde text-secundario hover:text-primario transition-colors"
+        className="flex-1 px-4 py-2 text-sm border rounded-lg border-borde text-secundario hover:text-primario transition-colors flex items-center justify-center gap-2"
       >
-        Cancelar
+        <X className="w-4 h-4" /> Cancelar
       </button>
       <button
         type="submit"
         onClick={alGuardar}
         className="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-primario text-fondo hover:bg-white/90 transition-colors flex items-center justify-center gap-2"
       >
-        <IconoGuardar className="w-3.5 h-3.5" /> {textoGuardar}
+        <IconoGuardar className="w-4 h-4" /> {textoGuardar}
       </button>
     </div>
   )

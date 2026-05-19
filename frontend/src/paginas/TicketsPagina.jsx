@@ -6,7 +6,6 @@ import {
 	Plus,
 	Eye,
 	Pencil,
-	Trash2,
 	Ticket,
 	Clock,
 	CheckCircle,
@@ -24,11 +23,12 @@ import { Modal, ModalConfirmacion } from '../componentes/ui/Modales.jsx';
 import { Campo, Entrada, Selector } from '../componentes/ui/Formularios.jsx';
 import { formatearFecha } from '../utilidades/formatearFecha.js';
 import { extraerError } from '../utilidades/extraerError.js';
+import { validarTextoConSentido } from '../utilidades/validarTexto.js';
 import useStore from '../estado/useStore.js';
 import { toast } from 'sonner';
 
 const ESTADOS = ['ABIERTO', 'EN_PROGRESO', 'RESUELTO', 'CERRADO', 'CANCELADO'];
-const PRIORIDADES = { 1: 'Baja', 2: 'Media', 3: 'Alta', 4: 'Urgente' };
+const PRIORIDADES = { 1: 'BAJA', 2: 'MEDIA', 3: 'ALTA', 4: 'URGENTE' };
 
 const limpiar = (str) => str?.toString().toLowerCase().replace(/\s/g, '') ?? '';
 
@@ -36,13 +36,12 @@ export default function TicketsPagina({ filtroGlobal = '' }) {
 	const usuario = useStore((s) => s.usuario);
 	const esAdmin = usuario?.ROL === 'Administrador';
 
-	const { tickets, cargando, error, crear, actualizar, eliminar } = useTickets();
+	const { tickets, cargando, error, crear, actualizar } = useTickets();
 
 	const [busqueda, setBusqueda] = useState('');
 	const [modal, setModal] = useState(null);
 	const [filaActiva, setFilaActiva] = useState(null);
 	const [seleccion, setSeleccion] = useState(null);
-	const [aEliminar, setAEliminar] = useState(null);
 	const [historial, setHistorial] = useState([]);
 	const [errorModal, setErrorModal] = useState('');
 	const [personal, setPersonal] = useState([]);
@@ -128,6 +127,31 @@ export default function TicketsPagina({ filtroGlobal = '' }) {
 	const guardar = async (e) => {
 		e.preventDefault();
 		setErrorModal('');
+
+		if (!validarTextoConSentido(form.titulo)) {
+			setErrorModal('El título debe tener al menos 5 caracteres y contener texto con sentido.');
+			return;
+		}
+
+		if (!validarTextoConSentido(form.descripcion) || form.descripcion.trim().length < 10) {
+			setErrorModal('La descripción debe tener al menos 10 caracteres y contener texto coherente.');
+			return;
+		}
+
+		if (!form.fechaLimite) {
+			setErrorModal('Debe seleccionar una fecha límite obligatoria.');
+			return;
+		}
+
+		const hoy = new Date();
+		hoy.setHours(0, 0, 0, 0);
+		const fechaSeleccionada = new Date(`${form.fechaLimite}T00:00:00`);
+		
+		if (fechaSeleccionada < hoy) {
+			setErrorModal('La fecha límite no puede ser anterior a la fecha actual.');
+			return;
+		}
+
 		try {
 			let fechaLimiteFormateada = null;
 			if (form.fechaLimite) {
@@ -154,18 +178,6 @@ export default function TicketsPagina({ filtroGlobal = '' }) {
 			setErrorModal(msj);
 			toast.error(msj);
 		}
-	};
-
-	const confirmarEliminar = async () => {
-		try {
-			await eliminar(aEliminar.ID_TICKET);
-			toast.success('Ticket eliminado exitosamente');
-		} catch (err) {
-			const msj = extraerError(err) || 'Error al eliminar el ticket';
-			console.error('Error al eliminar el ticket:', msj);
-			toast.error(msj);
-		}
-		setAEliminar(null);
 	};
 
 	const obtenerNombreAsignado = (id) => {
@@ -463,12 +475,6 @@ export default function TicketsPagina({ filtroGlobal = '' }) {
 										{esAdmin && (
 											<>
 												<BtnAccion onClick={() => abrirEditar(t)} Icono={Pencil} titulo="Editar" />
-												<BtnAccion
-													onClick={() => setAEliminar(t)}
-													Icono={Trash2}
-													titulo="Eliminar"
-													colorHover="hover:text-red-400"
-												/>
 											</>
 										)}
 									</div>
@@ -532,11 +538,14 @@ export default function TicketsPagina({ filtroGlobal = '' }) {
 							/>
 						</Campo>
 						<div className="grid grid-cols-2 gap-4">
-							<Campo etiqueta="Fecha límite (opcional)">
+							<Campo etiqueta="Fecha límite">
 								<Entrada
 									type="date"
+									required
+									min={new Date().toISOString().split('T')[0]}
 									value={form.fechaLimite}
 									onChange={(e) => setForm({ ...form, fechaLimite: e.target.value })}
+									style={{ colorScheme: 'dark' }}
 								/>
 							</Campo>
 							{modal === 'editar' && (
@@ -625,15 +634,6 @@ export default function TicketsPagina({ filtroGlobal = '' }) {
 						</div>
 					)}
 				</Modal>
-			)}
-
-			{aEliminar && (
-				<ModalConfirmacion
-					titulo="¿Eliminar ticket?"
-					mensaje={`Se eliminará el ticket "${aEliminar.TITULO}" de forma permanente.`}
-					onConfirmar={confirmarEliminar}
-					onCancelar={() => setAEliminar(null)}
-				/>
 			)}
 		</div>
 	);

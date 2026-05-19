@@ -56,6 +56,14 @@ export function useReservas() {
 		return res.data;
 	};
 
+	const actualizarPrecioArea = async (idArea, nuevoPrecio) => {
+		const res = await reservasApi.actualizarPrecioArea(idArea, nuevoPrecio);
+		setAreas((prev) =>
+			prev.map((a) => (a.ID_AREA === idArea ? { ...a, PRECIO_POR_HORA: nuevoPrecio } : a))
+		);
+		return res.data;
+	};
+
 	return {
 		reservas,
 		areas,
@@ -66,5 +74,6 @@ export function useReservas() {
 		cargarAreas,
 		crear,
 		cancelar,
+		actualizarPrecioArea,
 	};
 }

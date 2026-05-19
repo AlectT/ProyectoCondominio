@@ -40,3 +40,9 @@ enrutadorUsuarios.patch(
 	verificarRol('Administrador'),
 	UsuarioController.desactivar,
 );
+enrutadorUsuarios.patch(
+	'/:id/activar',
+	autenticacion,
+	verificarRol('Administrador'),
+	UsuarioController.activar,
+);

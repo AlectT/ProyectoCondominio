@@ -88,6 +88,16 @@ export class UsuarioController {
 		return res.json(usuarioSinContrasena);
 	}
 
+	static async activar(req, res) {
+		const { id } = req.params;
+		const usuario = await UsuarioModel.obtenerPorId({ id });
+		if (!usuario) return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
+
+		const usuarioActualizado = await UsuarioModel.actualizar({ id, datos: { activo: 1 } });
+		const { CONTRASENA_HASH, ...usuarioSinContrasena } = usuarioActualizado;
+		return res.json(usuarioSinContrasena);
+	}
+
 	static async login(req, res) {
 		const resultado = validarLogin(req.body);
 		if (!resultado.success) {

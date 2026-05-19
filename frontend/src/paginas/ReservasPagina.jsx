@@ -1,6 +1,3 @@
-// ============================================================
-// 📁 RUTA: frontend/src/paginas/ReservasPagina.jsx
-// ============================================================
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
 	Plus,
@@ -18,6 +15,10 @@ import {
 	CalendarDays,
 	Users,
 	Banknote,
+	Edit,
+	Save,
+	ArrowRight,
+	ArrowLeft,
 } from 'lucide-react';
 import { useReservas } from '../hooks/useReservas.js';
 import { reservasApi } from '../api/reservasApi.js';
@@ -28,6 +29,7 @@ import { Modal, ModalConfirmacion } from '../componentes/ui/Modales.jsx';
 import { Campo, Entrada } from '../componentes/ui/Formularios.jsx';
 import { formatearFecha } from '../utilidades/formatearFecha.js';
 import { extraerError } from '../utilidades/extraerError.js';
+import { generarNumeroBoleta } from '../utilidades/generarBoleta.js';
 import useStore from '../estado/useStore.js';
 import { toast } from 'sonner';
 
@@ -131,7 +133,7 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 	const usuario = useStore((s) => s.usuario);
 	const esAdmin = usuario?.ROL === 'Administrador';
 
-	const { reservas, areas, cargando, error, cargarReservas, crear, cancelar } = useReservas();
+	const { reservas, areas, cargando, error, cargarReservas, crear, cancelar, actualizarPrecioArea } = useReservas();
 
 	const [vistaCalendario, setVistaCalendario] = useState(true);
 	const [modoCalendario, setModoCalendario] = useState('semana');
@@ -142,13 +144,17 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 	const [historial, setHistorial] = useState([]);
 	const [filaActiva, setFilaActiva] = useState(null);
 
+	const [areaEditar, setAreaEditar] = useState(null);
+	const [nuevoPrecio, setNuevoPrecio] = useState('');
+	const [guardandoPrecio, setGuardandoPrecio] = useState(false);
+
 	const [paso, setPaso] = useState(1);
 	const [areaElegida, setAreaElegida] = useState(null);
 	const [wizForm, setWizForm] = useState({
 		fechaReserva: '',
 		horaInicio: '',
 		horaFin: '',
-		numeroBoleta: '',
+		numeroBoleta: generarNumeroBoleta(),
 	});
 	const [disponible, setDisponible] = useState(null);
 	const [costo, setCosto] = useState(null);
@@ -212,7 +218,12 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 	const abrirWizard = () => {
 		setPaso(1);
 		setAreaElegida(null);
-		setWizForm({ fechaReserva: '', horaInicio: '', horaFin: '', numeroBoleta: '' });
+		setWizForm({
+			fechaReserva: '',
+			horaInicio: '',
+			horaFin: '',
+			numeroBoleta: generarNumeroBoleta(),
+		});
 		setDisponible(null);
 		setCosto(null);
 		setErrorWiz('');
@@ -260,6 +271,33 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 		} catch (err) {
 			setErrorCancelar(extraerError(err));
 			toast.error('Error al cancelar la reserva');
+		}
+	};
+
+	const abrirEditarPrecio = (area) => {
+		setAreaEditar(area);
+		setNuevoPrecio(area.PRECIO_POR_HORA.toString());
+		setModal('editarPrecio');
+	};
+
+	const guardarPrecio = async () => {
+		if (!nuevoPrecio || isNaN(nuevoPrecio) || Number(nuevoPrecio) < 0) {
+			toast.error('Precio inválido. Debe ser un número positivo.');
+			return;
+		}
+		if (!Number.isInteger(Number(nuevoPrecio))) {
+			toast.error('El precio debe ser un número entero. No se permiten decimales.');
+			return;
+		}
+		setGuardandoPrecio(true);
+		try {
+			await actualizarPrecioArea(areaEditar.ID_AREA, Number(nuevoPrecio));
+			toast.success('Precio actualizado');
+			setModal(null);
+		} catch (err) {
+			toast.error(extraerError(err) || 'Error al actualizar precio');
+		} finally {
+			setGuardandoPrecio(false);
 		}
 	};
 
@@ -566,6 +604,15 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 								<span className={`w-2 h-2 rounded-full ${color.dot}`} />
 								{area.NOMBRE}
 								<span className="opacity-60">· {formatQ(area.PRECIO_POR_HORA)}/hr</span>
+								{esAdmin && (
+									<button
+										onClick={() => abrirEditarPrecio(area)}
+										className="ml-1 p-1 hover:bg-black/20 rounded-md transition-colors"
+										title="Editar precio"
+									>
+										<Edit className="w-3 h-3" />
+									</button>
+								)}
 							</div>
 						);
 					})}
@@ -599,9 +646,9 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 						</h2>
 						<button
 							onClick={irHoy}
-							className="ml-2 px-2.5 py-1 text-[11px] font-bold rounded-lg border border-borde text-zinc-400 hover:text-primario hover:border-zinc-600 transition-colors"
+							className="ml-2 px-2.5 py-1 text-[11px] font-bold rounded-lg border border-borde text-zinc-400 hover:text-primario hover:border-zinc-600 transition-colors flex items-center gap-1.5"
 						>
-							Hoy
+							<CalendarDays className="w-3.5 h-3.5" /> Hoy
 						</button>
 					</div>
 
@@ -946,9 +993,9 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 											setErrorWiz('');
 										} else setErrorWiz('Selecciona un área para continuar.');
 									}}
-									className="px-4 py-2 text-sm font-bold rounded-lg bg-primario text-fondo hover:bg-white/90 transition-colors disabled:opacity-50"
+									className="px-4 py-2 text-sm font-bold rounded-lg bg-primario text-fondo hover:bg-white/90 transition-colors disabled:opacity-50 flex items-center gap-2"
 								>
-									Siguiente →
+									Siguiente <ArrowRight className="w-4 h-4" />
 								</button>
 							</div>
 							{errorWiz && (
@@ -1051,9 +1098,9 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 							<div className="flex gap-2 pt-1">
 								<button
 									onClick={() => setPaso(1)}
-									className="flex-1 px-4 py-2 text-sm border rounded-lg border-borde text-secundario hover:text-primario transition-colors"
+									className="flex-1 px-4 py-2 text-sm border rounded-lg border-borde text-secundario hover:text-primario transition-colors flex items-center justify-center gap-2"
 								>
-									← Atrás
+									<ArrowLeft className="w-4 h-4" /> Atrás
 								</button>
 								<button
 									onClick={() => {
@@ -1076,9 +1123,9 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 										setPaso(3);
 										setErrorWiz('');
 									}}
-									className="flex-1 px-4 py-2 text-sm font-bold rounded-lg bg-primario text-fondo hover:bg-white/90 transition-colors"
+									className="flex-1 px-4 py-2 text-sm font-bold rounded-lg bg-primario text-fondo hover:bg-white/90 transition-colors flex items-center justify-center gap-2"
 								>
-									Siguiente →
+									Siguiente <ArrowRight className="w-4 h-4" />
 								</button>
 							</div>
 							{errorWiz && (
@@ -1129,13 +1176,13 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 									<Campo etiqueta="Número de Boleta de Pago">
 										<Entrada
 											required
-											placeholder="Ej: BOL-2026-001"
+											disabled
 											value={wizForm.numeroBoleta}
 											onChange={(e) => setWizForm({ ...wizForm, numeroBoleta: e.target.value })}
 										/>
 									</Campo>
 									<p className="text-[11px] text-zinc-600 -mt-2">
-										Ingresa el número de la boleta con la que realizaste el pago en banco.
+										Este número de boleta se ha generado automáticamente.
 									</p>
 
 									{errorWiz && (
@@ -1148,9 +1195,9 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 									<div className="flex gap-2 pt-1">
 										<button
 											onClick={() => setPaso(2)}
-											className="flex-1 px-4 py-2 text-sm border rounded-lg border-borde text-secundario hover:text-primario transition-colors"
+											className="flex-1 px-4 py-2 text-sm border rounded-lg border-borde text-secundario hover:text-primario transition-colors flex items-center justify-center gap-2"
 										>
-											← Atrás
+											<ArrowLeft className="w-4 h-4" /> Atrás
 										</button>
 										<button
 											onClick={() => {
@@ -1201,9 +1248,9 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 									setModal(null);
 									setTimeout(() => abrirCancelar(seleccion), 50);
 								}}
-								className="flex-1 px-4 py-2 text-sm font-bold rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors"
+								className="flex-1 px-4 py-2 text-sm font-bold rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2"
 							>
-								Cancelar reserva
+								<XCircle className="w-4 h-4" /> Cancelar reserva
 							</button>
 						</div>
 					)}
@@ -1218,12 +1265,25 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 							del <strong>{formatearFecha(seleccion.FECHA_RESERVA)}</strong>.
 						</div>
 						<Campo etiqueta="Motivo de cancelación">
-							<Entrada
+							<select
 								required
-								placeholder="Ej: Mantenimiento programado del área"
 								value={motivoCancelar}
 								onChange={(e) => setMotivoCancelar(e.target.value)}
-							/>
+								className="w-full px-3 py-2 text-sm border rounded-lg bg-fondo border-borde text-primario focus:outline-none focus:border-zinc-500 transition-colors"
+							>
+								<option value="">Selecciona un motivo...</option>
+								<option value="Mantenimiento programado del área">
+									Mantenimiento programado del área
+								</option>
+								<option value="Condiciones climáticas adversas">
+									Condiciones climáticas adversas
+								</option>
+								<option value="Solicitud del residente">Solicitud del residente</option>
+								<option value="Incumplimiento de normas">Incumplimiento de normas</option>
+								<option value="Problemas técnicos o de servicios">
+									Problemas técnicos o de servicios
+								</option>
+							</select>
 						</Campo>
 						{errorCancelar && (
 							<p className="text-red-400 text-xs flex items-center gap-1">
@@ -1266,6 +1326,33 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 							))}
 						</div>
 					)}
+				</Modal>
+			)}
+
+			{modal === 'editarPrecio' && areaEditar && (
+				<Modal titulo="Editar precio de área" alCerrar={() => setModal(null)}>
+					<div className="space-y-4">
+						<div className="p-3 rounded-lg bg-primario/5 border border-borde text-sm">
+							Actualizar precio por hora para el área <strong>{areaEditar.NOMBRE}</strong>.
+						</div>
+						<Campo etiqueta="Precio por hora (Q)">
+							<Entrada
+								type="number"
+								min="0"
+								step="1"
+								required
+								value={nuevoPrecio}
+								onChange={(e) => setNuevoPrecio(e.target.value)}
+							/>
+						</Campo>
+						<BotonesModal
+							alCancelar={() => setModal(null)}
+							alGuardar={guardarPrecio}
+							textoGuardar={guardandoPrecio ? "Guardando..." : "Guardar precio"}
+							IconoGuardar={Save}
+							deshabilitado={guardandoPrecio}
+						/>
+					</div>
 				</Modal>
 			)}
 		</div>

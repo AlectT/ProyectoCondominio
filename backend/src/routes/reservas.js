@@ -69,3 +69,11 @@ enrutadorReservas.get(
 	verificarRol('Administrador'),
 	ReservaController.obtenerHistorialCancelaciones,
 );
+
+// Actualizar precio de área (solo Admin)
+enrutadorReservas.put(
+	'/areas/:idArea/precio',
+	autenticacion,
+	verificarRol('Administrador'),
+	ReservaController.actualizarPrecioArea,
+);

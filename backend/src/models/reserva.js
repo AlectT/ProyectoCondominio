@@ -387,4 +387,21 @@ export class ReservaModel {
 			await conexion.close();
 		}
 	}
+
+	static async actualizarPrecioArea({ idArea, nuevoPrecio }) {
+		const conexion = await conectar();
+		try {
+			await conexion.execute(
+				`UPDATE AREA_SOCIAL SET PRECIO_POR_HORA = :nuevoPrecio WHERE ID_AREA = :idArea`,
+				{ nuevoPrecio, idArea }
+			);
+			await conexion.commit();
+			return { idArea, nuevoPrecio };
+		} catch (error) {
+			await conexion.rollback();
+			throw error;
+		} finally {
+			await conexion.close();
+		}
+	}
 }

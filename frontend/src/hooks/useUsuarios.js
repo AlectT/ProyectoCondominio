@@ -39,5 +39,11 @@ export function useUsuarios() {
     return res.data
   }
 
-  return { usuarios, cargando, error, cargar, crear, actualizar, desactivar }
+  const activar = async (id) => {
+    const res = await usuariosApi.activar(id)
+    setUsuarios((prev) => prev.map((u) => (u.ID_USUARIO === id ? res.data : u)))
+    return res.data
+  }
+
+  return { usuarios, cargando, error, cargar, crear, actualizar, desactivar, activar }
 }

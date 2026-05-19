@@ -124,13 +124,69 @@ export class PropiedadModel {
 			await conexion.close();
 		}
 	}
-	static async generarCuotasMensuales() {
+	static async generarCuotasMensuales({ propiedades = 'ALL', incluirMora = false, montoMora = 0, fechaEmision = null } = {}) {
 		const conexion = await conectar();
 		try {
-			await conexion.execute('BEGIN prc_generar_cuotas_mensuales; END;');
+			// Find id_tipo_cargo for "Cuota condominio"
+			const resultCuota = await conexion.execute(`SELECT ID_TIPO_CARGO FROM TIPO_CARGO WHERE LOWER(NOMBRE) = 'cuota condominio'`, {}, { outFormat: oracledb.OUT_FORMAT_OBJECT });
+			if (resultCuota.rows.length === 0) throw new Error('Tipo de cargo "Cuota condominio" no encontrado');
+			const idTipoCuota = resultCuota.rows[0].ID_TIPO_CARGO;
+
+			let idTipoMora = null;
+			if (incluirMora) {
+				const resultMora = await conexion.execute(`SELECT ID_TIPO_CARGO FROM TIPO_CARGO WHERE LOWER(NOMBRE) = 'mora'`, {}, { outFormat: oracledb.OUT_FORMAT_OBJECT });
+				if (resultMora.rows.length === 0) throw new Error('Tipo de cargo "Mora" no encontrado');
+				idTipoMora = resultMora.rows[0].ID_TIPO_CARGO;
+			}
+
+			let queryProps = `SELECT p.ID_PROPIEDAD, cp.CUOTA_MENSUAL 
+                              FROM PROPIEDAD p
+                              JOIN CATEGORIA_PROPIEDAD cp ON p.ID_CATEGORIA = cp.ID_CATEGORIA 
+                              WHERE p.ACTIVO = 1`;
+			const bindParams = {};
+
+			if (propiedades !== 'ALL' && Array.isArray(propiedades) && propiedades.length > 0) {
+				const binds = propiedades.map((_, i) => `:prop${i}`).join(',');
+				queryProps += ` AND p.ID_PROPIEDAD IN (${binds})`;
+				propiedades.forEach((p, i) => { bindParams[`prop${i}`] = Number(p); });
+			}
+
+			const resultProps = await conexion.execute(queryProps, bindParams, { outFormat: oracledb.OUT_FORMAT_OBJECT });
+			
+			// Formato seguro para la fecha
+			const fechaVal = fechaEmision && /^\d{4}-\d{2}-\d{2}$/.test(fechaEmision) 
+				? `TO_DATE('${fechaEmision}', 'YYYY-MM-DD')` 
+				: 'SYSDATE';
+
+			for (let prop of resultProps.rows) {
+				await conexion.execute(`
+					INSERT INTO CARGO (ID_PROPIEDAD, ID_TIPO_CARGO, MONTO, DESCRIPCION, ESTADO, FECHA_EMISION)
+					VALUES (:idPropiedad, :idTipoCargo, :monto, :descripcion, 'PENDIENTE', ${fechaVal})
+				`, {
+					idPropiedad: prop.ID_PROPIEDAD,
+					idTipoCargo: idTipoCuota,
+					monto: prop.CUOTA_MENSUAL,
+					descripcion: 'Cuota mensual de condominio'
+				});
+
+				if (incluirMora && montoMora > 0) {
+					await conexion.execute(`
+						INSERT INTO CARGO (ID_PROPIEDAD, ID_TIPO_CARGO, MONTO, DESCRIPCION, ESTADO, FECHA_EMISION)
+						VALUES (:idPropiedad, :idTipoCargo, :monto, :descripcion, 'PENDIENTE', ${fechaVal})
+					`, {
+						idPropiedad: prop.ID_PROPIEDAD,
+						idTipoCargo: idTipoMora,
+						monto: Number(montoMora),
+						descripcion: 'Mora por retraso en pago'
+					});
+				}
+			}
+
+			await conexion.commit();
 			return true;
 		} catch (error) {
-			console.error('Error al ejecutar el procedimiento de cuotas:', error);
+			console.error('Error al ejecutar el generador de cuotas avanzado:', error);
+			try { await conexion.rollback(); } catch(e) {}
 			throw error;
 		} finally {
 			await conexion.close();

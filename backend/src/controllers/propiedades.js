@@ -88,7 +88,7 @@ export const propiedadesController = {
 	generarCuotasMensuales: async (req, res) => {
 		try {
 			console.log(`[Backend] -> Ejecutando generación manual de cuotas mensuales...`);
-			await PropiedadModel.generarCuotasMensuales(); // Solucionado: Ahora usa el modelo correcto
+			await PropiedadModel.generarCuotasMensuales(req.body); 
 			console.log(`[Backend] -> Éxito: Cuotas mensuales generadas en Oracle.`);
 
 			res.json({ mensaje: 'Cuotas mensuales generadas correctamente.' });

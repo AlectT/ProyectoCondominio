@@ -11,6 +11,7 @@ import { BtnPrimario, BtnAccion, BotonesModal } from '../../componentes/ui/Boton
 import { CabeceraTabla, Fila, Celda, PieTabla } from '../../componentes/ui/Tablas.jsx';
 import { Modal } from '../../componentes/ui/Modales.jsx';
 import { Campo, Entrada, Selector } from '../../componentes/ui/Formularios.jsx';
+import { validarTextoConSentido, validarMontoEntero } from '../../utilidades/validarTexto.js';
 import { toast } from 'sonner';
 
 export default function ModuloTiposCargo({ filtroGlobal = '' }) {
@@ -27,7 +28,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 		nombre: '',
 		descripcion: '',
 		monto: 0,
-		esMulta: 0,
+		esMulta: 1,
 	});
 
 	useEffect(() => {
@@ -38,7 +39,8 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 		try {
 			setCargando(true);
 			const respuesta = await tiposCargoApi.obtenerTodos();
-			setDatos(respuesta.data);
+			const soloMultas = respuesta.data.filter(t => t.ES_MULTA === 1);
+			setDatos(soloMultas);
 		} catch (error) {
 			console.error('Error al cargar tipos de cargo:', error);
 			toast.error('No se pudieron cargar los tipos de cargo.');
@@ -64,7 +66,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 			nombre: '',
 			descripcion: '',
 			monto: 0,
-			esMulta: 0,
+			esMulta: 1,
 		});
 		setEditandoId(null);
 		setModal('nuevo');
@@ -75,7 +77,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 			nombre: tipo.NOMBRE ?? '',
 			descripcion: tipo.DESCRIPCION ?? '',
 			monto: Number(tipo.MONTO ?? 0),
-			esMulta: Number(tipo.ES_MULTA ?? 0),
+			esMulta: 1,
 		});
 		setEditandoId(tipo.ID_TIPO_CARGO);
 		setModal('nuevo');
@@ -83,6 +85,21 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 
 	async function guardarTipoCargo(e) {
 		e.preventDefault();
+
+		if (!validarTextoConSentido(form.nombre)) {
+			toast.error('El nombre de la multa debe contener texto con sentido (mínimo 5 caracteres).');
+			return;
+		}
+
+		if (form.descripcion.trim() && !validarTextoConSentido(form.descripcion)) {
+			toast.error('La descripción de la multa debe contener texto con sentido.');
+			return;
+		}
+
+		if (!validarMontoEntero(form.monto)) {
+			toast.error('El monto debe ser un número entero mayor a 0.');
+			return;
+		}
 
 		try {
 			setGuardando(true);
@@ -130,8 +147,6 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 	}
 
 	const total = datos.length;
-	const multas = datos.filter((t) => t.ES_MULTA === 1).length;
-	const dinamicos = datos.filter((t) => t.ES_MULTA === 0).length;
 	const activos = datos.filter((t) => t.ACTIVO === 1).length;
 
 	if (cargando) {
@@ -352,27 +367,15 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 
 	return (
 		<div className="space-y-6 animate-in fade-in duration-300">
-			<div className="grid grid-cols-4 gap-4">
+			<div className="grid grid-cols-2 gap-4">
 				<TarjetaMetrica
-					etiqueta="Total conceptos"
+					etiqueta="Total Multas"
 					valor={total}
-					Icono={Layers}
+					Icono={ShieldAlert}
 					fondo="bg-zinc-800"
 				/>
 				<TarjetaMetrica
-					etiqueta="Multas"
-					valor={multas}
-					Icono={ShieldAlert}
-					fondo="bg-red-500/10"
-				/>
-				<TarjetaMetrica
-					etiqueta="Dinámicos"
-					valor={dinamicos}
-					Icono={Coins}
-					fondo="bg-sky-500/10"
-				/>
-				<TarjetaMetrica
-					etiqueta="Activos"
+					etiqueta="Activas"
 					valor={activos}
 					Icono={CheckCircle}
 					fondo="bg-emerald-500/10"
@@ -383,13 +386,13 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 				<div className="flex items-center justify-between p-4 border-b border-borde bg-tarjeta/50">
 					<BuscadorCasa valor={busqueda} alCambiar={setBusqueda} />
 					<BtnPrimario onClick={abrirNuevo}>
-						<Plus className="w-4 h-4" /> Nuevo Tipo de Cargo
+						<Plus className="w-4 h-4" /> Nueva Multa
 					</BtnPrimario>
 				</div>
 
 				<table className="w-full">
 					<CabeceraTabla
-						columnas={['Nombre', 'Descripción', 'Monto', 'Tipo', 'Estado', 'Acciones']}
+						columnas={['Nombre', 'Descripción', 'Monto', 'Estado', 'Acciones']}
 					/>
 					<tbody>
 						{filtrados.map((tipo, i) => (
@@ -404,15 +407,8 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 								<Celda mono>{tipo.NOMBRE}</Celda>
 								<Celda>{tipo.DESCRIPCION || 'Sin descripción'}</Celda>
 								<Celda>
-									{Number(tipo.MONTO) > 0 ? `Q${Number(tipo.MONTO).toFixed(2)}` : 'Dinámico'}
+									{Number(tipo.MONTO) > 0 ? `Q${Number(tipo.MONTO).toFixed(2)}` : 'Q0.00'}
 								</Celda>
-
-								<td className="px-4 py-3">
-									<Etiqueta
-										texto={tipo.ES_MULTA === 1 ? 'Multa' : 'Dinámico'}
-										variante={tipo.ES_MULTA === 1 ? 'inactivo' : 'activo'}
-									/>
-								</td>
 
 								<td className="px-4 py-3">
 									<Etiqueta
@@ -450,43 +446,26 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 					</tbody>
 				</table>
 
-				<PieTabla mostrados={filtrados.length} total={datos.length} unidad="tipos de cargo" />
+				<PieTabla mostrados={filtrados.length} total={datos.length} unidad="multas" />
 			</div>
 
 			{modal === 'nuevo' && (
 				<Modal
-					titulo={editandoId ? 'Editar Tipo de Cargo' : 'Registrar Tipo de Cargo'}
+					titulo={editandoId ? 'Editar Multa' : 'Registrar Multa'}
 					alCerrar={() => {
 						setModal(null);
 						setEditandoId(null);
 					}}
 				>
 					<form onSubmit={guardarTipoCargo} className="space-y-4">
-						<div className="grid grid-cols-2 gap-4">
-							<Campo etiqueta="Nombre">
-								<Entrada
-									value={form.nombre}
-									onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-									placeholder="Ej: Multa ruido excesivo"
-									required
-								/>
-							</Campo>
-
-							<Campo etiqueta="Tipo">
-								<Selector
-									value={form.esMulta}
-									onChange={(e) =>
-										setForm({
-											...form,
-											esMulta: Number(e.target.value),
-										})
-									}
-								>
-									<option value={0}>Dinámico</option>
-									<option value={1}>Multa</option>
-								</Selector>
-							</Campo>
-						</div>
+						<Campo etiqueta="Nombre">
+							<Entrada
+								value={form.nombre}
+								onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+								placeholder="Ej: Multa ruido excesivo"
+								required
+							/>
+						</Campo>
 
 						<Campo etiqueta="Descripción">
 							<Entrada
@@ -499,8 +478,8 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 						<Campo etiqueta="Monto">
 							<Entrada
 								type="number"
-								min="0"
-								step="0.01"
+								min="1"
+								step="1"
 								value={form.monto}
 								onChange={(e) =>
 									setForm({
@@ -508,27 +487,10 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 										monto: e.target.value === '' ? '' : Number(e.target.value),
 									})
 								}
-								placeholder="Ej: 250.00"
+								placeholder="Ej: 250"
 								required
 							/>
 						</Campo>
-
-						<div className="p-3 rounded-lg bg-zinc-800/60 border border-borde text-xs text-secundario space-y-1">
-							<p>
-								Tipo seleccionado:{' '}
-								<span className="text-primario font-bold">
-									{Number(form.esMulta) === 1 ? 'Multa con monto fijo' : 'Cargo dinámico'}
-								</span>
-							</p>
-							<p>
-								Comportamiento esperado:{' '}
-								<span className="text-primario font-bold">
-									{Number(form.esMulta) === 1
-										? 'Se usará el monto del catálogo.'
-										: 'El sistema podrá calcular el monto dinámicamente.'}
-								</span>
-							</p>
-						</div>
 
 						<BotonesModal
 							alCancelar={() => {
@@ -552,9 +514,8 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 								'Monto',
 								Number(seleccion.MONTO) > 0
 									? `Q${Number(seleccion.MONTO).toFixed(2)}`
-									: 'Dinámico / 0.00',
+									: 'Q0.00',
 							],
-							['Es multa', seleccion.ES_MULTA === 1 ? 'Sí' : 'No'],
 							['Estado', seleccion.ACTIVO === 1 ? 'Activo' : 'Inactivo'],
 						].map(([k, v]) => (
 							<div
