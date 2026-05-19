@@ -14,4 +14,6 @@ export const usuariosApi = {
 	actualizar: (id, datos) => instancia.patch(`/usuarios/${id}`, datos),
 
 	desactivar: (id) => instancia.patch(`/usuarios/${id}/desactivar`),
+
+	activar: (id) => instancia.patch(`/usuarios/${id}/activar`),
 };

@@ -1,8 +1,8 @@
 export function Etiqueta({ texto, variante = 'default' }) {
   const estilos = {
-    activo:    'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+    activo:    'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase',
     pendiente: 'bg-sky-500/10 text-sky-400 border border-sky-500/20',
-    inactivo:  'bg-zinc-500/10 text-zinc-400 border border-zinc-600/30',
+    inactivo:  'bg-red-500/10 text-red-400 border border-red-500/20 uppercase',
     utilizado: 'bg-zinc-500/10 text-zinc-400 border border-zinc-600/30',
     pagado:    'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
     expirado:  'bg-red-500/10 text-red-400 border border-red-500/20',
@@ -13,6 +13,14 @@ export function Etiqueta({ texto, variante = 'default' }) {
     resuelto:  'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
     cerrado:   'bg-zinc-500/10 text-zinc-400 border border-zinc-600/30',
     cancelado: 'bg-red-500/10 text-red-400 border border-red-500/20',
+    baja:      'bg-sky-500/10 text-sky-400 border border-sky-500/20 uppercase',
+    media:     'bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase',
+    alta:      'bg-orange-500/10 text-orange-400 border border-orange-500/20 uppercase',
+    urgente:   'bg-red-500/10 text-red-400 border border-red-500/20 uppercase font-bold',
+    administrador: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase',
+    residente: 'bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase',
+    guardia:   'bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase',
+    colaborador: 'bg-teal-500/10 text-teal-400 border border-teal-500/20 uppercase',
     default:   'bg-zinc-800 text-zinc-300 border border-zinc-700',
   }
 

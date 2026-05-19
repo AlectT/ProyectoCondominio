@@ -27,7 +27,7 @@ export const GRUPOS = [
 		modulos: [
 			{ id: 'Gestión de Propiedades', Icono: Building, propio: true, roles: ['Administrador'] },
 			{
-				id: 'Directorio Residentes',
+				id: 'Directorio Usuarios',
 				Icono: Users,
 				propio: true,
 				roles: ['Administrador', 'Guardia'],

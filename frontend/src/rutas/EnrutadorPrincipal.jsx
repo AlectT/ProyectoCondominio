@@ -6,8 +6,6 @@ import LayoutPrincipal from '../componentes/layout/LayoutPrincipal.jsx';
 import ParqueosPagina from '../paginas/ParqueosPagina.jsx';
 import LlamadasAtencionPagina from '../paginas/LlamadasAtencionPagina.jsx';
 import UsuarioPropiedadPagina from '../paginas/usuarioPropiedadPagina.jsx';
-import Reportes from '../pages/Reportes.jsx';
-import DashboardLayout from '../components/reports/DashboardLayout.jsx';
 
 // Importamos la nueva pantalla de bienvenida
 import PantallaBienvenida from '../paginas/modulos/PantallaBienvenida.jsx';
@@ -28,6 +26,7 @@ export default function EnrutadorPrincipal() {
 				<Route path="/parqueos" element={<ParqueosPagina />} />
 				<Route path="/llamadasAtencion" element={<LlamadasAtencionPagina />} />
 				<Route path="/usuarioPropiedad" element={<UsuarioPropiedadPagina />} />
+
 				<Route path="/garita/validar/:codigo" element={<GaritaPagina />} />
 
 				{/* Rutas protegidas */}

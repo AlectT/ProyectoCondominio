@@ -27,4 +27,7 @@ export const reservasApi = {
 
 	// Historial de cancelaciones (Admin)
 	historialCancelaciones: (id) => instancia.get(`/reservas/${id}/historial-cancelaciones`),
+
+	// Actualizar precio de área (Admin)
+	actualizarPrecioArea: (idArea, precioPorHora) => instancia.put(`/reservas/areas/${idArea}/precio`, { precioPorHora }),
 };

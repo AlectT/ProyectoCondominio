@@ -248,4 +248,30 @@ export class ReservaController {
 			res.status(500).json({ mensaje: 'Error al obtener el historial de cancelaciones.' });
 		}
 	}
+
+	// Actualizar precio de área social (solo Administrador)
+	static async actualizarPrecioArea(req, res) {
+		try {
+			const { idArea } = req.params;
+			const { precioPorHora } = req.body;
+
+			if (!precioPorHora || isNaN(precioPorHora) || Number(precioPorHora) < 0) {
+				return res.status(400).json({ mensaje: 'Precio por hora inválido.' });
+			}
+
+			if (!Number.isInteger(Number(precioPorHora))) {
+				return res.status(400).json({ mensaje: 'El precio debe ser un número entero. No se permiten decimales.' });
+			}
+
+			const actualizado = await ReservaModel.actualizarPrecioArea({
+				idArea: Number(idArea),
+				nuevoPrecio: Number(precioPorHora)
+			});
+
+			res.json(actualizado);
+		} catch (error) {
+			console.error('Error al actualizar precio de área:', error);
+			res.status(500).json({ mensaje: 'Error al actualizar precio del área.' });
+		}
+	}
 }

@@ -13,19 +13,21 @@ import { Modal, ModalConfirmacion } from '../componentes/ui/Modales.jsx';
 import { Campo, Entrada, Selector } from '../componentes/ui/Formularios.jsx';
 import { extraerError } from '../utilidades/extraerError.js';
 import { toast } from 'sonner';
+import { validarNombrePersona, validarNombreUsuario, validarTelefono } from '../utilidades/validarTexto.js';
 
 const ROLES = ['Administrador', 'Residente', 'Guardia', 'Colaborador'];
 
 const limpiar = (str) => str?.toString().toLowerCase().replace(/\s/g, '') ?? '';
 
 export default function UsuariosPagina({ filtroGlobal = '' }) {
-	const { usuarios, cargando, error, crear, actualizar, desactivar } = useUsuarios();
+	const { usuarios, cargando, error, crear, actualizar, desactivar, activar } = useUsuarios();
 
 	const [busqueda, setBusqueda] = useState('');
 	const [modal, setModal] = useState(null); // 'crear' | 'editar' | 'ver'
 	const [filaActiva, setFilaActiva] = useState(null);
 	const [seleccion, setSeleccion] = useState(null);
 	const [aDesactivar, setADesactivar] = useState(null);
+	const [aActivar, setAActivar] = useState(null);
 	const [errorModal, setErrorModal] = useState('');
 
 	const [form, setForm] = useState({
@@ -87,6 +89,32 @@ export default function UsuariosPagina({ filtroGlobal = '' }) {
 	const guardar = async (e) => {
 		e.preventDefault();
 		setErrorModal('');
+
+		if (!validarNombreUsuario(form.nombreUsuario)) {
+			const msj = 'El nombre de usuario no es válido (mínimo 3 caracteres, sin espacios ni caracteres especiales).';
+			setErrorModal(msj);
+			toast.error(msj);
+			return;
+		}
+		if (!validarNombrePersona(form.nombre)) {
+			const msj = 'El nombre ingresado no parece válido.';
+			setErrorModal(msj);
+			toast.error(msj);
+			return;
+		}
+		if (!validarNombrePersona(form.apellido)) {
+			const msj = 'El apellido ingresado no parece válido.';
+			setErrorModal(msj);
+			toast.error(msj);
+			return;
+		}
+		if (!form.telefono || !validarTelefono(form.telefono)) {
+			const msj = 'El número de teléfono es obligatorio y debe ser válido.';
+			setErrorModal(msj);
+			toast.error(msj);
+			return;
+		}
+
 		try {
 			if (modal === 'crear') {
 				const datos = { ...form, idRol: Number(form.idRol) };
@@ -116,6 +144,18 @@ export default function UsuariosPagina({ filtroGlobal = '' }) {
 			toast.error(msj);
 		}
 		setADesactivar(null);
+	};
+
+	const confirmarActivar = async () => {
+		try {
+			await activar(aActivar.ID_USUARIO);
+			toast.success('Usuario activado exitosamente');
+		} catch (err) {
+			const msj = extraerError(err) || 'Error al activar el usuario';
+			console.error('Error al activar:', msj);
+			toast.error(msj);
+		}
+		setAActivar(null);
 	};
 
 	const varianteActivo = (activo) => (activo ? 'activo' : 'inactivo');
@@ -399,12 +439,19 @@ export default function UsuariosPagina({ filtroGlobal = '' }) {
 									<div className="flex items-center gap-1">
 										<BtnAccion onClick={() => abrirVer(u)} Icono={Eye} titulo="Ver" />
 										<BtnAccion onClick={() => abrirEditar(u)} Icono={Pencil} titulo="Editar" />
-										{u.ACTIVO === 1 && (
+										{u.ACTIVO === 1 ? (
 											<BtnAccion
 												onClick={() => setADesactivar(u)}
 												Icono={Ban}
 												titulo="Desactivar"
 												colorHover="hover:text-red-400"
+											/>
+										) : (
+											<BtnAccion
+												onClick={() => setAActivar(u)}
+												Icono={UserCheck}
+												titulo="Activar"
+												colorHover="hover:text-emerald-400"
 											/>
 										)}
 									</div>
@@ -483,8 +530,9 @@ export default function UsuariosPagina({ filtroGlobal = '' }) {
 								placeholder="••••••••"
 							/>
 						</Campo>
-						<Campo etiqueta="Teléfono (opcional)">
+						<Campo etiqueta="Teléfono">
 							<Entrada
+								required
 								value={form.telefono}
 								onChange={(e) => setForm({ ...form, telefono: e.target.value })}
 								placeholder="502 1234 5678"
@@ -525,6 +573,15 @@ export default function UsuariosPagina({ filtroGlobal = '' }) {
 					mensaje={`El usuario "${aDesactivar.NOMBRE_USUARIO}" no podrá iniciar sesión.`}
 					onConfirmar={confirmarDesactivar}
 					onCancelar={() => setADesactivar(null)}
+				/>
+			)}
+
+			{aActivar && (
+				<ModalConfirmacion
+					titulo="¿Activar usuario?"
+					mensaje={`El usuario "${aActivar.NOMBRE_USUARIO}" podrá iniciar sesión nuevamente.`}
+					onConfirmar={confirmarActivar}
+					onCancelar={() => setAActivar(null)}
 				/>
 			)}
 		</div>

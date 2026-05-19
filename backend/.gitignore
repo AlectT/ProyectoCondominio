@@ -8,7 +8,7 @@ logs/
 
 # Entorno
 .env
-
+.env.production
 
 # Archivos del sistema
 .DS_Store

@@ -13,10 +13,14 @@ import {
 	ChevronDown,
 	ChevronUp,
 	Wallet,
+	Settings,
+	Save,
+	XCircle,
 } from 'lucide-react';
 import { usePagos } from '../hooks/usePagos.js';
 import { pagosApi } from '../api/pagosApi.js';
 import { propiedadesApi } from '../api/propiedadesApi.js';
+import { categoriasApi } from '../api/categoriasApi.js';
 import { TarjetaMetrica, Etiqueta } from '../componentes/ui/Etiquetas.jsx';
 import { BuscadorCasa } from '../componentes/ui/Buscador.jsx';
 import { BtnPrimario, BtnAccion, BotonesModal } from '../componentes/ui/Botones.jsx';
@@ -25,6 +29,8 @@ import { Modal } from '../componentes/ui/Modales.jsx';
 import { Campo, Entrada } from '../componentes/ui/Formularios.jsx';
 import { formatearFecha } from '../utilidades/formatearFecha.js';
 import { extraerError } from '../utilidades/extraerError.js';
+import { generarNumeroBoleta } from '../utilidades/generarBoleta.js';
+import { validarTextoConSentido } from '../utilidades/validarTexto.js';
 import useStore from '../estado/useStore.js';
 import { toast } from 'sonner';
 
@@ -59,14 +65,22 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 	const [propiedades, setPropiedades] = useState([]);
 	const [cargandoPropiedades, setCargandoPropiedades] = useState(false);
 
+	// Estados avanzados
+	const [categorias, setCategorias] = useState([]);
+	const [cargandoCategorias, setCargandoCategorias] = useState(false);
+	const [modoGeneracion, setModoGeneracion] = useState('ALL');
+	const [propiedadesSeleccionadas, setPropiedadesSeleccionadas] = useState([]);
+	const [incluirMora, setIncluirMora] = useState(false);
+	const [montoMora, setMontoMora] = useState('50');
+	const [fechaEmision, setFechaEmision] = useState('');
+	const [filtroPropiedades, setFiltroPropiedades] = useState('');
+
 	useEffect(() => {
-		if (modal === 'crear' && esAdmin) {
+		if ((modal === 'crear' || modal === 'generarCuotas') && esAdmin) {
 			const obtenerPropiedades = async () => {
 				setCargandoPropiedades(true);
 				try {
-					// Usamos tu API con Axios
 					const res = await propiedadesApi.obtenerTodas();
-					// Axios encapsula la respuesta en ".data"
 					setPropiedades(res.data);
 				} catch (err) {
 					toast.error('Error al cargar propiedades');
@@ -74,7 +88,22 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 					setCargandoPropiedades(false);
 				}
 			};
-			obtenerPropiedades();
+			if (propiedades.length === 0) obtenerPropiedades();
+		}
+
+		if (modal === 'configurarCuotas' && esAdmin) {
+			const obtenerCategorias = async () => {
+				setCargandoCategorias(true);
+				try {
+					const res = await categoriasApi.obtenerTodas();
+					setCategorias(res.data);
+				} catch (err) {
+					toast.error('Error al cargar categorías');
+				} finally {
+					setCargandoCategorias(false);
+				}
+			};
+			obtenerCategorias();
 		}
 	}, [modal, esAdmin]);
 
@@ -98,7 +127,7 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 	}, [form.idPropiedad, modal]);
 
 	const abrirCrear = () => {
-		setForm({ idPropiedad: '', numeroBoleta: '', observaciones: '' });
+		setForm({ idPropiedad: '', numeroBoleta: generarNumeroBoleta(), observaciones: '' });
 		setErrorModal('');
 		if (!esAdmin) cargarEstadoCuenta();
 		setModal('crear');
@@ -126,6 +155,13 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 		if (estadoCuenta && estadoCuenta.cantidadCargosPendientes === 0) {
 			setErrorModal('Esta propiedad no tiene cargos pendientes.');
 			toast.error('Esta propiedad no tiene cargos pendientes.');
+			return;
+		}
+
+		if (form.observaciones.trim() && !validarTextoConSentido(form.observaciones)) {
+			const msj = 'El texto de las observaciones no es válido. Por favor, ingresa un comentario con sentido.';
+			setErrorModal(msj);
+			toast.error(msj);
 			return;
 		}
 
@@ -430,26 +466,28 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 					<BuscadorCasa valor={busqueda} alCambiar={setBusqueda} />
 					<div className="flex gap-2">
 						{esAdmin && (
-							<button
-								onClick={async () => {
-									if (
-										window.confirm(
-											'¿Estás seguro de generar el cobro mensual para TODAS las propiedades activas?',
-										)
-									) {
-										try {
-											await propiedadesApi.generarCuotasMensuales();
-											toast.success('Cuotas mensuales generadas exitosamente');
-											cargarPagos();
-										} catch (e) {
-											toast.error('Error al generar las cuotas');
-										}
-									}
-								}}
-								className="flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase text-amber-400 bg-amber-400/10 hover:bg-amber-400/20 transition-colors border border-amber-400/20 rounded-lg"
-							>
-								<Clock className="w-4 h-4" /> Generar Cuotas
-							</button>
+							<>
+								<button
+									onClick={() => setModal('configurarCuotas')}
+									className="flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase text-sky-400 bg-sky-400/10 hover:bg-sky-400/20 transition-colors border border-sky-400/20 rounded-lg"
+								>
+									<Settings className="w-4 h-4" /> Configurar Cuotas
+								</button>
+								<button
+									onClick={() => {
+										setModoGeneracion('ALL');
+										setPropiedadesSeleccionadas([]);
+										setIncluirMora(false);
+										setMontoMora('50');
+										setFechaEmision(new Date().toISOString().split('T')[0]);
+										setFiltroPropiedades('');
+										setModal('generarCuotas');
+									}}
+									className="flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase text-emerald-400 bg-emerald-400/10 hover:bg-emerald-400/20 transition-colors border border-emerald-400/20 rounded-lg"
+								>
+									<Clock className="w-4 h-4" /> Generar Cuotas
+								</button>
+							</>
 						)}
 						<BtnPrimario onClick={abrirCrear}>
 							<Plus className="w-4 h-4" /> Registrar Pago
@@ -507,7 +545,7 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 
 			{modal === 'crear' && (
 				<Modal titulo="Registrar Pago" alCerrar={() => setModal(null)}>
-					<form onSubmit={guardar} className="space-y-5">
+					<form onSubmit={guardar} className="space-y-5 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2 pb-2">
 						{esAdmin && (
 							<Campo etiqueta="Seleccionar Propiedad">
 								<select
@@ -554,7 +592,7 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 								</div>
 							) : (
 								<div>
-									<div className="divide-y divide-borde">
+									<div className="divide-y divide-borde max-h-48 overflow-y-auto custom-scrollbar pr-1">
 										{estadoCuenta.cargosPendientes.map((cargo) => (
 											<div key={cargo.ID_CARGO} className="flex items-center justify-between px-4 py-3">
 												<div>
@@ -599,12 +637,11 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 							)}
 						</div>
 
-						<Campo etiqueta="Número de Boleta">
+						<Campo etiqueta="Número de Boleta (Autogenerado)">
 							<Entrada
 								required
-								placeholder="Ej: BOL-2026-001"
+								disabled
 								value={form.numeroBoleta}
-								onChange={(e) => setForm({ ...form, numeroBoleta: e.target.value })}
 							/>
 						</Campo>
 
@@ -691,6 +728,185 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 										{formatQ(seleccion.MONTO_TOTAL)}
 									</span>
 								</div>
+							</div>
+						</div>
+					)}
+				</Modal>
+			)}
+
+			{modal === 'generarCuotas' && (
+				<Modal titulo="Generar Cuotas de Condominio" alCerrar={() => setModal(null)}>
+					<div className="space-y-6">
+						<div className="space-y-4 py-2">
+							<Campo etiqueta="Aplicar cobro a">
+								<div className="flex gap-4">
+									<label className="flex items-center gap-2 text-sm text-primario cursor-pointer font-medium hover:text-emerald-400 transition-colors">
+										<input type="radio" name="modoGen" value="ALL" checked={modoGeneracion === 'ALL'} onChange={() => setModoGeneracion('ALL')} className="w-4 h-4 accent-emerald-500" />
+										Todas las propiedades
+									</label>
+									<label className="flex items-center gap-2 text-sm text-primario cursor-pointer font-medium hover:text-emerald-400 transition-colors">
+										<input type="radio" name="modoGen" value="MANUAL" checked={modoGeneracion === 'MANUAL'} onChange={() => setModoGeneracion('MANUAL')} className="w-4 h-4 accent-emerald-500" />
+										Selección individual
+									</label>
+								</div>
+							</Campo>
+
+							{modoGeneracion === 'MANUAL' && (
+								<div className="space-y-3 border border-borde rounded-xl p-4 bg-tarjeta/30 shadow-inner">
+									<Entrada 
+										placeholder="🔍 Buscar número de propiedad (ej. 101)..." 
+										value={filtroPropiedades} 
+										onChange={(e) => setFiltroPropiedades(e.target.value)}
+										className="bg-fondo"
+									/>
+									<div className="max-h-48 overflow-y-auto space-y-1 pr-2 custom-scrollbar border border-borde/50 rounded-lg p-2 bg-fondo/50">
+										{propiedades.filter(p => p.NUMERO_PROPIEDAD.toLowerCase().includes(filtroPropiedades.toLowerCase())).map(p => (
+											<label key={p.ID_PROPIEDAD} className="flex items-center justify-between gap-3 text-sm text-primario cursor-pointer p-2 hover:bg-borde rounded-md transition-colors border border-transparent hover:border-borde">
+												<div className="flex items-center gap-3">
+													<input 
+														type="checkbox" 
+														checked={propiedadesSeleccionadas.includes(p.ID_PROPIEDAD)}
+														onChange={(e) => {
+															if(e.target.checked) setPropiedadesSeleccionadas([...propiedadesSeleccionadas, p.ID_PROPIEDAD]);
+															else setPropiedadesSeleccionadas(propiedadesSeleccionadas.filter(id => id !== p.ID_PROPIEDAD));
+														}}
+														className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+													/>
+													<span className="font-bold">Propiedad {p.NUMERO_PROPIEDAD}</span>
+												</div>
+											</label>
+										))}
+										{propiedades.length > 0 && propiedades.filter(p => p.NUMERO_PROPIEDAD.toLowerCase().includes(filtroPropiedades.toLowerCase())).length === 0 && (
+											<div className="text-center py-4 text-secundario text-sm">No se encontraron propiedades.</div>
+										)}
+									</div>
+									<div className="text-xs font-bold text-emerald-400 text-right bg-emerald-400/10 py-1.5 px-3 rounded-full inline-block ml-auto border border-emerald-400/20">
+										{propiedadesSeleccionadas.length} seleccionadas
+									</div>
+								</div>
+							)}
+
+							<div className="mt-4 pt-4 border-t border-borde">
+								<div className="space-y-3">
+									<label className="flex items-center gap-2 text-sm font-bold text-secundario cursor-pointer hover:text-red-400 transition-colors">
+										<input type="checkbox" checked={incluirMora} onChange={(e) => setIncluirMora(e.target.checked)} className="w-4 h-4 accent-red-500 rounded" />
+										Añadir recargo de Mora
+									</label>
+									{incluirMora && (
+										<div className="animate-in slide-in-from-top-2 duration-200">
+											<Entrada type="number" min="0" step="1" placeholder="Monto mora (Q)" value={montoMora} onChange={(e) => setMontoMora(e.target.value)} required={incluirMora} />
+										</div>
+									)}
+								</div>
+							</div>
+						</div>
+
+						<div className="flex gap-3 pt-5 border-t border-borde">
+							<button
+								onClick={() => setModal(null)}
+								className="flex-1 px-4 py-2.5 text-sm font-bold bg-fondo text-primario border border-borde rounded-lg hover:bg-borde transition-colors flex items-center justify-center gap-2"
+							>
+								<XCircle className="w-5 h-5" />
+								Cancelar
+							</button>
+							<button
+								onClick={async () => {
+									if(modoGeneracion === 'MANUAL' && propiedadesSeleccionadas.length === 0) {
+										return toast.error('Selecciona al menos una propiedad para continuar');
+									}
+									if(incluirMora) {
+										const val = Number(montoMora);
+										if(!Number.isInteger(val) || val < 0) {
+											return toast.error('🚫 El monto de mora debe ser un número entero y positivo (sin decimales ni negativos)');
+										}
+									}
+									try {
+										await propiedadesApi.generarCuotasMensuales({
+											propiedades: modoGeneracion === 'ALL' ? 'ALL' : propiedadesSeleccionadas,
+											incluirMora,
+											montoMora: Number(montoMora),
+											fechaEmision
+										});
+										toast.success('Cuotas mensuales generadas exitosamente');
+										cargarPagos();
+										setModal(null);
+									} catch (e) {
+										toast.error('Error al generar las cuotas. Verifica la conexión.');
+									}
+								}}
+								className="flex-1 px-4 py-2.5 text-sm font-bold bg-emerald-500 text-black rounded-lg hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+							>
+								<CheckCircle className="w-5 h-5" />
+								Generar Cuotas
+							</button>
+						</div>
+					</div>
+				</Modal>
+			)}
+
+			{modal === 'configurarCuotas' && (
+				<Modal titulo="Configuración de Cuotas por Tipo" alCerrar={() => setModal(null)}>
+					{cargandoCategorias ? (
+						<div className="text-center py-10 text-secundario flex flex-col items-center gap-3">
+							<div className="w-8 h-8 border-4 border-sky-400/30 border-t-sky-400 rounded-full animate-spin"></div>
+							Cargando categorías...
+						</div>
+					) : (
+						<div className="space-y-5">
+							<p className="text-sm text-secundario px-2">
+								Modifica el precio de la cuota mensual de manera dinámica. Estos cambios aplicarán para las <strong>nuevas cuotas</strong> que generes en adelante.
+							</p>
+							<div className="flex flex-col gap-3">
+								{categorias.map(cat => (
+									<div key={cat.ID_CATEGORIA} className="p-4 flex items-center justify-between gap-4 border border-borde rounded-xl bg-tarjeta/50 hover:border-sky-400/30 transition-colors shadow-sm">
+										<div className="flex-1">
+											<h4 className="text-sm font-bold text-primario flex items-center gap-2">
+												{cat.NOMBRE}
+											</h4>
+											<p className="text-xs text-secundario mt-1">{cat.DESCRIPCION}</p>
+										</div>
+										<div className="flex items-center gap-2 w-1/3">
+											<span className="text-sm text-sky-400 font-bold font-mono">Q</span>
+											<Entrada
+												type="number"
+												step="1"
+												min="0"
+												value={cat.CUOTA_MENSUAL}
+												onChange={(e) => {
+													const newCats = [...categorias];
+													const idx = newCats.findIndex(c => c.ID_CATEGORIA === cat.ID_CATEGORIA);
+													newCats[idx].CUOTA_MENSUAL = e.target.value;
+													setCategorias(newCats);
+												}}
+												className="text-right font-mono font-bold w-full bg-fondo border-borde focus:border-sky-500"
+											/>
+										</div>
+										<button
+											onClick={async () => {
+												const val = Number(cat.CUOTA_MENSUAL);
+												if(!Number.isInteger(val) || val < 0) {
+													return toast.error(`🚫 La cuota para ${cat.NOMBRE} debe ser un número entero y positivo (sin decimales)`);
+												}
+												try {
+													await categoriasApi.actualizar(cat.ID_CATEGORIA, { cuotaMensual: val });
+													toast.success(`Cuota actualizada para: ${cat.NOMBRE}`);
+												} catch(err) {
+													toast.error(`Error al actualizar ${cat.NOMBRE}`);
+												}
+											}}
+											className="px-4 py-2.5 text-xs font-bold text-sky-400 bg-sky-400/10 hover:bg-sky-400/20 hover:shadow-lg hover:shadow-sky-400/10 rounded-lg transition-all border border-sky-400/20 flex items-center gap-2"
+										>
+											<Save className="w-4 h-4" />
+											Guardar
+										</button>
+									</div>
+								))}
+							</div>
+							<div className="flex pt-4 border-t border-borde">
+								<button onClick={() => setModal(null)} className="w-full py-2.5 text-sm font-bold bg-fondo text-primario border border-borde rounded-lg hover:bg-borde transition-colors flex items-center justify-center gap-2">
+									<XCircle className="w-5 h-5" />
+									Cerrar Configuración
+								</button>
 							</div>
 						</div>
 					)}
