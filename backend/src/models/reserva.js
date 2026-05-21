@@ -388,6 +388,32 @@ export class ReservaModel {
 		}
 	}
 
+	// Verificar deudas directamente por ID de propiedad (para uso admin)
+	static async verificarPropiedadSinDeudas({ idPropiedad }) {
+		const conexion = await conectar();
+		try {
+			const resultado = await conexion.execute(
+				`SELECT COUNT(*) AS DEUDAS
+        FROM CARGO
+        WHERE ID_PROPIEDAD = :idPropiedad
+          AND ESTADO = 'PENDIENTE'`,
+				{ idPropiedad },
+				{ outFormat: oracledb.OUT_FORMAT_OBJECT },
+			);
+
+			const tieneDeudas = resultado.rows[0].DEUDAS > 0;
+
+			return {
+				sinDeudas: !tieneDeudas,
+				mensaje: tieneDeudas
+					? 'La propiedad seleccionada tiene cargos pendientes de pago'
+					: null,
+			};
+		} finally {
+			await conexion.close();
+		}
+	}
+
 	static async actualizarPrecioArea({ idArea, nuevoPrecio }) {
 		const conexion = await conectar();
 		try {
