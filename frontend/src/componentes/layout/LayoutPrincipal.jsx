@@ -28,7 +28,7 @@ import ModuloInvitaciones from '../../paginas/modulos/ModuloInvitaciones.jsx';
 import PantallaBienvenida from '../../paginas/modulos/PantallaBienvenida.jsx';
 import LlamadasAtencionPagina from '../../paginas/LlamadasAtencionPagina.jsx';
 import UsuarioPropiedadPagina from '../../paginas/usuarioPropiedadPagina.jsx';
-import Reportes from '../../pages/Reportes.jsx';
+import ReportesPagina from '../../paginas/ReportesPagina.jsx';
 import DashboardLayout from '../../components/reports/DashboardLayout.jsx';
 
 const SUBTITULOS = {
@@ -69,7 +69,7 @@ export default function LayoutPrincipal() {
 		'Inventario Parqueos': <ParqueosPagina filtroGlobal={busquedaGlobal} />,
 		'Llamados de Atención': <LlamadasAtencionPagina filtroGlobal={busquedaGlobal} />,
 		'Propietarios e Inquilinos': <UsuarioPropiedadPagina filtroGlobal={busquedaGlobal} />,
-		'Reportes Condominio': <Reportes />,
+		'Reportes Condominio': <ReportesPagina />,
 	};
 
 	const infoModulo = GRUPOS.flatMap((g) => g.modulos).find((m) => m.id === moduloActivo);

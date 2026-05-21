@@ -1,6 +1,14 @@
 import z from 'zod';
 
 const esquemaReserva = z.object({
+	idPropiedad: z
+		.number({
+			invalid_type_error: 'El ID de la propiedad debe ser un número.',
+		})
+		.int()
+		.positive()
+		.optional(),
+
 	idArea: z
 		.number({
 			required_error: 'El ID del área es requerido.',
