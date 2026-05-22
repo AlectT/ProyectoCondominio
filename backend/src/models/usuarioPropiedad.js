@@ -3,14 +3,18 @@ import { conectar } from '../config/db.js';
 
 const consultaBase = `
   SELECT
-    ID_USUARIO_PROPIEDAD,
-    ID_USUARIO,
-    ID_PROPIEDAD,
-    TIPO_VINCULO,
-    FECHA_INICIO,
-    FECHA_FIN,
-    ACTIVO
-    FROM USUARIO_PROPIEDAD
+    up.ID_USUARIO_PROPIEDAD,
+    up.ID_USUARIO,
+    up.ID_PROPIEDAD,
+    up.TIPO_VINCULO,
+    up.FECHA_INICIO,
+    up.FECHA_FIN,
+    up.ACTIVO,
+    p.NUMERO_PROPIEDAD,
+    u.NOMBRE_USUARIO
+	FROM USUARIO_PROPIEDAD up
+	JOIN PROPIEDAD p ON up.ID_PROPIEDAD = p.ID_PROPIEDAD
+	JOIN USUARIO u ON up.ID_USUARIO = u.ID_USUARIO
 `;
 
 export class UsuarioPropiedadModel {

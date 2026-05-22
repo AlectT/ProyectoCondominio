@@ -17,6 +17,7 @@ import { extraerError } from '../utilidades/extraerError.js';
 import useStore from '../estado/useStore.js';
 import { formatearFecha } from '../utilidades/formatearFecha.js';
 import { toast } from 'sonner';
+import Cargando from '../Componentes/ui/Cargando.jsx';
 
 const limpiar = (str) => str?.toString().toLowerCase().replace(/\s/g, '') ?? '';
 
@@ -63,7 +64,7 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 	const filtrados = termino
 		? llamadasAtencion.filter(
 				(la) =>
-					limpiar(la.idPropiedad).includes(termino) || limpiar(la.idTipoCargo).includes(termino),
+					limpiar(la.NUMERO_PROPIEDAD).includes(termino) || limpiar(la.NOMBRE).includes(termino),
 			)
 		: llamadasAtencion;
 
@@ -133,228 +134,53 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 		setAEliminar(null);
 	};
 
-	if (cargando)
-		return (
-			<>
-				<div className="loading-overlay">
-					<div className="loading-card">
-						{/* Loader */}
-						<div className="loader-wrapper">
-							<div className="loader-ring"></div>
-							<div className="loader-core"></div>
-						</div>
-
-						{/* Text */}
-						<div className="loading-content">
-							<span className="loading-badge">
-								<span className="pulse-dot"></span>
-								Cargando llamadas de atención
-							</span>
-
-							<div className="loading-line">
-								<div className="loading-progress"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<style jsx>{`
-					.loading-overlay {
-						position: fixed;
-						inset: 0;
-						background: rgba(4, 7, 16, 0.78);
-						backdrop-filter: blur(7px);
-
-						display: flex;
-						justify-content: center;
-						align-items: center;
-
-						z-index: 9999;
-					}
-
-					.loading-card {
-						width: 320px;
-						padding: 32px 28px;
-
-						border-radius: 24px;
-
-						background: linear-gradient(145deg, rgba(15, 18, 32, 0.96), rgba(8, 11, 20, 0.98));
-
-						border: 1px solid rgba(0, 255, 170, 0.08);
-
-						box-shadow:
-							0 0 30px rgba(0, 255, 170, 0.05),
-							0 0 60px rgba(0, 0, 0, 0.45);
-
-						display: flex;
-						flex-direction: column;
-						align-items: center;
-						gap: 24px;
-					}
-
-					.loader-wrapper {
-						position: relative;
-						width: 72px;
-						height: 72px;
-
-						display: flex;
-						justify-content: center;
-						align-items: center;
-					}
-
-					.loader-ring {
-						position: absolute;
-						width: 72px;
-						height: 72px;
-						border-radius: 50%;
-
-						border: 3px solid rgba(0, 255, 170, 0.08);
-						border-top: 3px solid #00ffb3;
-						border-right: 3px solid #00c8ff;
-
-						animation: rotate 1s linear infinite;
-
-						box-shadow: 0 0 18px rgba(0, 255, 170, 0.15);
-					}
-
-					.loader-core {
-						width: 18px;
-						height: 18px;
-						border-radius: 50%;
-
-						background: linear-gradient(135deg, #00ffb3, #00c8ff);
-
-						box-shadow:
-							0 0 12px rgba(0, 255, 170, 0.45),
-							0 0 22px rgba(0, 200, 255, 0.25);
-
-						animation: pulse 1.5s ease-in-out infinite;
-					}
-
-					.loading-content {
-						width: 100%;
-						text-align: center;
-					}
-
-					.loading-badge {
-						display: inline-flex;
-						align-items: center;
-						gap: 8px;
-
-						padding: 7px 14px;
-						border-radius: 999px;
-
-						background: rgba(0, 255, 170, 0.06);
-						border: 1px solid rgba(0, 255, 170, 0.08);
-
-						color: #00ffb3;
-
-						font-size: 11px;
-						font-weight: 700;
-						letter-spacing: 1.5px;
-
-						margin-bottom: 18px;
-					}
-
-					.pulse-dot {
-						width: 8px;
-						height: 8px;
-						border-radius: 50%;
-						background: #00ffb3;
-
-						animation: blink 1s infinite;
-					}
-
-					.loading-content h2 {
-						color: white;
-						font-size: 20px;
-						font-weight: 600;
-
-						margin-bottom: 18px;
-					}
-
-					.loading-line {
-						width: 100%;
-						height: 6px;
-
-						background: rgba(255, 255, 255, 0.05);
-
-						border-radius: 999px;
-						overflow: hidden;
-					}
-
-					.loading-progress {
-						width: 40%;
-						height: 100%;
-
-						border-radius: inherit;
-
-						background: linear-gradient(90deg, #00ffb3, #00c8ff);
-
-						animation: progressMove 1.5s ease-in-out infinite;
-					}
-
-					@keyframes rotate {
-						from {
-							transform: rotate(0deg);
-						}
-
-						to {
-							transform: rotate(360deg);
-						}
-					}
-
-					@keyframes pulse {
-						0%,
-						100% {
-							transform: scale(1);
-							opacity: 1;
-						}
-
-						50% {
-							transform: scale(1.2);
-							opacity: 0.7;
-						}
-					}
-
-					@keyframes blink {
-						0%,
-						100% {
-							opacity: 1;
-						}
-
-						50% {
-							opacity: 0.4;
-						}
-					}
-
-					@keyframes progressMove {
-						0% {
-							transform: translateX(-120%);
-						}
-
-						100% {
-							transform: translateX(320%);
-						}
-					}
-
-					@media (max-width: 480px) {
-						.loading-card {
-							width: 88%;
-							padding: 28px 22px;
-						}
-					}
-				`}</style>
-			</>
-		);
+	if (cargando) return <Cargando Texto="llamadas de atención" />;
 	if (error) return <div className="text-red-400 text-sm p-8">{error}</div>;
+
+	const llamadosExpandido = llamadasAgrupadas.flatMap((la) => {
+		const filas = [];
+
+		for (let i = 0; i < la.CANTIDAD; i += 3) {
+			filas.push({
+				...la,
+				CANTIDAD_BLOQUE: Math.min(la.CANTIDAD - i, 3),
+				BLOQUE_INDEX: i / 3,
+			});
+		}
+
+		return filas;
+	});
 
 	return (
 		<div className="space-y-6 animate-in fade-in duration-300">
 			<div className="grid grid-cols-4 gap-4">
 				<TarjetaMetrica
-					etiqueta="Total"
+					etiqueta="Total de llamadas de atención"
 					valor={llamadasAtencion.length}
+					Icono={PhoneCall}
+					fondo="bg-zinc-800"
+				/>
+				<TarjetaMetrica
+					etiqueta="Multas por exceso de ruido"
+					valor={llamadasAtencion.filter((p) => p.NOMBRE === 'Multa ruido excesivo').length}
+					Icono={PhoneCall}
+					fondo="bg-zinc-800"
+				/>
+				<TarjetaMetrica
+					etiqueta="Multas daño áreas comunes"
+					valor={llamadasAtencion.filter((p) => p.NOMBRE === 'Multa daño áreas comunes').length}
+					Icono={PhoneCall}
+					fondo="bg-zinc-800"
+				/>
+				<TarjetaMetrica
+					etiqueta="Multas mascotas sin correa"
+					valor={llamadasAtencion.filter((p) => p.NOMBRE === 'Multa mascotas sin correa').length}
+					Icono={PhoneCall}
+					fondo="bg-zinc-800"
+				/>
+				<TarjetaMetrica
+					etiqueta="Multas basura incorrecta"
+					valor={llamadasAtencion.filter((p) => p.NOMBRE === 'Multa basura incorrecta').length}
 					Icono={PhoneCall}
 					fondo="bg-zinc-800"
 				/>
@@ -376,8 +202,8 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 					<CabeceraTabla
 						columnas={
 							!estadoLista
-								? ['#', 'Nombre', 'Descripción', 'Fecha', 'Acciones']
-								: ['#', 'Propiedad', 'Descripción', 'Cantidad', 'Acciones']
+								? ['#', 'Propiedad', 'Nombre del cargo', 'Descripción', 'Fecha', 'Acciones']
+								: ['#', 'Propiedad', 'Nombre del cargo', 'Descripción', 'Cantidad']
 						}
 					/>
 					<tbody>
@@ -389,10 +215,11 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 										onClick={() => setFilaActiva(filaActiva === la.ID_LLAMADO ? null : la.ID_LLAMADO)}
 									>
 										<Celda mono>{index + 1}</Celda>
+										<Celda>{la.NUMERO_PROPIEDAD}</Celda>
 										<Celda>{la.NOMBRE}</Celda>
 										<Celda>{la.DESCRIPCION}</Celda>
 										<Celda>{formatearFecha(la.FECHA_EMISION)}</Celda>
-										<td className="px-4 py-3">
+										<Celda>
 											<div className="flex items-center gap-1">
 												<BtnAccion onClick={() => abrirVer(la)} Icono={Eye} titulo="Ver" />
 												{esAdmin && (
@@ -407,10 +234,10 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 													</>
 												)}
 											</div>
-										</td>
+										</Celda>
 									</Fila>
 								))
-							: llamadasAgrupadas.map((la, index) => (
+							: llamadosExpandido.map((la, index) => (
 									<Fila
 										key={la.ID_LLAMADO}
 										seleccionada={filaActiva === la.ID_LLAMADO}
@@ -418,13 +245,14 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 									>
 										<Celda mono>{index + 1}</Celda>
 										<Celda>{la.NUMERO_PROPIEDAD}</Celda>
+										<Celda>{la.NOMBRE}</Celda>
 										<Celda>{la.DESCRIPCION}</Celda>
 										<Celda>
 											<div className="warning-level">
 												{[1, 2, 3].map((level) => (
 													<span
 														key={level}
-														className={`warning-dot ${la.CANTIDAD >= level ? 'active' : ''}`}
+														className={`warning-dot ${la.CANTIDAD_BLOQUE >= level ? 'active' : ''}`}
 													/>
 												))}
 											</div>
@@ -465,11 +293,6 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 												}
 											`}</style>
 										</Celda>
-										<td className="px-4 py-3">
-											<div className="flex items-center gap-1">
-												<BtnAccion onClick={() => abrirVer(la)} Icono={Eye} titulo="Ver" />
-											</div>
-										</td>
 									</Fila>
 								))}
 					</tbody>

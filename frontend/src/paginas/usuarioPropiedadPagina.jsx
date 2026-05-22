@@ -28,6 +28,7 @@ import { extraerError } from '../utilidades/extraerError.js';
 import useStore from '../estado/useStore.js';
 import { formatearFecha } from '../utilidades/formatearFecha.js';
 import { toast } from 'sonner';
+import Cargando from '../Componentes/ui/Cargando.jsx';
 
 const limpiar = (str) => str?.toString().toLowerCase().replace(/\s/g, '') ?? '';
 
@@ -75,7 +76,8 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 	const filtrados = termino
 		? up.filter(
 				(p) =>
-					limpiar(p.ID_PROPIEDAD).includes(termino) || limpiar(p.ID_USUARIO).includes(termino),
+					limpiar(p.NUMERO_PROPIEDAD).includes(termino) ||
+					limpiar(p.NOMBRE_USUARIO).includes(termino),
 			)
 		: up;
 
@@ -122,18 +124,18 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 				fechaFin: fechaFormateada,
 			};
 
-			console.log(datosAEnviar);
-
 			if (modal === 'crear') {
 				await crear(datosAEnviar);
 				toast.success('Vínculo creado exitosamente');
 			} else {
+				console.log(seleccion.ID_USUARIO_PROPIEDAD, datosAEnviar);
 				await actualizar(seleccion.ID_USUARIO_PROPIEDAD, datosAEnviar);
 				toast.success('Vínculo actualizado exitosamente');
 			}
 			setModal(null);
 		} catch (err) {
-			const msj = extraerError(err) || 'Error al guardar el vínculo';
+			const msj =
+				'El usuario o la propiedad seleccionados ya tienen un vínculo activo. Verifique los datos e intente nuevamente.';
 			setErrorModal(msj);
 			toast.error(msj);
 		}
@@ -144,227 +146,14 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 			await eliminar(aEliminar.ID_USUARIO_PROPIEDAD);
 			toast.success('Vínculo eliminado exitosamente');
 		} catch (err) {
-			const msj = extraerError(err) || 'Error al eliminar el vínculo';
-			console.error('Error al eliminar el vínculo:', msj);
+			const msj =
+				extraerError(err) || 'El vinculo no se pudo eliminar. Tiene reportes vinculados';
 			toast.error(msj);
 		}
 		setAEliminar(null);
 	};
 
-	if (cargando)
-		return (
-			<>
-				<div className="loading-overlay">
-					<div className="loading-card">
-						{/* Loader */}
-						<div className="loader-wrapper">
-							<div className="loader-ring"></div>
-							<div className="loader-core"></div>
-						</div>
-
-						{/* Text */}
-						<div className="loading-content">
-							<span className="loading-badge">
-								<span className="pulse-dot"></span>
-								Cargando Relaciones
-							</span>
-
-							<div className="loading-line">
-								<div className="loading-progress"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<style jsx>{`
-					.loading-overlay {
-						position: fixed;
-						inset: 0;
-						background: rgba(4, 7, 16, 0.78);
-						backdrop-filter: blur(7px);
-
-						display: flex;
-						justify-content: center;
-						align-items: center;
-
-						z-index: 9999;
-					}
-
-					.loading-card {
-						width: 320px;
-						padding: 32px 28px;
-
-						border-radius: 24px;
-
-						background: linear-gradient(145deg, rgba(15, 18, 32, 0.96), rgba(8, 11, 20, 0.98));
-
-						border: 1px solid rgba(0, 255, 170, 0.08);
-
-						box-shadow:
-							0 0 30px rgba(0, 255, 170, 0.05),
-							0 0 60px rgba(0, 0, 0, 0.45);
-
-						display: flex;
-						flex-direction: column;
-						align-items: center;
-						gap: 24px;
-					}
-
-					.loader-wrapper {
-						position: relative;
-						width: 72px;
-						height: 72px;
-
-						display: flex;
-						justify-content: center;
-						align-items: center;
-					}
-
-					.loader-ring {
-						position: absolute;
-						width: 72px;
-						height: 72px;
-						border-radius: 50%;
-
-						border: 3px solid rgba(0, 255, 170, 0.08);
-						border-top: 3px solid #00ffb3;
-						border-right: 3px solid #00c8ff;
-
-						animation: rotate 1s linear infinite;
-
-						box-shadow: 0 0 18px rgba(0, 255, 170, 0.15);
-					}
-
-					.loader-core {
-						width: 18px;
-						height: 18px;
-						border-radius: 50%;
-
-						background: linear-gradient(135deg, #00ffb3, #00c8ff);
-
-						box-shadow:
-							0 0 12px rgba(0, 255, 170, 0.45),
-							0 0 22px rgba(0, 200, 255, 0.25);
-
-						animation: pulse 1.5s ease-in-out infinite;
-					}
-
-					.loading-content {
-						width: 100%;
-						text-align: center;
-					}
-
-					.loading-badge {
-						display: inline-flex;
-						align-items: center;
-						gap: 8px;
-
-						padding: 7px 14px;
-						border-radius: 999px;
-
-						background: rgba(0, 255, 170, 0.06);
-						border: 1px solid rgba(0, 255, 170, 0.08);
-
-						color: #00ffb3;
-
-						font-size: 11px;
-						font-weight: 700;
-						letter-spacing: 1.5px;
-
-						margin-bottom: 18px;
-					}
-
-					.pulse-dot {
-						width: 8px;
-						height: 8px;
-						border-radius: 50%;
-						background: #00ffb3;
-
-						animation: blink 1s infinite;
-					}
-
-					.loading-content h2 {
-						color: white;
-						font-size: 20px;
-						font-weight: 600;
-
-						margin-bottom: 18px;
-					}
-
-					.loading-line {
-						width: 100%;
-						height: 6px;
-
-						background: rgba(255, 255, 255, 0.05);
-
-						border-radius: 999px;
-						overflow: hidden;
-					}
-
-					.loading-progress {
-						width: 40%;
-						height: 100%;
-
-						border-radius: inherit;
-
-						background: linear-gradient(90deg, #00ffb3, #00c8ff);
-
-						animation: progressMove 1.5s ease-in-out infinite;
-					}
-
-					@keyframes rotate {
-						from {
-							transform: rotate(0deg);
-						}
-
-						to {
-							transform: rotate(360deg);
-						}
-					}
-
-					@keyframes pulse {
-						0%,
-						100% {
-							transform: scale(1);
-							opacity: 1;
-						}
-
-						50% {
-							transform: scale(1.2);
-							opacity: 0.7;
-						}
-					}
-
-					@keyframes blink {
-						0%,
-						100% {
-							opacity: 1;
-						}
-
-						50% {
-							opacity: 0.4;
-						}
-					}
-
-					@keyframes progressMove {
-						0% {
-							transform: translateX(-120%);
-						}
-
-						100% {
-							transform: translateX(320%);
-						}
-					}
-
-					@media (max-width: 480px) {
-						.loading-card {
-							width: 88%;
-							padding: 28px 22px;
-						}
-					}
-				`}</style>
-			</>
-		);
+	if (cargando) return <Cargando Texto="vínculos de propiedad" />;
 	if (error) return <div className="text-red-400 text-sm p-8">{error}</div>;
 
 	return (
@@ -396,10 +185,10 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 				</div>
 				<table className="w-full">
 					<CabeceraTabla
-						columnas={['#', 'No. Usuario', 'No. Propiedad', 'Vínculo', 'Duración', 'Acciones']}
+						columnas={['#', 'Nombre de Usuario', 'No. Propiedad', 'Vínculo', 'Duración', 'Acciones']}
 					/>
 					<tbody>
-						{filtrados.map((up) => (
+						{filtrados.map((up, index) => (
 							<Fila
 								key={up.ID_USUARIO_PROPIEDAD}
 								seleccionada={filaActiva === up.ID_USUARIO_PROPIEDAD}
@@ -407,9 +196,9 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 									setFilaActiva(filaActiva === up.ID_USUARIO_PROPIEDAD ? null : up.ID_USUARIO_PROPIEDAD)
 								}
 							>
-								<Celda mono>{up.ID_USUARIO_PROPIEDAD}</Celda>
-								<Celda>{up.ID_USUARIO}</Celda>
-								<Celda>{up.ID_PROPIEDAD}</Celda>
+								<Celda mono>{index + 1}</Celda>
+								<Celda>{up.NOMBRE_USUARIO}</Celda>
+								<Celda>{up.NUMERO_PROPIEDAD}</Celda>
 								<Celda>{up.TIPO_VINCULO}</Celda>
 								<Celda>{formatearFecha(up.FECHA_FIN)}</Celda>
 								<td className="px-4 py-3">
@@ -451,7 +240,7 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 									<option value="">Seleccionar...</option>
 									{personal.map((u) => (
 										<option key={u.ID_USUARIO} value={u.ID_USUARIO}>
-											{u.NOMBRE_USUARIO} — {u.NOMBRE} {u.APELLIDO} ({u.ROL})
+											{u.NOMBRE_USUARIO}
 										</option>
 									))}
 								</Selector>
@@ -505,8 +294,8 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 					<div className="space-y-3 text-sm">
 						{[
 							['#', seleccion.ID_USUARIO_PROPIEDAD],
-							['No. Usuario', seleccion.ID_USUARIO],
-							['No. Propiedad', seleccion.ID_PROPIEDAD],
+							['Nombre de Usuario', seleccion.NOMBRE_USUARIO],
+							['No. Propiedad', seleccion.NUMERO_PROPIEDAD],
 							['Tipo de Vínculo', seleccion.TIPO_VINCULO],
 							['Fecha de Pago', formatearFecha(seleccion.FECHA_FIN)],
 						].map(([lbl, val]) => (

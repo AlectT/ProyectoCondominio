@@ -7,7 +7,7 @@ export const usuariosPropiedadApi = {
 
 	crear: (datos) => instancia.post('/usuarioPropiedad', datos),
 
-	actualizar: (id, datos) => instancia.patch(`/usuarioPropiedad/${id}`, datos),
+	actualizar: (id, datos) => instancia.put(`/usuarioPropiedad/${id}`, datos),
 
 	eliminar: (id) => instancia.delete(`/usuarioPropiedad/${id}`),
 };

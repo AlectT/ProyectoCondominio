@@ -5,13 +5,14 @@ import { ca } from 'zod/v4/locales';
 const consultaBase = `
   SELECT
     la.ID_LLAMADO,
-    la.ID_PROPIEDAD,
+	p.NUMERO_PROPIEDAD,
     la.ID_ADMIN,
     la.ID_TIPO_CARGO,
     la.DESCRIPCION,
     la.FECHA_EMISION,
     tc.NOMBRE
-    FROM LLAMADO_ATENCION la JOIN TIPO_CARGO tc ON la.ID_TIPO_CARGO = tc.ID_TIPO_CARGO
+    FROM LLAMADO_ATENCION la JOIN TIPO_CARGO tc ON la.ID_TIPO_CARGO = tc.ID_TIPO_CARGO 
+	JOIN PROPIEDAD p ON la.ID_PROPIEDAD = p.ID_PROPIEDAD
 `;
 
 export class LlamadasAtencionModel {
@@ -51,7 +52,7 @@ export class LlamadasAtencionModel {
 		try {
 			const parametros = {};
 			const resultado = await conexion.execute(
-				'SELECT COUNT(p.NUMERO_PROPIEDAD) AS cantidad, p.NUMERO_PROPIEDAD, tc.DESCRIPCION, la.ID_PROPIEDAD, la.ID_TIPO_CARGO FROM LLAMADO_ATENCION la JOIN PROPIEDAD p ON la.ID_PROPIEDAD = p.ID_PROPIEDAD JOIN TIPO_CARGO tc ON la.ID_TIPO_CARGO = tc.ID_TIPO_CARGO GROUP BY p.NUMERO_PROPIEDAD, tc.DESCRIPCION, la.ID_PROPIEDAD, la.ID_TIPO_CARGO',
+				'SELECT COUNT(p.NUMERO_PROPIEDAD) AS cantidad, p.NUMERO_PROPIEDAD, tc.DESCRIPCION, la.ID_PROPIEDAD, la.ID_TIPO_CARGO, tc.NOMBRE FROM LLAMADO_ATENCION la JOIN PROPIEDAD p ON la.ID_PROPIEDAD = p.ID_PROPIEDAD JOIN TIPO_CARGO tc ON la.ID_TIPO_CARGO = tc.ID_TIPO_CARGO GROUP BY p.NUMERO_PROPIEDAD, tc.DESCRIPCION, la.ID_PROPIEDAD, la.ID_TIPO_CARGO, tc.NOMBRE',
 				parametros,
 				{
 					outFormat: oracledb.OUT_FORMAT_OBJECT,
@@ -68,7 +69,7 @@ export class LlamadasAtencionModel {
 		try {
 			const parametros = {};
 			const resultado = await conexion.execute(
-				'SELECT COUNT(la.ID_PROPIEDAD) AS cantidad, la.ID_PROPIEDAD, la.ID_TIPO_CARGO FROM LLAMADO_ATENCION la  WHERE la.ID_PROPIEDAD = :id GROUP BY la.ID_TIPO_CARGO, la.ID_PROPIEDAD',
+				'SELECT COUNT(la.ID_PROPIEDAD) AS cantidad, la.ID_PROPIEDAD, la.ID_TIPO_CARGO, tc.NOMBRE FROM LLAMADO_ATENCION la JOIN TIPO_CARGO tc ON la.ID_TIPO_CARGO = tc.ID_TIPO_CARGO WHERE la.ID_PROPIEDAD = :id GROUP BY la.ID_TIPO_CARGO, la.ID_PROPIEDAD, tc.NOMBRE',
 				{ ...parametros, id },
 				{
 					outFormat: oracledb.OUT_FORMAT_OBJECT,
