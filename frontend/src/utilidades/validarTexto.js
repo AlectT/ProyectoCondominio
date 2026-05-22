@@ -19,10 +19,26 @@ export const validarTextoConSentido = (texto) => {
 	// 5. Patrones de teclado comunes (asdf, qwer, etc.)
 	const txtLower = txt.toLowerCase();
 	const patronesTeclado = [
-		'qwert', 'werty', 'ertyu', 'rtyui', 'tyuio', 'yuiop',
-		'asdfg', 'sdfgh', 'dfghj', 'fghjk', 'ghjkl',
-		'zxcvb', 'xcvbn', 'cvbnm',
-		'qwer', 'asdf', 'zxcv', 'hjkl', 'uiop', 'vbnm'
+		'qwert',
+		'werty',
+		'ertyu',
+		'rtyui',
+		'tyuio',
+		'yuiop',
+		'asdfg',
+		'sdfgh',
+		'dfghj',
+		'fghjk',
+		'ghjkl',
+		'zxcvb',
+		'xcvbn',
+		'cvbnm',
+		'qwer',
+		'asdf',
+		'zxcv',
+		'hjkl',
+		'uiop',
+		'vbnm',
 	];
 	if (patronesTeclado.some((p) => txtLower.includes(p))) return false;
 
@@ -54,10 +70,26 @@ export const validarNombrePersona = (texto) => {
 	// Patrones de teclado comunes
 	const txtLower = txt.toLowerCase();
 	const patronesTeclado = [
-		'qwert', 'werty', 'ertyu', 'rtyui', 'tyuio', 'yuiop',
-		'asdfg', 'sdfgh', 'dfghj', 'fghjk', 'ghjkl',
-		'zxcvb', 'xcvbn', 'cvbnm',
-		'qwer', 'asdf', 'zxcv', 'hjkl', 'uiop', 'vbnm'
+		'qwert',
+		'werty',
+		'ertyu',
+		'rtyui',
+		'tyuio',
+		'yuiop',
+		'asdfg',
+		'sdfgh',
+		'dfghj',
+		'fghjk',
+		'ghjkl',
+		'zxcvb',
+		'xcvbn',
+		'cvbnm',
+		'qwer',
+		'asdf',
+		'zxcv',
+		'hjkl',
+		'uiop',
+		'vbnm',
 	];
 	if (patronesTeclado.some((p) => txtLower.includes(p))) return false;
 
@@ -98,4 +130,11 @@ export const validarMontoEntero = (monto) => {
 	if (!Number.isInteger(num)) return false;
 	if (num <= 0) return false;
 	return true;
+};
+
+export const validarParqueo = (texto) => {
+	if (!texto || typeof texto !== 'string') return false;
+	const txt = texto.trim();
+	// Validar formato LETRA-NUMERO (ej. A-105)
+	return /^[a-zA-Z]-\d+$/.test(txt);
 };
