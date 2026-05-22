@@ -143,10 +143,21 @@ export const reporteDinamico = async (req, res) => {
 
         // Filtros adicionales
         filters.forEach(f => {
-            if (f.operator === 'LIKE') {
-                queryBuilder.where(f.field, 'LIKE', `%${f.value}%`);
+            if (!f || !f.field) return;
+            if (f.field.includes('||')) {
+                // Es una expresión virtual (ej. Horario Reservado)
+                if (f.operator === 'LIKE') {
+                    queryBuilder.whereRaw(`${f.field} LIKE ?`, [`%${f.value}%`]);
+                } else {
+                    queryBuilder.whereRaw(`${f.field} ${f.operator} ?`, [f.value]);
+                }
             } else {
-                queryBuilder.where(f.field, f.operator, f.value);
+                // Campo normal
+                if (f.operator === 'LIKE') {
+                    queryBuilder.where(f.field, 'LIKE', `%${f.value}%`);
+                } else {
+                    queryBuilder.where(f.field, f.operator, f.value);
+                }
             }
         });
 

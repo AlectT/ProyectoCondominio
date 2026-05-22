@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
-import { BarChart3, Download, FileText, Plus, X, Play, Filter, Loader2, Info, Zap } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { BarChart3, Download, FileText, Plus, X, Play, Filter, Loader2, Info, Zap, Image, BadgeDollarSign, AlertTriangle, Building2, Trophy, PieChart, Layers, ClipboardList, Wrench, Star, Users } from 'lucide-react';
 import { BtnPrimario } from '../ui/Botones.jsx';
 import { Campo, Entrada, Selector } from '../ui/Formularios.jsx';
-import { ReportWidget } from '../ui/ReportWidget.jsx';
+import { ReportWidget, TIPOS_GRAFICO } from '../ui/ReportWidget.jsx';
 import { exportarAExcel } from '../../utilidades/exportarExcel.js';
 import { exportarAPDF } from '../../utilidades/exportarPDF.js';
 import { obtenerReporteDinamico } from '../../api/reportesApi.js';
 import { toast } from 'sonner';
+import html2canvas from 'html2canvas';
 
 const TABLAS_TRANSACCIONALES = [
     { id: 'PAGO', nombre: 'Pagos' },
@@ -24,7 +25,6 @@ const CAMPOS_DISPONIBLES = {
         { id: 'PROPIEDAD.numero_propiedad', nombre: 'Número de Propiedad' },
         { id: 'PAGO.fecha_pago',            nombre: 'Fecha de Pago' },
         { id: 'PAGO.monto_total',           nombre: 'Monto Pagado' },
-        { id: 'PAGO.estado',                nombre: 'Estado del Pago' },
     ],
     CARGO: [
         { id: 'USUARIO.nombre',             nombre: 'Nombre del Residente' },
@@ -38,6 +38,7 @@ const CAMPOS_DISPONIBLES = {
         { id: 'USUARIO.nombre',             nombre: 'Nombre del Residente' },
         { id: 'AREA_SOCIAL.nombre',         nombre: 'Área Social' },
         { id: 'RESERVA.fecha_reserva',      nombre: 'Fecha de Reserva' },
+        { id: "RESERVA.hora_inicio || ' - ' || RESERVA.hora_fin", nombre: 'Horario Reservado (Intervalo)' },
         { id: 'RESERVA.estado',             nombre: 'Estado de Reserva' },
     ],
     TICKET: [
@@ -93,7 +94,7 @@ const REPORTES_PREDEFINIDOS = [
         id: 'morosos',
         titulo: 'Top 10 Morosos',
         descripcion: 'Residentes con mayor deuda pendiente',
-        emoji: '💸',
+        Icon: BadgeDollarSign,
         color: 'from-red-500/20 to-red-900/10 border-red-500/30 hover:border-red-400/60',
         config: { baseEntity: 'CARGO', dimension: 'USUARIO.nombre', metricType: 'SUM', metricField: 'CARGO.monto', topN: '10', filtros: [{ field: 'CARGO.estado', operator: '=', value: 'Pendiente' }] }
     },
@@ -101,7 +102,7 @@ const REPORTES_PREDEFINIDOS = [
         id: 'multas_residente',
         titulo: 'Residentes con Más Multas',
         descripcion: 'Quién acumula más llamados de atención',
-        emoji: '🚨',
+        Icon: AlertTriangle,
         color: 'from-orange-500/20 to-orange-900/10 border-orange-500/30 hover:border-orange-400/60',
         config: { baseEntity: 'LLAMADO_ATENCION', dimension: 'USUARIO.nombre', metricType: 'COUNT', metricField: 'LLAMADO_ATENCION.estado', topN: '10', filtros: [] }
     },
@@ -109,63 +110,63 @@ const REPORTES_PREDEFINIDOS = [
         id: 'areas_populares',
         titulo: 'Áreas Sociales Más Populares',
         descripcion: 'Cuáles áreas se reservan más',
-        emoji: '🏊',
+        Icon: Building2,
         color: 'from-blue-500/20 to-blue-900/10 border-blue-500/30 hover:border-blue-400/60',
         config: { baseEntity: 'RESERVA', dimension: 'AREA_SOCIAL.nombre', metricType: 'COUNT', metricField: 'RESERVA.estado', topN: '0', filtros: [] }
     },
     {
         id: 'pagadores_top',
-        titulo: 'Top Pagadores del Condominio',
-        descripcion: 'Residentes que más han pagado en total',
-        emoji: '🏆',
+        titulo: 'Top Pagadores',
+        descripcion: 'Residentes que más han pagado',
+        Icon: Trophy,
         color: 'from-emerald-500/20 to-emerald-900/10 border-emerald-500/30 hover:border-emerald-400/60',
         config: { baseEntity: 'PAGO', dimension: 'USUARIO.nombre', metricType: 'SUM', metricField: 'PAGO.monto_total', topN: '10', filtros: [] }
     },
     {
-        id: 'estado_pagos',
-        titulo: 'Estado de Todos los Pagos',
-        descripcion: 'Cuantos pagos hay por cada estado',
-        emoji: '📊',
+        id: 'estado_cargos',
+        titulo: 'Estado de Cargos',
+        descripcion: 'Cargos financieros por estado',
+        Icon: PieChart,
         color: 'from-violet-500/20 to-violet-900/10 border-violet-500/30 hover:border-violet-400/60',
-        config: { baseEntity: 'PAGO', dimension: 'PAGO.estado', metricType: 'COUNT', metricField: 'PAGO.estado', topN: '0', filtros: [] }
+        config: { baseEntity: 'CARGO', dimension: 'CARGO.estado', metricType: 'COUNT', metricField: 'CARGO.estado', topN: '0', filtros: [] }
     },
     {
         id: 'tipos_cargo',
         titulo: 'Cargos por Tipo',
-        descripcion: 'Qué tipos de cargo se generan más',
-        emoji: '🗂️',
+        descripcion: 'Qué cargos se generan más',
+        Icon: Layers,
         color: 'from-yellow-500/20 to-yellow-900/10 border-yellow-500/30 hover:border-yellow-400/60',
         config: { baseEntity: 'CARGO', dimension: 'TIPO_CARGO.nombre', metricType: 'COUNT', metricField: 'CARGO.estado', topN: '0', filtros: [] }
     },
     {
         id: 'motivos_multa',
-        titulo: 'Motivos de Multa Más Comunes',
-        descripcion: 'Por qué se sancionan más los residentes',
-        emoji: '📋',
+        titulo: 'Motivos de Multa',
+        descripcion: 'Causas de sanciones',
+        Icon: ClipboardList,
         color: 'from-red-500/20 to-pink-900/10 border-red-400/30 hover:border-pink-400/60',
         config: { baseEntity: 'LLAMADO_ATENCION', dimension: 'TIPO_CARGO.nombre', metricType: 'COUNT', metricField: 'LLAMADO_ATENCION.estado', topN: '0', filtros: [] }
     },
     {
         id: 'tickets_prioridad',
-        titulo: 'Tickets por Prioridad',
-        descripcion: 'Cuántos tickets abiertos hay por nivel de urgencia',
-        emoji: '🔧',
+        titulo: 'Tickets de Ayuda',
+        descripcion: 'Tickets por urgencia',
+        Icon: Wrench,
         color: 'from-cyan-500/20 to-cyan-900/10 border-cyan-500/30 hover:border-cyan-400/60',
         config: { baseEntity: 'TICKET', dimension: 'PRIORIDAD_TICKET.nombre', metricType: 'COUNT', metricField: 'TICKET.estado', topN: '0', filtros: [] }
     },
     {
         id: 'reservadores_top',
-        titulo: 'Residentes que Más Reservan',
-        descripcion: 'Quién usa más las áreas comunes',
-        emoji: '🌟',
+        titulo: 'Mayores Reservadores',
+        descripcion: 'Quién usa más las áreas',
+        Icon: Star,
         color: 'from-indigo-500/20 to-indigo-900/10 border-indigo-500/30 hover:border-indigo-400/60',
         config: { baseEntity: 'RESERVA', dimension: 'USUARIO.nombre', metricType: 'COUNT', metricField: 'RESERVA.estado', topN: '10', filtros: [] }
     },
     {
         id: 'tipo_visita',
-        titulo: 'Tipos de Visita Registrados',
-        descripcion: 'Qué tipo de visitantes ingresan más',
-        emoji: '🚶',
+        titulo: 'Visitas Registradas',
+        descripcion: 'Qué visitantes ingresan más',
+        Icon: Users,
         color: 'from-teal-500/20 to-teal-900/10 border-teal-500/30 hover:border-teal-400/60',
         config: { baseEntity: 'INVITACION', dimension: 'TIPO_INVITACION.nombre', metricType: 'COUNT', metricField: 'INVITACION.estado', topN: '0', filtros: [] }
     },
@@ -181,6 +182,7 @@ export function ConfiguradorReporte() {
     const [metricType, setMetricType]   = useState('SUM');
     const [topN, setTopN]               = useState('0');
     const [filtros, setFiltros]         = useState([]);
+    const [graficosActivos, setGraficosActivos] = useState(['bar']);
 
     const [nombreDimensionActual, setNombreDimensionActual] = useState('');
     const [nombreMetricaActual, setNombreMetricaActual]     = useState('');
@@ -188,6 +190,36 @@ export function ConfiguradorReporte() {
     const [nuevoFiltro, setNuevoFiltro]     = useState({ field: '', operator: '=', value: '' });
     const [valoresFiltro, setValoresFiltro] = useState([]);
     const [cargandoValores, setCargandoValores] = useState(false);
+
+    const chartsContainerRef = useRef(null);
+
+    const toggleGrafico = (id) => {
+        setGraficosActivos(prev =>
+            prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
+        );
+    };
+
+    // Captura TODOS los gráficos visibles como un array de imágenes base64
+    const capturarGraficos = async () => {
+        if (!chartsContainerRef.current) return [];
+        const nodos = chartsContainerRef.current.querySelectorAll('[data-chart]');
+        if (!nodos.length) return [];
+        const imagenes = [];
+        for (const nodo of nodos) {
+            try {
+                const canvas = await html2canvas(nodo, {
+                    backgroundColor: '#09090b',
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                });
+                imagenes.push(canvas.toDataURL('image/png'));
+            } catch (err) {
+                console.warn('No se pudo capturar una gráfica:', err);
+            }
+        }
+        return imagenes;
+    };
 
     // Al cambiar el campo del filtro → cargar valores únicos desde BD
     useEffect(() => {
@@ -238,6 +270,14 @@ export function ConfiguradorReporte() {
 
         setCargando(true);
         try {
+            const currentFilters = [...filtros];
+            if (nuevoFiltro.field && nuevoFiltro.value) {
+                currentFilters.push({ ...nuevoFiltro });
+                setFiltros(currentFilters);
+                setNuevoFiltro({ field: '', operator: '=', value: '' });
+                setValoresFiltro([]);
+            }
+
             const payload = {
                 baseEntity,
                 selections: [`${dimension} AS label`],
@@ -248,7 +288,7 @@ export function ConfiguradorReporte() {
                     alias: 'value'
                 }],
                 groupBys: [dimension],
-                filters: filtros,
+                filters: currentFilters,
                 limit: topN && topN !== '0' ? parseInt(topN, 10) : undefined,
             };
             const resp = await obtenerReporteDinamico(baseEntity, 100, payload);
@@ -273,16 +313,20 @@ export function ConfiguradorReporte() {
         [nombreMetricaActual   || 'Valor']:     r.value,
     }));
 
-    const handleExcel = () => {
+    const handleExcel = async () => {
         if (!datos.length) return toast.warning('No hay datos para exportar.');
-        exportarAExcel(datosExport(), `Reporte_${baseEntity}`);
-        toast.success('Excel generado.');
+        toast.loading('Generando Excel con gráficas…', { id: 'export-excel' });
+        const imagenesGrafico = await capturarGraficos();
+        await exportarAExcel(datosExport(), `Reporte_${baseEntity}`, imagenesGrafico);
+        toast.success('Excel generado.', { id: 'export-excel' });
     };
 
-    const handlePDF = () => {
+    const handlePDF = async () => {
         if (!datos.length) return toast.warning('No hay datos para exportar.');
-        exportarAPDF(datosExport(), `Reporte_${baseEntity}`, `Reporte de ${TABLAS_TRANSACCIONALES.find(t => t.id === baseEntity)?.nombre}`);
-        toast.success('PDF generado.');
+        toast.loading('Capturando gráficas…', { id: 'export-pdf' });
+        const imagenesGrafico = await capturarGraficos();
+        exportarAPDF(datosExport(), `Reporte_${baseEntity}`, `Reporte de ${TABLAS_TRANSACCIONALES.find(t => t.id === baseEntity)?.nombre}`, imagenesGrafico);
+        toast.success('PDF generado.', { id: 'export-pdf' });
     };
 
     const aplicarPlantilla = (plantilla) => {
@@ -303,23 +347,29 @@ export function ConfiguradorReporte() {
         <div className="flex flex-col gap-6">
 
             {/* ── Reportes Rápidos ── */}
-            <div>
-                <h3 className="text-sm font-semibold text-secundario uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-primario" /> Reportes Rápidos — Un clic para aplicar
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                    {REPORTES_PREDEFINIDOS.map(r => (
-                        <button
-                            key={r.id}
-                            type="button"
-                            onClick={() => aplicarPlantilla(r)}
-                            className={`bg-gradient-to-br ${r.color} border rounded-xl p-3 text-left transition-all duration-200 hover:scale-[1.03] hover:shadow-lg group`}
-                        >
-                            <div className="text-2xl mb-2">{r.emoji}</div>
-                            <p className="text-xs font-bold text-primario leading-tight mb-1">{r.titulo}</p>
-                            <p className="text-xs text-secundario leading-tight">{r.descripcion}</p>
-                        </button>
-                    ))}
+            <div className="border bg-fondo border-borde rounded-xl overflow-hidden shadow-sm">
+                <div className="flex items-center gap-2 p-4 border-b border-borde bg-tarjeta/50">
+                    <Zap className="w-4 h-4 text-amber-400" />
+                    <span className="text-[11px] font-bold uppercase tracking-wide text-secundario">
+                        Reportes Rápidos — Un clic para aplicar
+                    </span>
+                </div>
+                <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                    {REPORTES_PREDEFINIDOS.map((r) => {
+                        const Icon = r.Icon;
+                        return (
+                            <button
+                                key={r.id}
+                                type="button"
+                                onClick={() => aplicarPlantilla(r)}
+                                title={r.descripcion}
+                                className="flex items-center justify-center gap-2 px-4 py-2.5 text-[13px] font-medium rounded-lg bg-primario text-fondo hover:bg-white/90 transition-colors shadow-sm active:scale-[0.98]"
+                            >
+                                <Icon className="w-4 h-4 shrink-0" />
+                                <span className="truncate">{r.titulo}</span>
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -378,6 +428,11 @@ export function ConfiguradorReporte() {
                                         type="number" min="0" step="1" placeholder="0 = todos"
                                         value={topN}
                                         onChange={e => setTopN(e.target.value.replace(/\D/g, ''))}
+                                        onKeyDown={e => {
+                                            if (['-', '+', 'e', 'E', '.', ','].includes(e.key)) {
+                                                e.preventDefault();
+                                            }
+                                        }}
                                     />
                                     <p className="text-xs text-secundario mt-1">0 para ver todos</p>
                                 </Campo>
@@ -561,15 +616,57 @@ export function ConfiguradorReporte() {
                                 </div>
                             </div>
 
-                            {/* GRÁFICA ABAJO */}
+                            {/* SELECTOR DE TIPO + GRÁFICAS */}
                             <div>
-                                <h4 className="text-sm font-semibold text-secundario uppercase tracking-wider mb-3">Gráfica de Barras</h4>
-                                <ReportWidget
-                                    data={datos}
-                                    colorPrimario="#00ffb3"
-                                    nombreDimension={nombreDimensionActual}
-                                    nombreMetrica={nombreMetricaActual}
-                                />
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-sm font-semibold text-secundario uppercase tracking-wider">Visualización</h4>
+                                    <span className="text-[10px] text-secundario">{graficosActivos.length} gráfico{graficosActivos.length !== 1 ? 's' : ''} activo{graficosActivos.length !== 1 ? 's' : ''}</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1.5 mb-4">
+                                    {TIPOS_GRAFICO.map(t => {
+                                        const activo = graficosActivos.includes(t.id);
+                                        return (
+                                            <button
+                                                key={t.id}
+                                                type="button"
+                                                onClick={() => toggleGrafico(t.id)}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 cursor-pointer ${
+                                                    activo
+                                                        ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400'
+                                                        : 'bg-fondo border-borde text-secundario hover:border-zinc-600 hover:text-primario'
+                                                }`}
+                                            >
+                                                <span>{t.emoji}</span> {t.nombre}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <div ref={chartsContainerRef} className="space-y-4">
+                                    {graficosActivos.length === 0 && (
+                                        <div className="w-full h-40 flex items-center justify-center text-secundario text-sm border border-borde border-dashed rounded-lg">
+                                            Selecciona al menos un tipo de gráfico arriba.
+                                        </div>
+                                    )}
+                                    {graficosActivos.map(tipo => {
+                                        const info = TIPOS_GRAFICO.find(t => t.id === tipo);
+                                        return (
+                                            <div key={tipo}>
+                                                <p className="text-xs font-semibold text-secundario mb-2 flex items-center gap-1.5">
+                                                    <span>{info?.emoji}</span> {info?.nombre}
+                                                </p>
+                                                <div data-chart={tipo}>
+                                                    <ReportWidget
+                                                        data={datos}
+                                                        colorPrimario="#34d399"
+                                                        nombreDimension={nombreDimensionActual}
+                                                        nombreMetrica={nombreMetricaActual}
+                                                        tipoGrafico={tipo}
+                                                    />
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
                     ) : (
