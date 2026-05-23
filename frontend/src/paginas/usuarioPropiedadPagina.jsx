@@ -13,7 +13,9 @@ import {
 	XCircle,
 	History,
 	CarFront,
-	PersonStanding,
+	HouseHeart,
+	UserStar,
+	UserKey,
 } from 'lucide-react';
 import { useUsuarioPropiedad } from '../hooks/useUsuarioPropiedad.js';
 import { usuariosApi } from '../api/usuariosApi.js';
@@ -76,6 +78,7 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 	const filtrados = termino
 		? up.filter(
 				(p) =>
+					limpiar(p.TIPO_VINCULO).includes(termino) ||
 					limpiar(p.NUMERO_PROPIEDAD).includes(termino) ||
 					limpiar(p.NOMBRE_USUARIO).includes(termino),
 			)
@@ -159,18 +162,23 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 	return (
 		<div className="space-y-6 animate-in fade-in duration-300">
 			<div className="grid grid-cols-4 gap-4">
-				<TarjetaMetrica etiqueta="Total" valor={up.length} Icono={CarFront} fondo="bg-zinc-800" />
+				<TarjetaMetrica
+					etiqueta="Total"
+					valor={up.length}
+					Icono={HouseHeart}
+					fondo="bg-sky-500/10"
+				/>
 				<TarjetaMetrica
 					etiqueta="Propietarios"
 					valor={up.filter((p) => p.TIPO_VINCULO === 'Propietario').length}
-					Icono={PersonStanding}
+					Icono={UserStar}
 					fondo="bg-sky-500/10"
 				/>
 				<TarjetaMetrica
 					etiqueta="Inquilino"
 					valor={up.filter((p) => p.TIPO_VINCULO === 'Inquilino').length}
-					Icono={PersonStanding}
-					fondo="bg-zinc-500/10"
+					Icono={UserKey}
+					fondo="bg-sky-500/10"
 				/>
 			</div>
 
@@ -221,7 +229,7 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 						))}
 					</tbody>
 				</table>
-				<PieTabla mostrados={filtrados.length} total={up.length} unidad="up" />
+				<PieTabla mostrados={filtrados.length} total={up.length} unidad="Vínculos" />
 			</div>
 
 			{(modal === 'crear' || modal === 'editar') && (

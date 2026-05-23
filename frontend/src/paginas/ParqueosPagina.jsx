@@ -2,7 +2,17 @@
 // 📁 RUTA: frontend/src/paginas/ParqueosPagina.jsx
 // ============================================================
 import { useState, useEffect } from 'react';
-import { Plus, Eye, Pencil, Trash2, Clock, XCircle, CarFront } from 'lucide-react';
+import {
+	Plus,
+	Eye,
+	Pencil,
+	Trash2,
+	Clock,
+	XCircle,
+	SquareParking,
+	CircleParking,
+	CircleParkingOff,
+} from 'lucide-react';
 import { useParqueos } from '../hooks/useParqueo.js';
 import { propiedadesApi } from '../api/propiedadesApi.js';
 import { TarjetaMetrica, Etiqueta } from '../componentes/ui/Etiquetas.jsx';
@@ -133,22 +143,22 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 		<div className="space-y-6 animate-in fade-in duration-300">
 			<div className="grid grid-cols-4 gap-4">
 				<TarjetaMetrica
-					etiqueta="Total"
+					etiqueta="Total de Parqueos"
 					valor={parqueos.length}
-					Icono={CarFront}
-					fondo="bg-zinc-800"
+					Icono={CircleParking}
+					fondo="bg-sky-500/10"
 				/>
 				<TarjetaMetrica
 					etiqueta="Activos"
 					valor={parqueos.filter((p) => p.ACTIVO === 1).length}
-					Icono={Clock}
+					Icono={CircleParking}
 					fondo="bg-sky-500/10"
 				/>
 				<TarjetaMetrica
 					etiqueta="Inactivos"
 					valor={parqueos.filter((p) => p.ACTIVO === 0).length}
-					Icono={XCircle}
-					fondo="bg-zinc-500/10"
+					Icono={CircleParkingOff}
+					fondo="bg-sky-500/10"
 				/>
 			</div>
 
@@ -166,13 +176,13 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 						columnas={['#', 'No. Parqueo', 'Descripción', 'Propiedad', 'Estado', 'Acciones']}
 					/>
 					<tbody>
-						{filtrados.map((p) => (
+						{filtrados.map((p, index) => (
 							<Fila
 								key={p.ID_PARQUEO}
 								seleccionada={filaActiva === p.ID_PARQUEO}
 								onClick={() => setFilaActiva(filaActiva === p.ID_PARQUEO ? null : p.ID_PARQUEO)}
 							>
-								<Celda mono>{p.ID_PARQUEO}</Celda>
+								<Celda mono>{index + 1}</Celda>
 								<Celda>{p.NUMERO_PARQUEO}</Celda>
 								<Celda>{p.DESCRIPCION}</Celda>
 								<Celda>{p.NUMERO_PROPIEDAD}</Celda>

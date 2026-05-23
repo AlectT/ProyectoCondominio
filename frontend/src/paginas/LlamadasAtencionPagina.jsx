@@ -2,7 +2,7 @@
 // 📁 RUTA: frontend/src/paginas/LlamadasAtencionPagina.jsx
 // ============================================================
 import { useState, useEffect } from 'react';
-import { Plus, Eye, Pencil, Trash2, PhoneCall } from 'lucide-react';
+import { Plus, Eye, Pencil, PhoneOutgoing, Volume2, Hammer, Dog, Trash2 } from 'lucide-react';
 import { useLlamadasAtencion } from '../hooks/useLlamadasAtencion.js';
 import { propiedadesApi } from '../api/propiedadesApi.js';
 
@@ -157,32 +157,32 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 				<TarjetaMetrica
 					etiqueta="Total de llamadas de atención"
 					valor={llamadasAtencion.length}
-					Icono={PhoneCall}
-					fondo="bg-zinc-800"
+					Icono={PhoneOutgoing}
+					fondo="bg-sky-500/10"
 				/>
 				<TarjetaMetrica
 					etiqueta="Multas por exceso de ruido"
 					valor={llamadasAtencion.filter((p) => p.NOMBRE === 'Multa ruido excesivo').length}
-					Icono={PhoneCall}
-					fondo="bg-zinc-800"
+					Icono={Volume2}
+					fondo="bg-sky-500/10"
 				/>
 				<TarjetaMetrica
 					etiqueta="Multas daño áreas comunes"
 					valor={llamadasAtencion.filter((p) => p.NOMBRE === 'Multa daño áreas comunes').length}
-					Icono={PhoneCall}
-					fondo="bg-zinc-800"
+					Icono={Hammer}
+					fondo="bg-sky-500/10"
 				/>
 				<TarjetaMetrica
 					etiqueta="Multas mascotas sin correa"
 					valor={llamadasAtencion.filter((p) => p.NOMBRE === 'Multa mascotas sin correa').length}
-					Icono={PhoneCall}
-					fondo="bg-zinc-800"
+					Icono={Dog}
+					fondo="bg-sky-500/10"
 				/>
 				<TarjetaMetrica
 					etiqueta="Multas basura incorrecta"
 					valor={llamadasAtencion.filter((p) => p.NOMBRE === 'Multa basura incorrecta').length}
-					Icono={PhoneCall}
-					fondo="bg-zinc-800"
+					Icono={Trash2}
+					fondo="bg-sky-500/10"
 				/>
 			</div>
 
@@ -257,41 +257,36 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 												))}
 											</div>
 
-											<style jsx>{`
-												.cantidad-cell {
-													text-align: left;
-												}
+											<style>{`
+	.warning-level {
+		display: flex;
+		justify-content: left;
+		align-items: center;
+		gap: 10px;
+	}
 
-												.warning-level {
-													display: flex;
-													justify-content: left;
-													align-items: center;
-													gap: 10px;
-												}
+	.warning-dot {
+		width: 13px;
+		height: 13px;
+		border-radius: 50%;
 
-												.warning-dot {
-													width: 13px;
-													height: 13px;
-													border-radius: 50%;
+		background: rgba(127, 127, 127, 0.18);
 
-													background: rgba(255, 255, 255, 0.84);
+		border: 1px solid rgba(127, 127, 127, 0.25);
 
-													border: 1px solid rgba(255, 255, 255, 0.18);
+		transition: all 0.25s ease;
+	}
 
-													transition: all 0.25s ease;
-												}
+	.warning-dot.active {
+		background: #ff4d4d;
 
-												.warning-dot.active {
-													border: 1px solid #fff;
-													background: #ff3b3b;
+		border: 1px solid rgba(255, 255, 255, 0.35);
 
-													border-color: #ff5a5a;
-
-													box-shadow:
-														0 0 8px rgba(255, 59, 59, 0.45),
-														0 0 18px rgba(255, 59, 59, 0.15);
-												}
-											`}</style>
+		box-shadow:
+			0 0 6px rgba(255, 77, 77, 0.25),
+			0 0 14px rgba(255, 77, 77, 0.08);
+	}
+`}</style>
 										</Celda>
 									</Fila>
 								))}

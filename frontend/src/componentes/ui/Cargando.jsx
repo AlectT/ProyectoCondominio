@@ -29,8 +29,8 @@ const Cargando = ({ Texto }) => {
 				.loading-overlay {
 					position: fixed;
 					inset: 0;
-					background: rgba(4, 7, 16, 0.78);
-					backdrop-filter: blur(7px);
+					background: rgba(20, 20, 20, 0.18);
+					background: rgba(255, 255, 255, 0.08);
 
 					display: flex;
 					justify-content: center;
@@ -45,13 +45,12 @@ const Cargando = ({ Texto }) => {
 
 					border-radius: 24px;
 
-					background: linear-gradient(145deg, rgba(15, 18, 32, 0.96), rgba(8, 11, 20, 0.98));
-
+					background: rgba(255, 255, 255, 0.08);
 					border: 1px solid rgba(0, 255, 170, 0.08);
 
 					box-shadow:
-						0 0 30px rgba(0, 255, 170, 0.05),
-						0 0 60px rgba(0, 0, 0, 0.45);
+  0 0 25px rgba(0, 0, 0, 0.08),
+  0 8px 30px rgba(0, 0, 0, 0.08);
 
 					display: flex;
 					flex-direction: column;
@@ -112,7 +111,7 @@ const Cargando = ({ Texto }) => {
 					border-radius: 999px;
 
 					background: rgba(0, 255, 170, 0.06);
-					border: 1px solid rgba(0, 255, 170, 0.08);
+					border: 1px solid rgba(127, 127, 127, 0.15);
 
 					color: #00ffb3;
 
@@ -133,7 +132,7 @@ const Cargando = ({ Texto }) => {
 				}
 
 				.loading-content h2 {
-					color: white;
+					color: inherit;
 					font-size: 20px;
 					font-weight: 600;
 
@@ -144,7 +143,7 @@ const Cargando = ({ Texto }) => {
 					width: 100%;
 					height: 6px;
 
-					background: rgba(255, 255, 255, 0.05);
+					background: rgba(127, 127, 127, 0.12);
 
 					border-radius: 999px;
 					overflow: hidden;
