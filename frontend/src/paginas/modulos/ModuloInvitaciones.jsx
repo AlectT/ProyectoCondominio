@@ -1,10 +1,11 @@
 import { extraerError } from '../../utilidades/extraerError.js';
+import { validarNombrePersona, limpiarNombre } from '../../utilidades/validarTexto.js';
 // ============================================================
 // 📁 RUTA: frontend/src/paginas/modulos/ModuloInvitaciones.jsx
 // ============================================================
 
 import { useState, useEffect } from 'react';
-import { QrCode, Plus, Ban, Trash2, Pencil, CheckCircle, Clock } from 'lucide-react';
+import { QrCode, Plus, Ban, Trash2, Pencil, CheckCircle, Clock, Filter } from 'lucide-react';
 import { invitacionesApi } from '../../api/invitacionesApi.js';
 import useStore from '../../estado/useStore.js';
 import { TarjetaMetrica, Etiqueta } from '../../componentes/ui/Etiquetas.jsx';
@@ -26,10 +27,17 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 	const [filaActiva, setFilaActiva] = useState(null);
 	const [aEliminar, setAEliminar] = useState(null);
 	const [editandoId, setEditandoId] = useState(null);
+	const [guardando, setGuardando] = useState(false);
+	
+	// Filtros
+	const [mostrarFiltros, setMostrarFiltros] = useState(false);
+	const [filtroTipo, setFiltroTipo] = useState('Todos');
+	const [filtroEstado, setFiltroEstado] = useState('Todos');
 	const [form, setForm] = useState({
 		visitante: '',
 		tipo: 'Normal',
 	});
+	const [errores, setErrores] = useState({});
 
 	const cargarDatos = async (silencioso = false) => {
 		if (!silencioso) setCargando(true);
@@ -93,19 +101,61 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 	}, [datos, modal, seleccion]);
 
 	const termino = (busqueda || filtroGlobal).toLowerCase().trim();
-	const filtrados = termino
-		? datos.filter(
-				(inv) =>
-					inv.visitante.toLowerCase().includes(termino) ||
-					inv.tipo.toLowerCase().includes(termino) ||
-					inv.codigoQR?.toLowerCase().includes(termino),
-			)
-		: datos;
+	const filtrados = datos.filter((inv) => {
+		const cumpleTexto = !termino ||
+			inv.visitante.toLowerCase().includes(termino) ||
+			inv.codigoQR?.toLowerCase().includes(termino);
+		
+		const cumpleTipo = filtroTipo === 'Todos' || inv.tipo === filtroTipo;
+		const cumpleEst = filtroEstado === 'Todos' || inv.estado === filtroEstado;
+
+		return cumpleTexto && cumpleTipo && cumpleEst;
+	});
+
+	const manejarCambio = (campo, valor) => {
+		let nuevoValor = valor;
+		let error = null;
+
+		if (campo === 'visitante') {
+			nuevoValor = limpiarNombre(valor);
+			if (valor !== nuevoValor) toast.error('Carácter inválido eliminado', { id: 'char-err' });
+
+			if (nuevoValor.length > 0 && !validarNombrePersona(nuevoValor)) {
+				error = 'Ingrese un nombre válido, solo letras';
+			} else if (nuevoValor.length === 0) {
+				error = 'El nombre del visitante es obligatorio';
+			}
+		}
+
+		setForm((prev) => ({ ...prev, [campo]: nuevoValor }));
+		setErrores((prev) => ({ ...prev, [campo]: error }));
+	};
+
+	const validarFormulario = () => {
+		const nuevosErrores = {};
+		if (!validarNombrePersona(form.visitante)) {
+			nuevosErrores.visitante = 'Nombre de visitante inválido. Solo letras y espacios.';
+		}
+		setErrores(nuevosErrores);
+		return Object.keys(nuevosErrores).length === 0;
+	};
 
 	const guardar = async (e) => {
 		if (e) e.preventDefault();
+		if (guardando) return;
+		
+		if (!usuario || !usuario.ID_USUARIO) {
+			toast.error('Sesión inválida o expirada. No se pudo obtener el ID del usuario.', { icon: '🚫' });
+			return;
+		}
+
+		if (!validarFormulario()) {
+			toast.error('Corrige los errores resaltados antes de generar el pase', { icon: '⚠️' });
+			return;
+		}
 		if (!form.visitante.trim()) return;
 
+		setGuardando(true);
 		try {
 			if (editandoId) {
 				await invitacionesApi.actualizar(editandoId, {
@@ -127,11 +177,14 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 			console.error('Error al guardar:', error);
 			const msj = extraerError(error) || 'Error al guardar la invitación';
 			toast.error(msj);
+		} finally {
+			setGuardando(false);
 		}
 	};
 
 	function abrirEditar(inv) {
 		setForm({ visitante: inv.visitante, tipo: inv.tipo });
+		setErrores({});
 		setEditandoId(inv.id);
 		setModal('nuevo');
 	}
@@ -393,17 +446,59 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 			</div>
 
 			<div className="border bg-fondo border-borde rounded-xl overflow-hidden shadow-sm">
-				<div className="flex items-center justify-between p-4 border-b border-borde bg-tarjeta/50">
-					<BuscadorCasa valor={busqueda} alCambiar={setBusqueda} />
-					<BtnPrimario
-						onClick={() => {
-							setForm({ visitante: '', tipo: 'Normal' });
-							setEditandoId(null);
-							setModal('nuevo');
-						}}
-					>
-						<Plus className="w-4 h-4" /> Generar Pase QR
-					</BtnPrimario>
+				<div className="flex flex-col gap-4 p-4 border-b border-borde bg-tarjeta/50">
+					<div className="flex items-center justify-between">
+						<div className="flex items-center gap-3">
+							<BuscadorCasa valor={busqueda} alCambiar={setBusqueda} />
+							<button 
+								onClick={() => setMostrarFiltros(!mostrarFiltros)}
+								className={`p-2 rounded-lg border transition-all flex items-center gap-2 text-sm font-medium ${mostrarFiltros ? 'bg-primario/10 border-primario/30 text-primario' : 'bg-fondo border-borde text-secundario hover:text-primario hover:bg-zinc-800'}`}
+							>
+								<Filter className="w-4 h-4" />
+								<span className="hidden sm:inline">Filtros</span>
+							</button>
+						</div>
+						<BtnPrimario
+							onClick={() => {
+								setForm({ visitante: '', tipo: 'Normal' });
+								setErrores({});
+								setEditandoId(null);
+								setModal('nuevo');
+							}}
+						>
+							<Plus className="w-4 h-4" /> Generar Pase QR
+						</BtnPrimario>
+					</div>
+
+					{mostrarFiltros && (
+						<div className="flex gap-4 p-3 rounded-lg bg-zinc-900/50 border border-borde/50 animate-in slide-in-from-top-2">
+							<div className="flex flex-col gap-1.5">
+								<label className="text-xs font-medium text-secundario">Tipo de Pase</label>
+								<select 
+									value={filtroTipo}
+									onChange={(e) => setFiltroTipo(e.target.value)}
+									className="bg-fondo border border-borde text-primario text-sm rounded-lg px-3 py-1.5 outline-none focus:border-primario/50"
+								>
+									<option value="Todos">Todos</option>
+									<option value="Normal">Normal</option>
+									<option value="Servicio">Servicio</option>
+								</select>
+							</div>
+							<div className="flex flex-col gap-1.5">
+								<label className="text-xs font-medium text-secundario">Estado</label>
+								<select 
+									value={filtroEstado}
+									onChange={(e) => setFiltroEstado(e.target.value)}
+									className="bg-fondo border border-borde text-primario text-sm rounded-lg px-3 py-1.5 outline-none focus:border-primario/50"
+								>
+									<option value="Todos">Todos</option>
+									<option value="Activo">Activos</option>
+									<option value="Inactivo">Inactivos</option>
+									<option value="Expirado">Expirados</option>
+								</select>
+							</div>
+						</div>
+					)}
 				</div>
 
 				<table className="w-full">
@@ -504,12 +599,19 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 					}}
 				>
 					<form onSubmit={guardar} className="space-y-4">
-						<Campo etiqueta="Nombre del visitante">
+						<Campo 
+							etiqueta="Nombre del visitante"
+							error={errores.visitante}
+							ayuda="Escriba el primer nombre y apellido del visitante. Solo letras y espacios."
+						>
 							<Entrada
 								value={form.visitante}
-								onChange={(e) => setForm({ ...form, visitante: e.target.value })}
-								placeholder="Nombre completo"
+								onChange={(e) => manejarCambio('visitante', e.target.value)}
+								placeholder="Ej: Carlos Ramírez"
+								maxLength={45}
+								hasError={!!errores.visitante}
 								required
+								disabled={guardando}
 							/>
 						</Campo>
 
@@ -518,6 +620,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 								<Selector
 									value={form.tipo}
 									onChange={(e) => setForm({ ...form, tipo: e.target.value })}
+									disabled={guardando}
 								>
 									<option value="Normal">Normal</option>
 									<option value="Servicio">Servicio</option>
@@ -557,6 +660,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 							}}
 							textoGuardar={editandoId ? 'Actualizar' : 'Generar QR'}
 							IconoGuardar={editandoId ? undefined : QrCode}
+							deshabilitado={guardando}
 						/>
 					</form>
 				</Modal>

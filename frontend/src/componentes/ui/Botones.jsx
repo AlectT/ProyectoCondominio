@@ -27,22 +27,24 @@ export function BtnAccion({ onClick, Icono, titulo, colorHover = 'hover:text-pri
   )
 }
 
-export function BotonesModal({ alCancelar, alGuardar, textoGuardar = 'Guardar', IconoGuardar = Save }) {
+export function BotonesModal({ alCancelar, alGuardar, textoGuardar = 'Guardar', IconoGuardar = Save, deshabilitado = false }) {
   return (
     <div className="flex gap-3 pt-2">
       <button
         type="button"
         onClick={alCancelar}
-        className="flex-1 px-4 py-2 text-sm border rounded-lg border-borde text-secundario hover:text-primario transition-colors flex items-center justify-center gap-2"
+        disabled={deshabilitado}
+        className="flex-1 px-4 py-2 text-sm border rounded-lg border-borde text-secundario hover:text-primario transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <X className="w-4 h-4" /> Cancelar
       </button>
       <button
         type="submit"
         onClick={alGuardar}
-        className="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-primario text-fondo hover:bg-white/90 transition-colors flex items-center justify-center gap-2"
+        disabled={deshabilitado}
+        className="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-primario text-fondo hover:bg-white/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <IconoGuardar className="w-4 h-4" /> {textoGuardar}
+        <IconoGuardar className="w-4 h-4" /> {deshabilitado ? 'Procesando...' : textoGuardar}
       </button>
     </div>
   )

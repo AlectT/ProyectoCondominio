@@ -1,9 +1,17 @@
 import { extraerError } from '../../utilidades/extraerError.js';
+import { 
+	validarNombrePersona, 
+	validarNumeroPropiedad, 
+	limpiarNombre, 
+	limpiarAlfanumerico,
+	corregirCodificacion,
+	extraerNumeroPropiedad
+} from '../../utilidades/validarTexto.js';
 // ============================================================
 // 📁 RUTA: frontend/src/paginas/modulos/ModuloPropiedades.jsx
 // ============================================================
 import { useState, useEffect } from 'react';
-import { Building, CheckCircle, Users, Plus, Eye, Pencil, Ban, Trash2 } from 'lucide-react';
+import { Building, CheckCircle, Users, Plus, Eye, Pencil, Ban, Trash2, Filter } from 'lucide-react';
 import { propiedadesApi } from '../../api/propiedadesApi.js';
 import { categoriasApi } from '../../api/categoriasApi.js';
 import { TarjetaMetrica, Etiqueta } from '../../componentes/ui/Etiquetas.jsx';
@@ -23,6 +31,12 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 	const [seleccion, setSeleccion] = useState(null);
 	const [aEliminar, setAEliminar] = useState(null);
 	const [editandoId, setEditandoId] = useState(null);
+	const [guardando, setGuardando] = useState(false);
+	
+	// Filtros
+	const [mostrarFiltros, setMostrarFiltros] = useState(false);
+	const [filtroCategoria, setFiltroCategoria] = useState('Todas');
+	const [filtroEstado, setFiltroEstado] = useState('Todos');
 
 	const [form, setForm] = useState({
 		numero: '',
@@ -30,6 +44,7 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 		propietario: '',
 		inquilino: '',
 	});
+	const [errores, setErrores] = useState({});
 
 	const cargarDatos = async () => {
 		setCargando(true);
@@ -39,7 +54,12 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 				categoriasApi.obtenerTodas(),
 			]);
 
-			setCategoriasBD(resCat.data || []);
+			setCategoriasBD(
+				(resCat.data || []).map((c) => ({
+					...c,
+					NOMBRE: corregirCodificacion(c.NOMBRE),
+				}))
+			);
 
 			const datosFormateados = resProp.data.map((p) => {
 				const desc = p.DESCRIPCION || '';
@@ -51,7 +71,7 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 					id: p.ID_PROPIEDAD,
 					numero: p.NUMERO_PROPIEDAD,
 					idCategoria: p.ID_CATEGORIA,
-					categoria: p.CATEGORIA_NOMBRE,
+					categoria: corregirCodificacion(p.CATEGORIA_NOMBRE),
 					cuota: p.CUOTA_MENSUAL,
 					parqueos: p.MAX_PARQUEOS,
 					estado: p.ACTIVO === 1 ? 'Activo' : 'Inactivo',
@@ -72,19 +92,144 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 	}, []);
 
 	const termino = (busqueda || filtroGlobal).toLowerCase().trim();
-	const filtrados = termino
-		? datos.filter(
-				(p) =>
-					p.numero.toLowerCase().includes(termino) ||
-					p.propietario.toLowerCase().includes(termino) ||
-					(p.inquilino && p.inquilino.toLowerCase().includes(termino)),
-			)
-		: datos;
+	const filtrados = datos.filter((p) => {
+		const cumpleTexto = !termino || 
+			p.numero.toLowerCase().includes(termino) ||
+			p.propietario.toLowerCase().includes(termino) ||
+			(p.inquilino && p.inquilino.toLowerCase().includes(termino));
+		
+		const cumpleCat = filtroCategoria === 'Todas' || p.categoria.includes(filtroCategoria) || (filtroCategoria === 'Básica' && p.categoria.includes('sica'));
+		const cumpleEst = filtroEstado === 'Todos' || p.estado === filtroEstado;
+
+		return cumpleTexto && cumpleCat && cumpleEst;
+	});
+
+	const validarNumeroYLimites = (numero, idCategoria) => {
+		const categoria = categoriasBD.find(c => c.ID_CATEGORIA === Number(idCategoria));
+		if (!categoria) return null;
+
+		const nombreCat = categoria.NOMBRE;
+		let maxPropiedades = 0;
+
+		if (nombreCat.includes('Básica')) maxPropiedades = 120;
+		else if (nombreCat.includes('Intermedia')) maxPropiedades = 95;
+		else if (nombreCat.includes('Completa')) maxPropiedades = 35;
+
+		if (maxPropiedades > 0) {
+			const numExtract = extraerNumeroPropiedad(numero);
+			if (numExtract < 1 || numExtract > maxPropiedades) {
+				return `Límite excedido. Máx ${maxPropiedades} para ${nombreCat} (Ej: 1-${maxPropiedades})`;
+			}
+		}
+		return null;
+	};
+
+	const manejarCambio = (campo, valor) => {
+		let nuevoValor = valor;
+		let error = null;
+
+		if (campo === 'numero') {
+			nuevoValor = limpiarAlfanumerico(valor).toUpperCase();
+			if (valor !== nuevoValor) toast.error('Carácter inválido eliminado', { id: 'char-err' });
+
+			const categoria = categoriasBD.find(c => c.ID_CATEGORIA === Number(form.idCategoria));
+			let prefijo = '';
+			if (categoria) {
+				if (categoria.NOMBRE.includes('Básica')) prefijo = 'C-';
+				else if (categoria.NOMBRE.includes('Intermedia')) prefijo = 'B-';
+				else if (categoria.NOMBRE.includes('Completa')) prefijo = 'A-';
+			}
+			
+			if (prefijo && !nuevoValor.startsWith(prefijo)) {
+				nuevoValor = prefijo;
+			}
+
+			// Corrección de ceros a la izquierda (ej: C-05 -> C-5)
+			if (prefijo && nuevoValor.startsWith(prefijo)) {
+				const numStr = nuevoValor.substring(prefijo.length);
+				if (numStr.length > 0) {
+					const numInt = parseInt(numStr, 10);
+					if (!isNaN(numInt)) {
+						nuevoValor = prefijo + numInt;
+					}
+				}
+			}
+
+			if (!validarNumeroPropiedad(nuevoValor)) {
+				error = 'Debe contener letras, números o guiones';
+			} else if (form.idCategoria) {
+				const errorLimite = validarNumeroYLimites(nuevoValor, form.idCategoria);
+				if (errorLimite) error = errorLimite;
+			}
+		} else if (campo === 'propietario') {
+			nuevoValor = limpiarNombre(valor);
+			if (valor !== nuevoValor) toast.error('Carácter inválido eliminado', { id: 'char-err' });
+
+			if (nuevoValor.length > 0 && !validarNombrePersona(nuevoValor)) {
+				error = 'Ingrese un nombre válido, solo letras';
+			} else if (nuevoValor.length === 0) {
+				error = 'El nombre del propietario es obligatorio';
+			}
+		} else if (campo === 'inquilino') {
+			nuevoValor = limpiarNombre(valor);
+			if (valor !== nuevoValor) toast.error('Carácter inválido eliminado', { id: 'char-err' });
+
+			if (nuevoValor.length > 0 && !validarNombrePersona(nuevoValor)) {
+				error = 'Ingrese un nombre válido, solo letras';
+			}
+		} else if (campo === 'idCategoria') {
+			if (!nuevoValor) {
+				error = 'Debe seleccionar una categoría';
+			} else {
+				const categoria = categoriasBD.find(c => c.ID_CATEGORIA === Number(nuevoValor));
+				if (categoria) {
+					let prefijo = '';
+					if (categoria.NOMBRE.includes('Básica')) prefijo = 'C-';
+					else if (categoria.NOMBRE.includes('Intermedia')) prefijo = 'B-';
+					else if (categoria.NOMBRE.includes('Completa')) prefijo = 'A-';
+					setForm(prev => ({ ...prev, numero: prefijo }));
+				}
+			}
+		}
+
+		setForm((prev) => ({ ...prev, [campo]: nuevoValor }));
+		setErrores((prev) => ({ ...prev, [campo]: error }));
+	};
+
+	const validarFormulario = () => {
+		const nuevosErrores = {};
+		if (!validarNumeroPropiedad(form.numero)) {
+			nuevosErrores.numero = 'Número inválido (Ej: A-101)';
+		} else {
+			const errorLimite = validarNumeroYLimites(form.numero, form.idCategoria);
+			if (errorLimite) nuevosErrores.numero = errorLimite;
+		}
+
+		if (!validarNombrePersona(form.propietario)) {
+			nuevosErrores.propietario = 'Nombre de propietario inválido. Solo letras y espacios.';
+		}
+		if (form.inquilino && !validarNombrePersona(form.inquilino)) {
+			nuevosErrores.inquilino = 'Nombre de inquilino inválido. Solo letras y espacios.';
+		}
+		if (!form.idCategoria) {
+			nuevosErrores.idCategoria = 'Debe seleccionar una categoría';
+		}
+
+		setErrores(nuevosErrores);
+		return Object.keys(nuevosErrores).length === 0;
+	};
 
 	const guardarNuevo = async (e) => {
 		e.preventDefault();
+		if (guardando) return;
+
+		if (!validarFormulario()) {
+			toast.error('Corrige los errores resaltados antes de guardar', { icon: '⚠️' });
+			return;
+		}
 		if (!form.numero.trim() || !form.propietario.trim() || !form.idCategoria) return;
 
+		setGuardando(true);
 		const descFinal = form.inquilino.trim()
 			? `${form.propietario.trim()} | INQ: ${form.inquilino.trim()}`
 			: form.propietario.trim();
@@ -110,6 +255,8 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 		} catch (error) {
 			const msj = extraerError(error) || 'Error al guardar la propiedad';
 			toast.error(msj);
+		} finally {
+			setGuardando(false);
 		}
 	};
 
@@ -120,6 +267,7 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 			propietario: p.propietario !== 'Sin asignar' ? p.propietario : '',
 			inquilino: p.inquilino || '',
 		});
+		setErrores({});
 		setEditandoId(p.id);
 		setModal('nuevo');
 	}
@@ -385,22 +533,72 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 			</div>
 
 			<div className="border bg-fondo border-borde rounded-xl overflow-hidden shadow-sm">
-				<div className="flex items-center justify-between p-4 border-b border-borde bg-tarjeta/50">
-					<BuscadorCasa valor={busqueda} alCambiar={setBusqueda} />
-					<BtnPrimario
-						onClick={() => {
-							setForm({
-								numero: '',
-								idCategoria: categoriasBD[0]?.ID_CATEGORIA || '',
-								propietario: '',
-								inquilino: '',
-							});
-							setEditandoId(null);
-							setModal('nuevo');
-						}}
-					>
-						<Plus className="w-4 h-4" /> Registrar Propiedad
-					</BtnPrimario>
+				<div className="flex flex-col gap-4 p-4 border-b border-borde bg-tarjeta/50">
+					<div className="flex items-center justify-between">
+						<div className="flex items-center gap-3">
+							<BuscadorCasa valor={busqueda} alCambiar={setBusqueda} />
+							<button 
+								onClick={() => setMostrarFiltros(!mostrarFiltros)}
+								className={`p-2 rounded-lg border transition-all flex items-center gap-2 text-sm font-medium ${mostrarFiltros ? 'bg-primario/10 border-primario/30 text-primario' : 'bg-fondo border-borde text-secundario hover:text-primario hover:bg-zinc-800'}`}
+							>
+								<Filter className="w-4 h-4" />
+								<span className="hidden sm:inline">Filtros</span>
+							</button>
+						</div>
+						<BtnPrimario
+							onClick={() => {
+								const primerCat = categoriasBD[0];
+								let prefijo = '';
+								if (primerCat) {
+									if (primerCat.NOMBRE.includes('Básica')) prefijo = 'C-';
+									else if (primerCat.NOMBRE.includes('Intermedia')) prefijo = 'B-';
+									else if (primerCat.NOMBRE.includes('Completa')) prefijo = 'A-';
+								}
+
+								setForm({
+									numero: prefijo,
+									idCategoria: primerCat?.ID_CATEGORIA || '',
+									propietario: '',
+									inquilino: '',
+								});
+								setErrores({});
+								setEditandoId(null);
+								setModal('nuevo');
+							}}
+						>
+							<Plus className="w-4 h-4" /> Registrar Propiedad
+						</BtnPrimario>
+					</div>
+
+					{mostrarFiltros && (
+						<div className="flex gap-4 p-3 rounded-lg bg-zinc-900/50 border border-borde/50 animate-in slide-in-from-top-2">
+							<div className="flex flex-col gap-1.5">
+								<label className="text-xs font-medium text-secundario">Categoría</label>
+								<select 
+									value={filtroCategoria}
+									onChange={(e) => setFiltroCategoria(e.target.value)}
+									className="bg-fondo border border-borde text-primario text-sm rounded-lg px-3 py-1.5 outline-none focus:border-primario/50"
+								>
+									<option value="Todas">Todas</option>
+									<option value="Básica">Básica</option>
+									<option value="Intermedia">Intermedia</option>
+									<option value="Completa">Completa</option>
+								</select>
+							</div>
+							<div className="flex flex-col gap-1.5">
+								<label className="text-xs font-medium text-secundario">Estado</label>
+								<select 
+									value={filtroEstado}
+									onChange={(e) => setFiltroEstado(e.target.value)}
+									className="bg-fondo border border-borde text-primario text-sm rounded-lg px-3 py-1.5 outline-none focus:border-primario/50"
+								>
+									<option value="Todos">Todos</option>
+									<option value="Activo">Activos</option>
+									<option value="Inactivo">Inactivos</option>
+								</select>
+							</div>
+						</div>
+					)}
 				</div>
 				<table className="w-full">
 					<CabeceraTabla
@@ -482,19 +680,28 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 				>
 					<form onSubmit={guardarNuevo} className="space-y-4">
 						<div className="grid grid-cols-2 gap-4">
-							<Campo etiqueta="Número de propiedad">
+							<Campo 
+								etiqueta="Número de propiedad"
+								error={errores.numero}
+								ayuda="Alfanumérico (Ej: A-101)"
+							>
 								<Entrada
 									value={form.numero}
-									onChange={(e) => setForm({ ...form, numero: e.target.value })}
+									onChange={(e) => manejarCambio('numero', e.target.value)}
 									placeholder="Ej: A-101"
+									maxLength={15}
+									hasError={!!errores.numero}
 									required
+									disabled={guardando}
 								/>
 							</Campo>
-							<Campo etiqueta="Categoría">
+							<Campo etiqueta="Categoría" error={errores.idCategoria}>
 								<Selector
 									required
 									value={form.idCategoria}
-									onChange={(e) => setForm({ ...form, idCategoria: e.target.value })}
+									onChange={(e) => manejarCambio('idCategoria', e.target.value)}
+									hasError={!!errores.idCategoria}
+									disabled={guardando}
 								>
 									<option value="">Seleccione una...</option>
 									{categoriasBD.map((c) => (
@@ -505,19 +712,33 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 								</Selector>
 							</Campo>
 						</div>
-						<Campo etiqueta="Nombre del Propietario (Obligatorio)">
+						<Campo 
+							etiqueta="Nombre del Propietario (Obligatorio)"
+							error={errores.propietario}
+							ayuda="Escriba solo letras y espacios. Evite símbolos o números."
+						>
 							<Entrada
 								value={form.propietario}
-								onChange={(e) => setForm({ ...form, propietario: e.target.value })}
-								placeholder="Nombre completo"
+								onChange={(e) => manejarCambio('propietario', e.target.value)}
+								placeholder="Ej: Juan Pérez"
+								maxLength={45}
+								hasError={!!errores.propietario}
 								required
+								disabled={guardando}
 							/>
 						</Campo>
-						<Campo etiqueta="Nombre del Inquilino (Opcional)">
+						<Campo 
+							etiqueta="Nombre del Inquilino (Opcional)"
+							error={errores.inquilino}
+							ayuda="Dejar en blanco si la propiedad no está alquilada. Solo letras y espacios."
+						>
 							<Entrada
 								value={form.inquilino}
-								onChange={(e) => setForm({ ...form, inquilino: e.target.value })}
-								placeholder="Dejar en blanco si no hay"
+								onChange={(e) => manejarCambio('inquilino', e.target.value)}
+								placeholder="Ej: Ana Gómez"
+								maxLength={45}
+								hasError={!!errores.inquilino}
+								disabled={guardando}
 							/>
 						</Campo>
 
@@ -542,6 +763,7 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 								setEditandoId(null);
 							}}
 							textoGuardar={editandoId ? 'Actualizar' : 'Guardar'}
+							deshabilitado={guardando}
 						/>
 					</form>
 				</Modal>

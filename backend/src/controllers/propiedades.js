@@ -29,6 +29,10 @@ export const propiedadesController = {
 			res.status(201).json(nuevaPropiedad);
 		} catch (error) {
 			console.error(error);
+			if (error.message && error.message.includes('LIMITE_ALCANZADO')) {
+				const limite = error.message.split(':')[1];
+				return res.status(400).json({ mensaje: `Límite máximo de propiedades alcanzado (${limite}). No puedes crear más para esta categoría.` });
+			}
 			// Manejar error de número de propiedad duplicado
 			if (error.errorNum === 1) {
 				return res.status(400).json({ mensaje: 'El número de propiedad ya existe en el sistema' });
@@ -51,6 +55,10 @@ export const propiedadesController = {
 			res.json(propiedadActualizada);
 		} catch (error) {
 			console.error(error);
+			if (error.message && error.message.includes('LIMITE_ALCANZADO')) {
+				const limite = error.message.split(':')[1];
+				return res.status(400).json({ mensaje: `Límite máximo de propiedades alcanzado (${limite}). No puedes cambiar a esta categoría porque ya está llena.` });
+			}
 			res.status(500).json({ mensaje: 'Error interno al actualizar la propiedad' });
 		}
 	},

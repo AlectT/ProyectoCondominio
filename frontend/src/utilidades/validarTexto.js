@@ -38,7 +38,10 @@ export const validarNombrePersona = (texto) => {
 	const txt = texto.trim();
 	if (txt.length < 2) return false;
 
-	// Validar que contenga al menos 2 letras (evita puros números o símbolos)
+	// Si contiene CUALQUIER COSA que no sea letra, espacio o punto, es inválido (blindaje contra símbolos y números)
+	if (/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s.]/.test(txt)) return false;
+
+	// Validar que contenga al menos 2 letras
 	const soloLetras = txt.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
 	if (soloLetras.length < 2) return false;
 
@@ -62,6 +65,45 @@ export const validarNombrePersona = (texto) => {
 	if (patronesTeclado.some((p) => txtLower.includes(p))) return false;
 
 	return true;
+};
+
+export const limpiarNombre = (texto) => {
+	if (!texto) return '';
+	// Mantiene solo letras, espacios y puntos. Elimina todo lo demás en tiempo real.
+	// También reemplaza múltiples espacios por uno solo.
+	return texto.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s.]/g, '').replace(/\s{2,}/g, ' ');
+};
+
+export const limpiarAlfanumerico = (texto) => {
+	if (!texto) return '';
+	// Mantiene solo letras, números y guiones.
+	return texto.replace(/[^a-zA-Z0-9-]/g, '');
+};
+
+export const validarNumeroPropiedad = (texto) => {
+	if (!texto || typeof texto !== 'string') return false;
+	const txt = texto.trim();
+	if (txt.length < 1) return false;
+	// Solo permite letras, números y guiones
+	if (/[^a-zA-Z0-9-]/.test(txt)) return false;
+	return true;
+};
+
+export const corregirCodificacion = (texto) => {
+	if (!texto) return '';
+	// Corrige posibles errores de codificación en BBDD (ej: BÃ¡sica)
+	return texto.replace(/B[Ã¡a-zA-Z]*sica/gi, 'Básica');
+};
+
+export const extraerNumeroPropiedad = (texto) => {
+	if (!texto) return 0;
+	const partes = texto.split('-');
+	if (partes.length > 1) {
+		const num = parseInt(partes[1].replace(/[^0-9]/g, ''), 10);
+		return isNaN(num) ? 0 : num;
+	}
+	const num = parseInt(texto.replace(/[^0-9]/g, ''), 10);
+	return isNaN(num) ? 0 : num;
 };
 
 export const validarNombreUsuario = (texto) => {

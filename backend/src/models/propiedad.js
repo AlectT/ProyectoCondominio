@@ -54,6 +54,34 @@ export class PropiedadModel {
 		const conexion = await conectar();
 		try {
 			const { idCategoria, numeroPropiedad, descripcion, activo = 1 } = datos;
+
+			// VALIDACIÓN ANTI-CONCURRENCIA: Límite de propiedades
+			const resultadoCat = await conexion.execute(
+				`SELECT NOMBRE FROM CATEGORIA_PROPIEDAD WHERE ID_CATEGORIA = :idCategoria`,
+				{ idCategoria },
+				{ outFormat: oracledb.OUT_FORMAT_OBJECT }
+			);
+			
+			if (resultadoCat.rows.length > 0) {
+				const nombreCat = resultadoCat.rows[0].NOMBRE || '';
+				let limite = 0;
+				if (nombreCat.includes('sica')) limite = 120; // Básica o BÃ¡sica
+				else if (nombreCat.includes('Intermedia')) limite = 95;
+				else if (nombreCat.includes('Completa')) limite = 35;
+
+				if (limite > 0) {
+					const resultadoConteo = await conexion.execute(
+						`SELECT COUNT(*) AS TOTAL FROM PROPIEDAD WHERE ID_CATEGORIA = :idCategoria`,
+						{ idCategoria },
+						{ outFormat: oracledb.OUT_FORMAT_OBJECT }
+					);
+					const totalActual = resultadoConteo.rows[0].TOTAL;
+					if (totalActual >= limite) {
+						throw new Error(`LIMITE_ALCANZADO:${limite}`);
+					}
+				}
+			}
+
 			const resultado = await conexion.execute(
 				`INSERT INTO PROPIEDAD
                 (ID_CATEGORIA, NUMERO_PROPIEDAD, DESCRIPCION, ACTIVO) 
@@ -88,6 +116,36 @@ export class PropiedadModel {
 
 			const setCampos = [];
 			const parametros = { id };
+
+			// VALIDACIÓN ANTI-BYPASS: Límite de propiedades al cambiar de categoría
+			if (datos.idCategoria !== undefined) {
+				const resultadoCat = await conexion.execute(
+					`SELECT NOMBRE FROM CATEGORIA_PROPIEDAD WHERE ID_CATEGORIA = :idCategoria`,
+					{ idCategoria: datos.idCategoria },
+					{ outFormat: oracledb.OUT_FORMAT_OBJECT }
+				);
+				
+				if (resultadoCat.rows.length > 0) {
+					const nombreCat = resultadoCat.rows[0].NOMBRE || '';
+					let limite = 0;
+					if (nombreCat.includes('sica')) limite = 120;
+					else if (nombreCat.includes('Intermedia')) limite = 95;
+					else if (nombreCat.includes('Completa')) limite = 35;
+
+					if (limite > 0) {
+						// IMPORTANTE: Excluimos la propiedad actual del conteo por si solo está actualizando el nombre sin cambiar de categoría
+						const resultadoConteo = await conexion.execute(
+							`SELECT COUNT(*) AS TOTAL FROM PROPIEDAD WHERE ID_CATEGORIA = :idCategoria AND ID_PROPIEDAD != :id`,
+							{ idCategoria: datos.idCategoria, id },
+							{ outFormat: oracledb.OUT_FORMAT_OBJECT }
+						);
+						const totalActual = resultadoConteo.rows[0].TOTAL;
+						if (totalActual >= limite) {
+							throw new Error(`LIMITE_ALCANZADO:${limite}`);
+						}
+					}
+				}
+			}
 
 			for (const [claveCamel, columnaOracle] of Object.entries(camposPermitidos)) {
 				if (datos[claveCamel] !== undefined) {

@@ -1,4 +1,5 @@
 import { extraerError } from '../../utilidades/extraerError.js';
+import { corregirCodificacion } from '../../utilidades/validarTexto.js';
 // ============================================================
 // 📁 RUTA: frontend/src/paginas/modulos/ModuloCategorias.jsx
 // ============================================================
@@ -34,7 +35,7 @@ export default function ModuloCategorias({ filtroGlobal = '' }) {
 			const respuesta = await categoriasApi.obtenerTodas();
 			const formateados = respuesta.data.map((c) => ({
 				id: c.ID_CATEGORIA,
-				nombre: c.NOMBRE,
+				nombre: corregirCodificacion(c.NOMBRE),
 				descripcion: c.DESCRIPCION,
 				maxParqueos: c.MAX_PARQUEOS,
 				cuotaMensual: c.CUOTA_MENSUAL,
