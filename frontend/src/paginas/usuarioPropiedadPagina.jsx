@@ -101,7 +101,7 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 			idUsuario: p.ID_USUARIO,
 			idPropiedad: p.ID_PROPIEDAD,
 			tipoVinculo: p.TIPO_VINCULO,
-			fechaFin: p.FECHA_FIN,
+			fechaFin: p.FECHA_FIN ? p.FECHA_FIN.split('T')[0] : '',
 		});
 		setErrorModal('');
 		setModal('editar');

@@ -296,81 +296,136 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 									<span>Inactivo</span>
 								</label>
 
-								<style jsx>{`
+								<style>{`
 									.estado-container {
-										display: flex;
-										gap: 14px;
-										margin-top: 10px;
-									}
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	flex-wrap: wrap;
+}
 
-									.estado-opcion {
-										display: flex;
-										align-items: center;
-										gap: 8px;
+.estado-opcion {
+	display: flex;
+	align-items: center;
+	gap: 10px;
 
-										padding: 10px 18px;
-										border-radius: 999px;
+	cursor: pointer;
 
-										background: #23232b;
-										border: 1px solid #3a3a46;
+	padding: 10px 16px;
 
-										color: #b8b8c2;
-										font-size: 14px;
-										font-weight: 600;
+	border-radius: 14px;
 
-										cursor: pointer;
-										transition: all 0.2s ease;
+	background: rgba(127, 127, 127, 0.05);
 
-										user-select: none;
-									}
+	border: 1px solid rgba(127, 127, 127, 0.12);
 
-									/* OCULTAR RADIO ORIGINAL */
-									.estado-opcion input[type='radio'] {
-										display: none;
-									}
+	transition:
+		background 0.25s ease,
+		border-color 0.25s ease,
+		transform 0.2s ease,
+		box-shadow 0.25s ease;
+}
 
-									.estado-dot {
-										width: 10px;
-										height: 10px;
-										border-radius: 50%;
-										background: #777;
+.estado-opcion:hover {
+	background: rgba(127, 127, 127, 0.08);
 
-										transition: all 0.2s ease;
-									}
+	border-color: rgba(127, 127, 127, 0.2);
+}
 
-									/* HOVER */
-									.estado-opcion:hover {
-										transform: translateY(-1px);
-										border-color: #555;
-									}
+.estado-opcion input {
+	display: none;
+}
 
-									/* ACTIVO */
-									.activo-seleccionado {
-										background: rgba(0, 255, 140, 0.12);
-										border-color: rgba(0, 255, 140, 0.4);
-										color: #61ffb0;
+.estado-dot {
+	width: 18px;
+	height: 18px;
 
-										box-shadow: 0 0 12px rgba(0, 255, 140, 0.15);
-									}
+	border-radius: 50%;
 
-									.activo-seleccionado .estado-dot {
-										background: #00ff88;
-										box-shadow: 0 0 10px #00ff88;
-									}
+	border: 2px solid rgba(127, 127, 127, 0.45);
 
-									/* INACTIVO */
-									.inactivo-seleccionado {
-										background: rgba(255, 90, 90, 0.12);
-										border-color: rgba(255, 90, 90, 0.4);
-										color: #ff9090;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 
-										box-shadow: 0 0 12px rgba(255, 90, 90, 0.12);
-									}
+	position: relative;
 
-									.inactivo-seleccionado .estado-dot {
-										background: #ff5a5a;
-										box-shadow: 0 0 10px #ff5a5a;
-									}
+	transition: all 0.25s ease;
+}
+
+.estado-dot::after {
+	content: "";
+
+	width: 8px;
+	height: 8px;
+
+	border-radius: 50%;
+
+	transform: scale(0);
+
+	transition: transform 0.2s ease;
+}
+
+/* ========================= */
+/* ACTIVO */
+/* ========================= */
+
+.activo-seleccionado {
+	background: rgba(0, 214, 143, 0.08);
+
+	border-color: rgba(0, 214, 143, 0.28);
+
+	box-shadow:
+		0 0 10px rgba(0, 214, 143, 0.08);
+}
+
+.activo-seleccionado .estado-dot {
+	border-color: #00d68f;
+}
+
+.activo-seleccionado .estado-dot::after {
+	background: #00d68f;
+
+	transform: scale(1);
+
+	box-shadow:
+		0 0 8px rgba(0, 214, 143, 0.35);
+}
+
+/* ========================= */
+/* INACTIVO */
+/* ========================= */
+
+.inactivo-seleccionado {
+	background: rgba(255, 77, 77, 0.08);
+
+	border-color: rgba(255, 77, 77, 0.25);
+
+	box-shadow:
+		0 0 10px rgba(255, 77, 77, 0.06);
+}
+
+.inactivo-seleccionado .estado-dot {
+	border-color: #ff4d4d;
+}
+
+.inactivo-seleccionado .estado-dot::after {
+	background: #ff4d4d;
+
+	transform: scale(1);
+
+	box-shadow:
+		0 0 8px rgba(255, 77, 77, 0.35);
+}
+
+.estado-opcion span:last-child {
+	font-size: 14px;
+	font-weight: 500;
+
+	color: inherit;
+
+	user-select: none;
+}
 								`}</style>
 							</div>
 						</Campo>
