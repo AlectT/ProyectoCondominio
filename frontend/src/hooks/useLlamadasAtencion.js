@@ -8,7 +8,7 @@ export function useLlamadasAtencion() {
 	const [llamadasAgrupadas, setLlamadasAgrupadas] = useState([]);
 
 	const cargar = useCallback(async () => {
-		setCargando(true);
+		setCargando(false);
 		setError(null);
 		try {
 			const res = await llamadasAtencionApi.obtenerTodos();
@@ -27,20 +27,18 @@ export function useLlamadasAtencion() {
 	}, [cargar]);
 
 	const crear = async (datos) => {
-		const res = await llamadasAtencionApi.crear(datos);
-		setLlamadasAtencion((prev) => [res.data, ...prev]);
-		return res.data;
+		await llamadasAtencionApi.crear(datos);
+		await cargar();
 	};
 
 	const actualizar = async (id, datos) => {
-		const res = await llamadasAtencionApi.actualizar(id, datos);
-		setLlamadasAtencion((prev) => prev.map((l) => (l.ID_LLAMADO === id ? res.data : l)));
-		return res.data;
+		await llamadasAtencionApi.actualizar(id, datos);
+		await cargar();
 	};
 
 	const eliminar = async (id) => {
 		await llamadasAtencionApi.eliminar(id);
-		setLlamadasAtencion((prev) => prev.filter((l) => l.ID_LLAMADO !== id));
+		await cargar();
 	};
 
 	return {

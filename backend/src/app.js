@@ -58,7 +58,7 @@ aplicacion.use('/invitaciones', enrutadorInvitaciones);
 aplicacion.use('/propiedades', enrutadorPropiedades);
 aplicacion.use('/categorias-propiedad', enrutadorCategorias);
 aplicacion.use('/vinculaciones', enrutadorVinculaciones);
-aplicacion.use('/api/reportes', reportesRoutes);
+aplicacion.use('/reportes', reportesRoutes);
 
 // Iniciar servidor
 if (process.env.NODE_ENV !== 'test') {

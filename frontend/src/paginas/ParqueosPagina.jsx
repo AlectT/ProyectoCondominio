@@ -2,7 +2,17 @@
 // 📁 RUTA: frontend/src/paginas/ParqueosPagina.jsx
 // ============================================================
 import { useState, useEffect } from 'react';
-import { Plus, Eye, Pencil, Trash2, Clock, XCircle, CarFront } from 'lucide-react';
+import {
+	Plus,
+	Eye,
+	Pencil,
+	Trash2,
+	Clock,
+	XCircle,
+	SquareParking,
+	CircleParking,
+	CircleParkingOff,
+} from 'lucide-react';
 import { useParqueos } from '../hooks/useParqueo.js';
 import { propiedadesApi } from '../api/propiedadesApi.js';
 import { TarjetaMetrica, Etiqueta } from '../componentes/ui/Etiquetas.jsx';
@@ -14,6 +24,8 @@ import { Campo, Selector } from '../componentes/ui/Formularios.jsx';
 import { extraerError } from '../utilidades/extraerError.js';
 import useStore from '../estado/useStore.js';
 import { toast } from 'sonner';
+import Cargando from '../Componentes/ui/Cargando.jsx';
+import { validarTextoConSentido, validarParqueo } from '../Utilidades/validarTexto.js';
 
 const limpiar = (str) => str?.toString().toLowerCase().replace(/\s/g, '') ?? '';
 
@@ -92,8 +104,8 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 			const datosAEnviar = {
 				...form,
 				idPropiedad: Number(form.idPropiedad),
-				numeroParqueo: form.numeroParqueo,
-				descripcion: form.descripcion,
+				numeroParqueo: validarParqueo(form.numeroParqueo) && form.numeroParqueo,
+				descripcion: validarTextoConSentido(form.descripcion) && form.descripcion,
 				activo: form.activo,
 			};
 
@@ -106,7 +118,7 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 			}
 			setModal(null);
 		} catch (err) {
-			const msj = extraerError(err) || 'Error al guardar el parqueo';
+			const msj = extraerError(err) || 'Error en los campos seleccionados';
 			setErrorModal(msj);
 			toast.error(msj);
 		}
@@ -124,242 +136,29 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 		setAEliminar(null);
 	};
 
-	if (cargando)
-		return (
-			<>
-				<div className="loading-overlay">
-					<div className="loading-card">
-						{/* Loader */}
-						<div className="loader-wrapper">
-							<div className="loader-ring"></div>
-							<div className="loader-core"></div>
-						</div>
-
-						{/* Text */}
-						<div className="loading-content">
-							<span className="loading-badge">
-								<span className="pulse-dot"></span>
-								Cargando parqueos
-							</span>
-
-							<div className="loading-line">
-								<div className="loading-progress"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<style jsx>{`
-					.loading-overlay {
-						position: fixed;
-						inset: 0;
-						background: rgba(4, 7, 16, 0.78);
-						backdrop-filter: blur(7px);
-
-						display: flex;
-						justify-content: center;
-						align-items: center;
-
-						z-index: 9999;
-					}
-
-					.loading-card {
-						width: 320px;
-						padding: 32px 28px;
-
-						border-radius: 24px;
-
-						background: linear-gradient(145deg, rgba(15, 18, 32, 0.96), rgba(8, 11, 20, 0.98));
-
-						border: 1px solid rgba(0, 255, 170, 0.08);
-
-						box-shadow:
-							0 0 30px rgba(0, 255, 170, 0.05),
-							0 0 60px rgba(0, 0, 0, 0.45);
-
-						display: flex;
-						flex-direction: column;
-						align-items: center;
-						gap: 24px;
-					}
-
-					.loader-wrapper {
-						position: relative;
-						width: 72px;
-						height: 72px;
-
-						display: flex;
-						justify-content: center;
-						align-items: center;
-					}
-
-					.loader-ring {
-						position: absolute;
-						width: 72px;
-						height: 72px;
-						border-radius: 50%;
-
-						border: 3px solid rgba(0, 255, 170, 0.08);
-						border-top: 3px solid #00ffb3;
-						border-right: 3px solid #00c8ff;
-
-						animation: rotate 1s linear infinite;
-
-						box-shadow: 0 0 18px rgba(0, 255, 170, 0.15);
-					}
-
-					.loader-core {
-						width: 18px;
-						height: 18px;
-						border-radius: 50%;
-
-						background: linear-gradient(135deg, #00ffb3, #00c8ff);
-
-						box-shadow:
-							0 0 12px rgba(0, 255, 170, 0.45),
-							0 0 22px rgba(0, 200, 255, 0.25);
-
-						animation: pulse 1.5s ease-in-out infinite;
-					}
-
-					.loading-content {
-						width: 100%;
-						text-align: center;
-					}
-
-					.loading-badge {
-						display: inline-flex;
-						align-items: center;
-						gap: 8px;
-
-						padding: 7px 14px;
-						border-radius: 999px;
-
-						background: rgba(0, 255, 170, 0.06);
-						border: 1px solid rgba(0, 255, 170, 0.08);
-
-						color: #00ffb3;
-
-						font-size: 11px;
-						font-weight: 700;
-						letter-spacing: 1.5px;
-
-						margin-bottom: 18px;
-					}
-
-					.pulse-dot {
-						width: 8px;
-						height: 8px;
-						border-radius: 50%;
-						background: #00ffb3;
-
-						animation: blink 1s infinite;
-					}
-
-					.loading-content h2 {
-						color: white;
-						font-size: 20px;
-						font-weight: 600;
-
-						margin-bottom: 18px;
-					}
-
-					.loading-line {
-						width: 100%;
-						height: 6px;
-
-						background: rgba(255, 255, 255, 0.05);
-
-						border-radius: 999px;
-						overflow: hidden;
-					}
-
-					.loading-progress {
-						width: 40%;
-						height: 100%;
-
-						border-radius: inherit;
-
-						background: linear-gradient(90deg, #00ffb3, #00c8ff);
-
-						animation: progressMove 1.5s ease-in-out infinite;
-					}
-
-					@keyframes rotate {
-						from {
-							transform: rotate(0deg);
-						}
-
-						to {
-							transform: rotate(360deg);
-						}
-					}
-
-					@keyframes pulse {
-						0%,
-						100% {
-							transform: scale(1);
-							opacity: 1;
-						}
-
-						50% {
-							transform: scale(1.2);
-							opacity: 0.7;
-						}
-					}
-
-					@keyframes blink {
-						0%,
-						100% {
-							opacity: 1;
-						}
-
-						50% {
-							opacity: 0.4;
-						}
-					}
-
-					@keyframes progressMove {
-						0% {
-							transform: translateX(-120%);
-						}
-
-						100% {
-							transform: translateX(320%);
-						}
-					}
-
-					@media (max-width: 480px) {
-						.loading-card {
-							width: 88%;
-							padding: 28px 22px;
-						}
-					}
-				`}</style>
-			</>
-		);
+	if (cargando) return <Cargando Texto={'Parqueos'} />;
 	if (error) return <div className="text-red-400 text-sm p-8">{error}</div>;
 
 	return (
 		<div className="space-y-6 animate-in fade-in duration-300">
 			<div className="grid grid-cols-4 gap-4">
 				<TarjetaMetrica
-					etiqueta="Total"
+					etiqueta="Total de Parqueos"
 					valor={parqueos.length}
-					Icono={CarFront}
-					fondo="bg-zinc-800"
+					Icono={CircleParking}
+					fondo="bg-sky-500/10"
 				/>
 				<TarjetaMetrica
 					etiqueta="Activos"
 					valor={parqueos.filter((p) => p.ACTIVO === 1).length}
-					Icono={Clock}
+					Icono={CircleParking}
 					fondo="bg-sky-500/10"
 				/>
 				<TarjetaMetrica
 					etiqueta="Inactivos"
 					valor={parqueos.filter((p) => p.ACTIVO === 0).length}
-					Icono={XCircle}
-					fondo="bg-zinc-500/10"
+					Icono={CircleParkingOff}
+					fondo="bg-sky-500/10"
 				/>
 			</div>
 
@@ -377,13 +176,13 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 						columnas={['#', 'No. Parqueo', 'Descripción', 'Propiedad', 'Estado', 'Acciones']}
 					/>
 					<tbody>
-						{filtrados.map((p) => (
+						{filtrados.map((p, index) => (
 							<Fila
 								key={p.ID_PARQUEO}
 								seleccionada={filaActiva === p.ID_PARQUEO}
 								onClick={() => setFilaActiva(filaActiva === p.ID_PARQUEO ? null : p.ID_PARQUEO)}
 							>
-								<Celda mono>{p.ID_PARQUEO}</Celda>
+								<Celda mono>{index + 1}</Celda>
 								<Celda>{p.NUMERO_PARQUEO}</Celda>
 								<Celda>{p.DESCRIPCION}</Celda>
 								<Celda>{p.NUMERO_PROPIEDAD}</Celda>
@@ -424,18 +223,30 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 					<form onSubmit={guardar} className="space-y-4">
 						<div className="grid grid-cols-2 gap-4">
 							<Campo etiqueta="Propiedad">
-								<Selector
-									required
-									value={form.idPropiedad}
-									onChange={(e) => setForm({ ...form, idPropiedad: e.target.value })}
-								>
-									<option value="">Seleccionar...</option>
-									{propiedades.map((p) => (
-										<option key={p.ID_PROPIEDAD} value={p.ID_PROPIEDAD}>
-											{p.NUMERO_PROPIEDAD}
-										</option>
-									))}
-								</Selector>
+								{modal === 'crear' ? (
+									<Selector
+										required
+										value={form.idPropiedad}
+										onChange={(e) => setForm({ ...form, idPropiedad: e.target.value })}
+									>
+										<option value="">Seleccionar...</option>
+										{propiedades.map((p) => (
+											<option key={p.ID_PROPIEDAD} value={p.ID_PROPIEDAD}>
+												{p.NUMERO_PROPIEDAD}
+											</option>
+										))}
+									</Selector>
+								) : (
+									<input
+										type="text"
+										required
+										value={seleccion?.NUMERO_PROPIEDAD || ''}
+										onChange={(e) => setForm({ ...form, idPropiedad: e.target.value })}
+										placeholder="Ej: P-101"
+										className="w-full px-3 py-2 text-sm border rounded-lg bg-fondo border-borde text-primario placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
+										readOnly
+									/>
+								)}
 							</Campo>
 							<Campo etiqueta="Numero de parqueo">
 								<input
@@ -485,81 +296,136 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 									<span>Inactivo</span>
 								</label>
 
-								<style jsx>{`
+								<style>{`
 									.estado-container {
-										display: flex;
-										gap: 14px;
-										margin-top: 10px;
-									}
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	flex-wrap: wrap;
+}
 
-									.estado-opcion {
-										display: flex;
-										align-items: center;
-										gap: 8px;
+.estado-opcion {
+	display: flex;
+	align-items: center;
+	gap: 10px;
 
-										padding: 10px 18px;
-										border-radius: 999px;
+	cursor: pointer;
 
-										background: #23232b;
-										border: 1px solid #3a3a46;
+	padding: 10px 16px;
 
-										color: #b8b8c2;
-										font-size: 14px;
-										font-weight: 600;
+	border-radius: 14px;
 
-										cursor: pointer;
-										transition: all 0.2s ease;
+	background: rgba(127, 127, 127, 0.05);
 
-										user-select: none;
-									}
+	border: 1px solid rgba(127, 127, 127, 0.12);
 
-									/* OCULTAR RADIO ORIGINAL */
-									.estado-opcion input[type='radio'] {
-										display: none;
-									}
+	transition:
+		background 0.25s ease,
+		border-color 0.25s ease,
+		transform 0.2s ease,
+		box-shadow 0.25s ease;
+}
 
-									.estado-dot {
-										width: 10px;
-										height: 10px;
-										border-radius: 50%;
-										background: #777;
+.estado-opcion:hover {
+	background: rgba(127, 127, 127, 0.08);
 
-										transition: all 0.2s ease;
-									}
+	border-color: rgba(127, 127, 127, 0.2);
+}
 
-									/* HOVER */
-									.estado-opcion:hover {
-										transform: translateY(-1px);
-										border-color: #555;
-									}
+.estado-opcion input {
+	display: none;
+}
 
-									/* ACTIVO */
-									.activo-seleccionado {
-										background: rgba(0, 255, 140, 0.12);
-										border-color: rgba(0, 255, 140, 0.4);
-										color: #61ffb0;
+.estado-dot {
+	width: 18px;
+	height: 18px;
 
-										box-shadow: 0 0 12px rgba(0, 255, 140, 0.15);
-									}
+	border-radius: 50%;
 
-									.activo-seleccionado .estado-dot {
-										background: #00ff88;
-										box-shadow: 0 0 10px #00ff88;
-									}
+	border: 2px solid rgba(127, 127, 127, 0.45);
 
-									/* INACTIVO */
-									.inactivo-seleccionado {
-										background: rgba(255, 90, 90, 0.12);
-										border-color: rgba(255, 90, 90, 0.4);
-										color: #ff9090;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 
-										box-shadow: 0 0 12px rgba(255, 90, 90, 0.12);
-									}
+	position: relative;
 
-									.inactivo-seleccionado .estado-dot {
-										background: #ff5a5a;
-										box-shadow: 0 0 10px #ff5a5a;
-									}
+	transition: all 0.25s ease;
+}
+
+.estado-dot::after {
+	content: "";
+
+	width: 8px;
+	height: 8px;
+
+	border-radius: 50%;
+
+	transform: scale(0);
+
+	transition: transform 0.2s ease;
+}
+
+/* ========================= */
+/* ACTIVO */
+/* ========================= */
+
+.activo-seleccionado {
+	background: rgba(0, 214, 143, 0.08);
+
+	border-color: rgba(0, 214, 143, 0.28);
+
+	box-shadow:
+		0 0 10px rgba(0, 214, 143, 0.08);
+}
+
+.activo-seleccionado .estado-dot {
+	border-color: #00d68f;
+}
+
+.activo-seleccionado .estado-dot::after {
+	background: #00d68f;
+
+	transform: scale(1);
+
+	box-shadow:
+		0 0 8px rgba(0, 214, 143, 0.35);
+}
+
+/* ========================= */
+/* INACTIVO */
+/* ========================= */
+
+.inactivo-seleccionado {
+	background: rgba(255, 77, 77, 0.08);
+
+	border-color: rgba(255, 77, 77, 0.25);
+
+	box-shadow:
+		0 0 10px rgba(255, 77, 77, 0.06);
+}
+
+.inactivo-seleccionado .estado-dot {
+	border-color: #ff4d4d;
+}
+
+.inactivo-seleccionado .estado-dot::after {
+	background: #ff4d4d;
+
+	transform: scale(1);
+
+	box-shadow:
+		0 0 8px rgba(255, 77, 77, 0.35);
+}
+
+.estado-opcion span:last-child {
+	font-size: 14px;
+	font-weight: 500;
+
+	color: inherit;
+
+	user-select: none;
+}
 								`}</style>
 							</div>
 						</Campo>
@@ -580,7 +446,7 @@ export default function ParqueosPagina({ filtroGlobal = '' }) {
 							['No. Parqueo', seleccion.NUMERO_PARQUEO],
 							['No. Propiedad', seleccion.NUMERO_PROPIEDAD],
 							['Descripcion', seleccion.DESCRIPCION],
-							['Estado', seleccion.ACTIVO],
+							['Estado', seleccion.ACTIVO === 1 ? 'ACTIVO' : 'INACTIVO'],
 						].map(([lbl, val]) => (
 							<div key={lbl} className="flex justify-between border-b border-borde pb-2">
 								<span className="text-secundario">{lbl}</span>

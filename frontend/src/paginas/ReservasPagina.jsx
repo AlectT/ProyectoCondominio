@@ -19,9 +19,11 @@ import {
 	Save,
 	ArrowRight,
 	ArrowLeft,
+	Home,
 } from 'lucide-react';
 import { useReservas } from '../hooks/useReservas.js';
 import { reservasApi } from '../api/reservasApi.js';
+import { propiedadesApi } from '../api/propiedadesApi.js';
 import { Etiqueta, TarjetaMetrica } from '../componentes/ui/Etiquetas.jsx';
 import { BtnPrimario, BtnAccion, BotonesModal } from '../componentes/ui/Botones.jsx';
 import { CabeceraTabla, Fila, Celda, PieTabla } from '../componentes/ui/Tablas.jsx';
@@ -164,6 +166,11 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 	const [motivoCancelar, setMotivoCancelar] = useState('');
 	const [errorCancelar, setErrorCancelar] = useState('');
 
+	// Admin: propiedades para el wizard
+	const [propiedades, setPropiedades] = useState([]);
+	const [propiedadElegida, setPropiedadElegida] = useState(null);
+	const [cargandoPropiedades, setCargandoPropiedades] = useState(false);
+
 	const debRef = useRef(null);
 
 	const colorDeArea = useCallback(
@@ -175,8 +182,9 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 	);
 
 	useEffect(() => {
+		const pasoHorario = esAdmin ? 3 : 2;
 		if (
-			paso !== 2 ||
+			paso !== pasoHorario ||
 			!areaElegida ||
 			!wizForm.fechaReserva ||
 			!wizForm.horaInicio ||
@@ -218,6 +226,7 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 	const abrirWizard = () => {
 		setPaso(1);
 		setAreaElegida(null);
+		setPropiedadElegida(null);
 		setWizForm({
 			fechaReserva: '',
 			horaInicio: '',
@@ -228,6 +237,15 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 		setCosto(null);
 		setErrorWiz('');
 		setModal('wizard');
+
+		// Cargar propiedades si es admin
+		if (esAdmin) {
+			setCargandoPropiedades(true);
+			propiedadesApi.obtenerTodas()
+				.then((res) => setPropiedades(res.data ?? []))
+				.catch(() => setPropiedades([]))
+				.finally(() => setCargandoPropiedades(false));
+		}
 	};
 
 	const guardarReserva = async () => {
@@ -239,6 +257,7 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 				horaInicio: wizForm.horaInicio,
 				horaFin: wizForm.horaFin,
 				numeroBoleta: wizForm.numeroBoleta.trim(),
+				...(esAdmin && propiedadElegida ? { idPropiedad: propiedadElegida.ID_PROPIEDAD } : {}),
 			});
 			setModal(null);
 			toast.success('Reserva creada exitosamente');
@@ -912,7 +931,10 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 			{modal === 'wizard' && (
 				<Modal titulo="Nueva Reserva" alCerrar={() => setModal(null)}>
 					<div className="flex items-center gap-2 mb-6">
-						{['Área', 'Horario', 'Confirmar'].map((label, i) => {
+						{(esAdmin
+							? ['Propiedad', 'Área', 'Horario', 'Confirmar']
+							: ['Área', 'Horario', 'Confirmar']
+						).map((label, i) => {
 							const num = i + 1;
 							const activo = paso === num;
 							const listo = paso > num;
@@ -939,7 +961,76 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 						})}
 					</div>
 
-					{paso === 1 && (
+					{/* Paso 1 (Admin): Selección de propiedad */}
+					{esAdmin && paso === 1 && (
+						<div className="space-y-3">
+							<p className="text-xs text-zinc-500 mb-4">
+								Selecciona la propiedad a la que se le asignará la reserva del área.
+							</p>
+							{cargandoPropiedades ? (
+								<div className="flex items-center gap-2 text-xs text-zinc-500 py-4">
+									<div className="w-3 h-3 border-2 border-zinc-600 border-t-zinc-300 rounded-full animate-spin" />
+									Cargando propiedades...
+								</div>
+							) : (
+								<Campo etiqueta="Propiedad">
+									<select
+										value={propiedadElegida?.ID_PROPIEDAD ?? ''}
+										onChange={(e) => {
+											const found = propiedades.find(
+												(p) => p.ID_PROPIEDAD === Number(e.target.value)
+											);
+											setPropiedadElegida(found ?? null);
+										}}
+										className="w-full px-3 py-2 text-sm border rounded-lg bg-fondo border-borde text-primario focus:outline-none focus:border-zinc-500 transition-colors"
+									>
+										<option value="">Seleccionar propiedad...</option>
+										{propiedades.map((p) => (
+											<option key={p.ID_PROPIEDAD} value={p.ID_PROPIEDAD}>
+												{p.NUMERO_PROPIEDAD}
+												{p.DESCRIPCION ? ` — ${p.DESCRIPCION}` : ''}
+											</option>
+										))}
+									</select>
+								</Campo>
+							)}
+
+							{propiedadElegida && (
+								<div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primario/5 border border-primario/20 text-xs">
+									<Home className="w-3.5 h-3.5 text-primario" />
+									<span className="text-primario font-semibold">
+										Propiedad {propiedadElegida.NUMERO_PROPIEDAD}
+									</span>
+									{propiedadElegida.CATEGORIA_NOMBRE && (
+										<span className="text-zinc-500 ml-auto">{propiedadElegida.CATEGORIA_NOMBRE}</span>
+									)}
+								</div>
+							)}
+
+							<div className="flex justify-end pt-2">
+								<button
+									onClick={() => {
+										if (propiedadElegida) {
+											setPaso(2);
+											setErrorWiz('');
+										} else setErrorWiz('Selecciona una propiedad para continuar.');
+									}}
+									className="px-4 py-2 text-sm font-bold rounded-lg bg-primario text-fondo hover:bg-white/90 transition-colors flex items-center gap-2"
+								>
+									Siguiente <ArrowRight className="w-4 h-4" />
+								</button>
+							</div>
+							{errorWiz && (
+								<p className="text-red-400 text-xs flex items-center gap-1">
+									<AlertCircle className="w-3.5 h-3.5" />
+									{errorWiz}
+								</p>
+							)}
+						</div>
+					)}
+
+					{/* Paso 1 (Residente) o Paso 2 (Admin): Selección de área */}
+					{((!esAdmin && paso === 1) || (esAdmin && paso === 2)) && (
 						<div className="space-y-3">
 							<p className="text-xs text-zinc-500 mb-4">
 								Selecciona el área social que deseas reservar.
@@ -985,11 +1076,19 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 									);
 								})}
 							</div>
-							<div className="flex justify-end pt-2">
+							<div className="flex justify-between pt-2">
+								{esAdmin && (
+									<button
+										onClick={() => { setPaso(1); setErrorWiz(''); }}
+										className="px-4 py-2 text-sm border rounded-lg border-borde text-secundario hover:text-primario transition-colors flex items-center gap-2"
+									>
+										<ArrowLeft className="w-4 h-4" /> Atrás
+									</button>
+								)}
 								<button
 									onClick={() => {
 										if (areaElegida) {
-											setPaso(2);
+											setPaso(esAdmin ? 3 : 2);
 											setErrorWiz('');
 										} else setErrorWiz('Selecciona un área para continuar.');
 									}}
@@ -1007,7 +1106,8 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 						</div>
 					)}
 
-					{paso === 2 && (
+					{/* Paso 2 (Residente) o Paso 3 (Admin): Selección de horario */}
+					{((!esAdmin && paso === 2) || (esAdmin && paso === 3)) && (
 						<div className="space-y-4">
 							<div
 								className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium ${colorDeArea(areaElegida.ID_AREA).bg} ${colorDeArea(areaElegida.ID_AREA).border} ${colorDeArea(areaElegida.ID_AREA).text}`}
@@ -1015,6 +1115,13 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 								<MapPin className="w-3.5 h-3.5" /> {areaElegida.NOMBRE}
 								<span className="opacity-60 ml-auto">{formatQ(areaElegida.PRECIO_POR_HORA)}/hr</span>
 							</div>
+
+							{esAdmin && propiedadElegida && (
+								<div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primario/5 border border-primario/20 text-xs">
+									<Home className="w-3.5 h-3.5 text-primario" />
+									<span className="text-primario font-semibold">Propiedad {propiedadElegida.NUMERO_PROPIEDAD}</span>
+								</div>
+							)}
 
 							<Campo etiqueta="Fecha de reserva">
 								<Entrada
@@ -1097,7 +1204,7 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 
 							<div className="flex gap-2 pt-1">
 								<button
-									onClick={() => setPaso(1)}
+									onClick={() => setPaso(esAdmin ? 2 : 1)}
 									className="flex-1 px-4 py-2 text-sm border rounded-lg border-borde text-secundario hover:text-primario transition-colors flex items-center justify-center gap-2"
 								>
 									<ArrowLeft className="w-4 h-4" /> Atrás
@@ -1120,7 +1227,7 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 											setErrorWiz('Verifica la disponibilidad antes de continuar.');
 											return;
 										}
-										setPaso(3);
+										setPaso(esAdmin ? 4 : 3);
 										setErrorWiz('');
 									}}
 									className="flex-1 px-4 py-2 text-sm font-bold rounded-lg bg-primario text-fondo hover:bg-white/90 transition-colors flex items-center justify-center gap-2"
@@ -1137,7 +1244,8 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 						</div>
 					)}
 
-					{paso === 3 &&
+					{/* Paso 3 (Residente) o Paso 4 (Admin): Confirmación */}
+					{((!esAdmin && paso === 3) || (esAdmin && paso === 4)) &&
 						(() => {
 							const horasCalc = (horaAMin(wizForm.horaFin) - horaAMin(wizForm.horaInicio)) / 60;
 							const costoCalc =
@@ -1152,6 +1260,9 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 										</div>
 										<div className="divide-y divide-borde">
 											{[
+												...(esAdmin && propiedadElegida
+													? [['Propiedad', `Propiedad ${propiedadElegida.NUMERO_PROPIEDAD}`]]
+													: []),
 												['Área', areaElegida.NOMBRE],
 												['Fecha', formatearFecha(wizForm.fechaReserva + 'T12:00:00')],
 												['Horario', `${wizForm.horaInicio} – ${wizForm.horaFin}`],
@@ -1194,7 +1305,7 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 
 									<div className="flex gap-2 pt-1">
 										<button
-											onClick={() => setPaso(2)}
+											onClick={() => setPaso(esAdmin ? 3 : 2)}
 											className="flex-1 px-4 py-2 text-sm border rounded-lg border-borde text-secundario hover:text-primario transition-colors flex items-center justify-center gap-2"
 										>
 											<ArrowLeft className="w-4 h-4" /> Atrás

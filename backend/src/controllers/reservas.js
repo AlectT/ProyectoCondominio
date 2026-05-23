@@ -117,24 +117,42 @@ export class ReservaController {
 				return res.status(400).json({ error: JSON.parse(resultado.error.message) });
 			}
 
-			const { idArea, fechaReserva, horaInicio, horaFin, numeroBoleta } = resultado.data;
+			const { idArea, fechaReserva, horaInicio, horaFin, numeroBoleta, idPropiedad: idPropiedadBody } = resultado.data;
 			const idUsuario = req.usuario.ID_USUARIO;
+			const esAdmin = req.usuario.ROL === 'Administrador';
 
-			// 1. Verificar que el usuario tiene una propiedad vinculada
-			const propiedad = await ReservaModel.obtenerPropiedadUsuario({ idUsuario });
-			if (!propiedad) {
-				return res.status(400).json({
-					mensaje:
-						'No tienes una propiedad vinculada. Solo usuarios con propiedad pueden reservar áreas.',
-				});
-			}
+			let idPropiedad;
 
-			// 2. Verificar que el usuario no tiene deudas (RN-R5)
-			const verificacionDeudas = await ReservaModel.verificarUsuarioSinDeudas({ idUsuario });
-			if (!verificacionDeudas.sinDeudas) {
-				return res.status(400).json({
-					mensaje: verificacionDeudas.mensaje,
+			if (esAdmin && idPropiedadBody) {
+				// Admin con propiedad seleccionada: verificar deudas de ESA propiedad (RN-R5)
+				const verificacionDeudas = await ReservaModel.verificarPropiedadSinDeudas({
+					idPropiedad: idPropiedadBody,
 				});
+				if (!verificacionDeudas.sinDeudas) {
+					return res.status(400).json({
+						mensaje: verificacionDeudas.mensaje,
+					});
+				}
+				idPropiedad = idPropiedadBody;
+			} else {
+				// 1. Verificar que el usuario tiene una propiedad vinculada
+				const propiedad = await ReservaModel.obtenerPropiedadUsuario({ idUsuario });
+				if (!propiedad) {
+					return res.status(400).json({
+						mensaje:
+							'No tienes una propiedad vinculada. Solo usuarios con propiedad pueden reservar áreas.',
+					});
+				}
+
+				// 2. Verificar que el usuario no tiene deudas (RN-R5)
+				const verificacionDeudas = await ReservaModel.verificarUsuarioSinDeudas({ idUsuario });
+				if (!verificacionDeudas.sinDeudas) {
+					return res.status(400).json({
+						mensaje: verificacionDeudas.mensaje,
+					});
+				}
+
+				idPropiedad = propiedad.ID_PROPIEDAD;
 			}
 
 			// 3. Verificar disponibilidad del área (RN-R3)
@@ -168,7 +186,7 @@ export class ReservaController {
 					horaFin,
 					numeroBoleta,
 					montoTotal: costoTotal,
-					idPropiedad: propiedad?.ID_PROPIEDAD,
+					idPropiedad,
 				},
 			});
 
