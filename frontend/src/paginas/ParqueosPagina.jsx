@@ -24,8 +24,8 @@ import { Campo, Selector } from '../componentes/ui/Formularios.jsx';
 import { extraerError } from '../utilidades/extraerError.js';
 import useStore from '../estado/useStore.js';
 import { toast } from 'sonner';
-import Cargando from '../Componentes/ui/Cargando.jsx';
-import { validarTextoConSentido, validarParqueo } from '../Utilidades/validarTexto.js';
+import Cargando from '../componentes/ui/Cargando.jsx';
+import { validarTextoConSentido, validarParqueo } from '../utilidades/validarTexto.js';
 
 const limpiar = (str) => str?.toString().toLowerCase().replace(/\s/g, '') ?? '';
 

@@ -218,7 +218,6 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 
 				<table className="w-full">
 					<CabeceraTabla columnas={['Nombre', 'Descripción', 'Monto', 'Estado', 'Acciones']} />
-
 					<tbody>
 						{filtrados.map((tipo, i) => (
 							<Fila
@@ -355,9 +354,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 							['Descripción', seleccion.DESCRIPCION || 'Sin descripción'],
 							[
 								'Monto',
-								Number(seleccion.MONTO) > 0
-									? `Q${Number(seleccion.MONTO).toFixed(2)}`
-									: 'Q0.00',
+								Number(seleccion.MONTO) > 0 ? `Q${Number(seleccion.MONTO).toFixed(2)}` : 'Q0.00',
 							],
 							['Estado', seleccion.ACTIVO === 1 ? 'Activo' : 'Inactivo'],
 						].map(([k, v]) => (
