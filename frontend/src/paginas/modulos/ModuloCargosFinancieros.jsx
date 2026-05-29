@@ -6,6 +6,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { CreditCard, Search, FileText, ChevronDown } from 'lucide-react';
 import { cargosFinancierosApi } from '../../api/cargosFinancieros';
 import { propiedadesApi } from '../../api/propiedadesApi';
+import {
+	limpiarAlfanumerico,
+	validarNumeroPropiedad,
+} from '../../utilidades/validarTexto.js';
 import { toast } from 'sonner';
 
 export default function ModuloCargosFinancieros() {
@@ -24,11 +28,18 @@ export default function ModuloCargosFinancieros() {
 	async function cargarPropiedades() {
 		try {
 			const res = await propiedadesApi.obtenerTodas();
-			setPropiedades(res.data);
+			setPropiedades(Array.isArray(res.data) ? res.data : []);
 		} catch (err) {
 			console.error(err);
 			toast.error('No se pudieron cargar las propiedades.');
+			setPropiedades([]);
 		}
+	}
+
+	function sanitizarPropiedad(valor) {
+		return limpiarAlfanumerico(valor)
+			.toUpperCase()
+			.slice(0, 12);
 	}
 
 	const propiedadesFiltradas = useMemo(() => {
@@ -43,17 +54,52 @@ export default function ModuloCargosFinancieros() {
 		);
 	}, [propiedades, textoPropiedad]);
 
+	function manejarCambioPropiedad(e) {
+		const valorLimpio = sanitizarPropiedad(e.target.value);
+
+		setTextoPropiedad(valorLimpio);
+		setIdPropiedad('');
+		setMostrarLista(true);
+		setError('');
+		setCargos([]);
+	}
+
 	function seleccionarPropiedad(propiedad) {
+		const numeroPropiedad = sanitizarPropiedad(String(propiedad.NUMERO_PROPIEDAD ?? ''));
+
 		setIdPropiedad(propiedad.ID_PROPIEDAD);
-		setTextoPropiedad(propiedad.NUMERO_PROPIEDAD);
+		setTextoPropiedad(numeroPropiedad);
 		setMostrarLista(false);
 		setError('');
 	}
 
 	const consultar = async () => {
+		const textoLimpio = sanitizarPropiedad(textoPropiedad).trim();
+
+		if (!textoLimpio) {
+			setError('Debes escribir o seleccionar una propiedad.');
+			toast.warning('Debes escribir o seleccionar una propiedad.');
+			setCargos([]);
+			return;
+		}
+
+		if (!validarNumeroPropiedad(textoLimpio)) {
+			setError('La propiedad solo puede contener letras, números y guiones. Ejemplo: A-101.');
+			toast.warning('Formato de propiedad inválido.');
+			setCargos([]);
+			return;
+		}
+
+		if (textoLimpio.length > 12) {
+			setError('El código de propiedad es demasiado largo.');
+			toast.warning('El código de propiedad es demasiado largo.');
+			setCargos([]);
+			return;
+		}
+
 		if (!idPropiedad) {
-			setError('Debes seleccionar una propiedad de la lista.');
-			toast.warning('Debes seleccionar una propiedad de la lista.');
+			setError('Debes seleccionar una propiedad válida de la lista.');
+			toast.warning('Debes seleccionar una propiedad válida de la lista.');
 			setCargos([]);
 			return;
 		}
@@ -63,7 +109,7 @@ export default function ModuloCargosFinancieros() {
 			setError('');
 
 			const res = await cargosFinancierosApi.obtenerPorPropiedad(idPropiedad);
-			setCargos(res.data);
+			setCargos(Array.isArray(res.data) ? res.data : []);
 		} catch (err) {
 			console.error(err);
 			setError('No se pudo consultar el estado de cuenta.');
@@ -94,11 +140,8 @@ export default function ModuloCargosFinancieros() {
 						<input
 							type="text"
 							value={textoPropiedad}
-							onChange={(e) => {
-								setTextoPropiedad(e.target.value);
-								setIdPropiedad('');
-								setMostrarLista(true);
-							}}
+							maxLength={12}
+							onChange={manejarCambioPropiedad}
 							onFocus={() => setMostrarLista(true)}
 							placeholder="Escriba o seleccione una propiedad. Ej: A-101"
 							className="w-full rounded-xl border border-white/10 bg-zinc-800 px-4 py-3 pr-10 outline-none"
@@ -142,10 +185,11 @@ export default function ModuloCargosFinancieros() {
 
 					<button
 						onClick={consultar}
-						className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 font-semibold hover:bg-emerald-500"
+						disabled={cargando}
+						className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 font-semibold hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
 					>
 						<Search className="h-4 w-4" />
-						Consultar
+						{cargando ? 'Consultando...' : 'Consultar'}
 					</button>
 				</div>
 

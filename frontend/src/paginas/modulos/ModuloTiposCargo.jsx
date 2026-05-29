@@ -2,7 +2,7 @@
 // 📁 RUTA: frontend/src/paginas/modulos/ModuloTiposCargo.jsx
 // ============================================================
 import { useEffect, useMemo, useState } from 'react';
-import { Layers, ShieldAlert, Coins, CheckCircle, Plus, Eye, Pencil, Ban } from 'lucide-react';
+import { ShieldAlert, CheckCircle, Plus, Eye, Pencil, Ban } from 'lucide-react';
 import { tiposCargoApi } from '../../api/tiposCargo.js';
 import { limpiarBusqueda } from '../../datos/datosDePrueba.js';
 import { TarjetaMetrica, Etiqueta } from '../../componentes/ui/Etiquetas.jsx';
@@ -10,8 +10,11 @@ import { BuscadorCasa } from '../../componentes/ui/Buscador.jsx';
 import { BtnPrimario, BtnAccion, BotonesModal } from '../../componentes/ui/Botones.jsx';
 import { CabeceraTabla, Fila, Celda, PieTabla } from '../../componentes/ui/Tablas.jsx';
 import { Modal } from '../../componentes/ui/Modales.jsx';
-import { Campo, Entrada, Selector } from '../../componentes/ui/Formularios.jsx';
-import { validarTextoConSentido, validarMontoEntero } from '../../utilidades/validarTexto.js';
+import { Campo, Entrada } from '../../componentes/ui/Formularios.jsx';
+import {
+	validarTextoConSentido,
+	validarMontoEntero,
+} from '../../utilidades/validarTexto.js';
 import { toast } from 'sonner';
 import Cargando from '../../componentes/ui/Cargando.jsx';
 
@@ -28,7 +31,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 	const [form, setForm] = useState({
 		nombre: '',
 		descripcion: '',
-		monto: 0,
+		monto: '',
 		esMulta: 1,
 	});
 
@@ -62,11 +65,24 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 		);
 	}, [datos, termino]);
 
+	function sanitizarTexto(texto, limite = 80) {
+		return String(texto ?? '')
+			.replace(/[<>`"'{}[\]\\]/g, '')
+			.replace(/[;|$]/g, '')
+			.replace(/\s{2,}/g, ' ')
+			.slice(0, limite);
+	}
+
+	function sanitizarMonto(valor) {
+		const limpio = String(valor ?? '').replace(/[^0-9]/g, '');
+		return limpio.slice(0, 7);
+	}
+
 	function abrirNuevo() {
 		setForm({
 			nombre: '',
 			descripcion: '',
-			monto: 0,
+			monto: '',
 			esMulta: 1,
 		});
 		setEditandoId(null);
@@ -77,7 +93,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 		setForm({
 			nombre: tipo.NOMBRE ?? '',
 			descripcion: tipo.DESCRIPCION ?? '',
-			monto: Number(tipo.MONTO ?? 0),
+			monto: String(Number(tipo.MONTO ?? 0)),
 			esMulta: 1,
 		});
 		setEditandoId(tipo.ID_TIPO_CARGO);
@@ -87,18 +103,37 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 	async function guardarTipoCargo(e) {
 		e.preventDefault();
 
-		if (!validarTextoConSentido(form.nombre)) {
-			toast.error('El nombre de la multa debe contener texto con sentido (mínimo 5 caracteres).');
+		const nombreLimpio = sanitizarTexto(form.nombre, 60).trim();
+		const descripcionLimpia = sanitizarTexto(form.descripcion, 150).trim();
+		const montoNumerico = Number(form.monto);
+
+		if (!validarTextoConSentido(nombreLimpio)) {
+			toast.error('El nombre debe ser coherente. Evita símbolos, números solos o texto sin sentido.');
 			return;
 		}
 
-		if (form.descripcion.trim() && !validarTextoConSentido(form.descripcion)) {
-			toast.error('La descripción de la multa debe contener texto con sentido.');
+		if (nombreLimpio.length > 60) {
+			toast.error('El nombre no debe superar 60 caracteres.');
 			return;
 		}
 
-		if (!validarMontoEntero(form.monto)) {
+		if (descripcionLimpia && !validarTextoConSentido(descripcionLimpia)) {
+			toast.error('La descripción debe contener texto coherente.');
+			return;
+		}
+
+		if (descripcionLimpia.length > 150) {
+			toast.error('La descripción no debe superar 150 caracteres.');
+			return;
+		}
+
+		if (!validarMontoEntero(montoNumerico)) {
 			toast.error('El monto debe ser un número entero mayor a 0.');
+			return;
+		}
+
+		if (montoNumerico > 9999999) {
+			toast.error('El monto ingresado es demasiado alto.');
 			return;
 		}
 
@@ -106,18 +141,18 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 			setGuardando(true);
 
 			const payload = {
-				nombre: form.nombre.trim(),
-				descripcion: form.descripcion.trim(),
-				monto: Number(form.monto),
-				esMulta: Number(form.esMulta),
+				nombre: nombreLimpio,
+				descripcion: descripcionLimpia,
+				monto: montoNumerico,
+				esMulta: 1,
 			};
 
 			if (editandoId) {
 				await tiposCargoApi.actualizar(editandoId, payload);
-				toast.success('Tipo de cargo actualizado exitosamente');
+				toast.success('Multa actualizada exitosamente');
 			} else {
 				await tiposCargoApi.crear(payload);
-				toast.success('Tipo de cargo creado exitosamente');
+				toast.success('Multa creada exitosamente');
 			}
 
 			await cargarTiposCargo();
@@ -125,7 +160,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 			setEditandoId(null);
 		} catch (error) {
 			console.error('Error al guardar tipo de cargo:', error);
-			toast.error(error?.response?.data?.mensaje || 'No se pudo guardar el tipo de cargo.');
+			toast.error(error?.response?.data?.mensaje || 'No se pudo guardar la multa.');
 		} finally {
 			setGuardando(false);
 		}
@@ -163,6 +198,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 					Icono={ShieldAlert}
 					fondo="bg-zinc-800"
 				/>
+
 				<TarjetaMetrica
 					etiqueta="Activas"
 					valor={activos}
@@ -174,6 +210,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 			<div className="border bg-fondo border-borde rounded-xl overflow-hidden shadow-sm">
 				<div className="flex items-center justify-between p-4 border-b border-borde bg-tarjeta/50">
 					<BuscadorCasa valor={busqueda} alCambiar={setBusqueda} />
+
 					<BtnPrimario onClick={abrirNuevo}>
 						<Plus className="w-4 h-4" /> Nueva Multa
 					</BtnPrimario>
@@ -188,12 +225,17 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 								indice={i}
 								seleccionada={filaActiva === tipo.ID_TIPO_CARGO}
 								onClick={() =>
-									setFilaActiva(filaActiva === tipo.ID_TIPO_CARGO ? null : tipo.ID_TIPO_CARGO)
+									setFilaActiva(
+										filaActiva === tipo.ID_TIPO_CARGO ? null : tipo.ID_TIPO_CARGO,
+									)
 								}
 							>
 								<Celda mono>{tipo.NOMBRE}</Celda>
 								<Celda>{tipo.DESCRIPCION || 'Sin descripción'}</Celda>
-								<Celda>{Number(tipo.MONTO) > 0 ? `Q${Number(tipo.MONTO).toFixed(2)}` : 'Q0.00'}</Celda>
+
+								<Celda>
+									{Number(tipo.MONTO) > 0 ? `Q${Number(tipo.MONTO).toFixed(2)}` : 'Q0.00'}
+								</Celda>
 
 								<td className="px-4 py-3">
 									<Etiqueta
@@ -212,12 +254,14 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 												setModal('detalle');
 											}}
 										/>
+
 										<BtnAccion
 											Icono={Pencil}
 											titulo="Editar"
 											onClick={() => abrirEditar(tipo)}
 											colorHover="hover:text-blue-400"
 										/>
+
 										<BtnAccion
 											Icono={Ban}
 											titulo="Activar/Inactivar"
@@ -246,7 +290,13 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 						<Campo etiqueta="Nombre">
 							<Entrada
 								value={form.nombre}
-								onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+								maxLength={60}
+								onChange={(e) =>
+									setForm({
+										...form,
+										nombre: sanitizarTexto(e.target.value, 60),
+									})
+								}
 								placeholder="Ej: Multa ruido excesivo"
 								required
 							/>
@@ -255,21 +305,27 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 						<Campo etiqueta="Descripción">
 							<Entrada
 								value={form.descripcion}
-								onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+								maxLength={150}
+								onChange={(e) =>
+									setForm({
+										...form,
+										descripcion: sanitizarTexto(e.target.value, 150),
+									})
+								}
 								placeholder="Ej: Ruido fuera de horario permitido"
 							/>
 						</Campo>
 
 						<Campo etiqueta="Monto">
 							<Entrada
-								type="number"
-								min="1"
-								step="1"
+								type="text"
+								inputMode="numeric"
 								value={form.monto}
+								maxLength={7}
 								onChange={(e) =>
 									setForm({
 										...form,
-										monto: e.target.value === '' ? '' : Number(e.target.value),
+										monto: sanitizarMonto(e.target.value),
 									})
 								}
 								placeholder="Ej: 250"
@@ -283,6 +339,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 								setEditandoId(null);
 							}}
 							textoGuardar={guardando ? 'Guardando...' : editandoId ? 'Actualizar' : 'Guardar'}
+							disabled={guardando}
 						/>
 					</form>
 				</Modal>
