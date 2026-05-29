@@ -2,7 +2,7 @@
 // 📁 RUTA: frontend/src/paginas/modulos/ModuloTiposCargo.jsx
 // ============================================================
 import { useEffect, useMemo, useState } from 'react';
-import { Layers, ShieldAlert, Coins, CheckCircle, Plus, Eye, Pencil, Ban } from 'lucide-react';
+import { ShieldAlert, CheckCircle, Plus, Eye, Pencil, Ban } from 'lucide-react';
 import { tiposCargoApi } from '../../api/tiposCargo.js';
 import { limpiarBusqueda } from '../../datos/datosDePrueba.js';
 import { TarjetaMetrica, Etiqueta } from '../../componentes/ui/Etiquetas.jsx';
@@ -10,8 +10,11 @@ import { BuscadorCasa } from '../../componentes/ui/Buscador.jsx';
 import { BtnPrimario, BtnAccion, BotonesModal } from '../../componentes/ui/Botones.jsx';
 import { CabeceraTabla, Fila, Celda, PieTabla } from '../../componentes/ui/Tablas.jsx';
 import { Modal } from '../../componentes/ui/Modales.jsx';
-import { Campo, Entrada, Selector } from '../../componentes/ui/Formularios.jsx';
-import { validarTextoConSentido, validarMontoEntero } from '../../utilidades/validarTexto.js';
+import { Campo, Entrada } from '../../componentes/ui/Formularios.jsx';
+import {
+	validarTextoConSentido,
+	validarMontoEntero,
+} from '../../utilidades/validarTexto.js';
 import { toast } from 'sonner';
 
 export default function ModuloTiposCargo({ filtroGlobal = '' }) {
@@ -27,7 +30,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 	const [form, setForm] = useState({
 		nombre: '',
 		descripcion: '',
-		monto: 0,
+		monto: '',
 		esMulta: 1,
 	});
 
@@ -39,7 +42,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 		try {
 			setCargando(true);
 			const respuesta = await tiposCargoApi.obtenerTodos();
-			const soloMultas = respuesta.data.filter(t => t.ES_MULTA === 1);
+			const soloMultas = respuesta.data.filter((t) => t.ES_MULTA === 1);
 			setDatos(soloMultas);
 		} catch (error) {
 			console.error('Error al cargar tipos de cargo:', error);
@@ -61,11 +64,24 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 		);
 	}, [datos, termino]);
 
+	function sanitizarTexto(texto, limite = 80) {
+		return texto
+			.replace(/[<>`"'{}[\]\\]/g, '')
+			.replace(/[;|$]/g, '')
+			.replace(/\s{2,}/g, ' ')
+			.slice(0, limite);
+	}
+
+	function sanitizarMonto(valor) {
+		const limpio = String(valor).replace(/[^0-9]/g, '');
+		return limpio.slice(0, 7);
+	}
+
 	function abrirNuevo() {
 		setForm({
 			nombre: '',
 			descripcion: '',
-			monto: 0,
+			monto: '',
 			esMulta: 1,
 		});
 		setEditandoId(null);
@@ -76,7 +92,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 		setForm({
 			nombre: tipo.NOMBRE ?? '',
 			descripcion: tipo.DESCRIPCION ?? '',
-			monto: Number(tipo.MONTO ?? 0),
+			monto: String(Number(tipo.MONTO ?? 0)),
 			esMulta: 1,
 		});
 		setEditandoId(tipo.ID_TIPO_CARGO);
@@ -86,18 +102,37 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 	async function guardarTipoCargo(e) {
 		e.preventDefault();
 
-		if (!validarTextoConSentido(form.nombre)) {
-			toast.error('El nombre de la multa debe contener texto con sentido (mínimo 5 caracteres).');
+		const nombreLimpio = sanitizarTexto(form.nombre, 60).trim();
+		const descripcionLimpia = sanitizarTexto(form.descripcion, 150).trim();
+		const montoNumerico = Number(form.monto);
+
+		if (!validarTextoConSentido(nombreLimpio)) {
+			toast.error('El nombre debe ser coherente. Evita símbolos, números solos o texto sin sentido.');
 			return;
 		}
 
-		if (form.descripcion.trim() && !validarTextoConSentido(form.descripcion)) {
-			toast.error('La descripción de la multa debe contener texto con sentido.');
+		if (nombreLimpio.length > 60) {
+			toast.error('El nombre no debe superar 60 caracteres.');
 			return;
 		}
 
-		if (!validarMontoEntero(form.monto)) {
+		if (descripcionLimpia && !validarTextoConSentido(descripcionLimpia)) {
+			toast.error('La descripción debe contener texto coherente.');
+			return;
+		}
+
+		if (descripcionLimpia.length > 150) {
+			toast.error('La descripción no debe superar 150 caracteres.');
+			return;
+		}
+
+		if (!validarMontoEntero(montoNumerico)) {
 			toast.error('El monto debe ser un número entero mayor a 0.');
+			return;
+		}
+
+		if (montoNumerico > 9999999) {
+			toast.error('El monto ingresado es demasiado alto.');
 			return;
 		}
 
@@ -105,18 +140,18 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 			setGuardando(true);
 
 			const payload = {
-				nombre: form.nombre.trim(),
-				descripcion: form.descripcion.trim(),
-				monto: Number(form.monto),
-				esMulta: Number(form.esMulta),
+				nombre: nombreLimpio,
+				descripcion: descripcionLimpia,
+				monto: montoNumerico,
+				esMulta: 1,
 			};
 
 			if (editandoId) {
 				await tiposCargoApi.actualizar(editandoId, payload);
-				toast.success('Tipo de cargo actualizado exitosamente');
+				toast.success('Multa actualizada exitosamente');
 			} else {
 				await tiposCargoApi.crear(payload);
-				toast.success('Tipo de cargo creado exitosamente');
+				toast.success('Multa creada exitosamente');
 			}
 
 			await cargarTiposCargo();
@@ -124,7 +159,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 			setEditandoId(null);
 		} catch (error) {
 			console.error('Error al guardar tipo de cargo:', error);
-			toast.error(error?.response?.data?.mensaje || 'No se pudo guardar el tipo de cargo.');
+			toast.error(error?.response?.data?.mensaje || 'No se pudo guardar la multa.');
 		} finally {
 			setGuardando(false);
 		}
@@ -150,219 +185,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 	const activos = datos.filter((t) => t.ACTIVO === 1).length;
 
 	if (cargando) {
-		return (
-			<>
-				<div className="loading-overlay">
-					<div className="loading-card">
-						{/* Loader */}
-						<div className="loader-wrapper">
-							<div className="loader-ring"></div>
-							<div className="loader-core"></div>
-						</div>
-
-						{/* Text */}
-						<div className="loading-content">
-							<span className="loading-badge">
-								<span className="pulse-dot"></span>
-								Cargando tipos de cargo
-							</span>
-
-							<div className="loading-line">
-								<div className="loading-progress"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<style jsx>{`
-					.loading-overlay {
-						position: fixed;
-						inset: 0;
-						background: rgba(4, 7, 16, 0.78);
-						backdrop-filter: blur(7px);
-
-						display: flex;
-						justify-content: center;
-						align-items: center;
-
-						z-index: 9999;
-					}
-
-					.loading-card {
-						width: 320px;
-						padding: 32px 28px;
-
-						border-radius: 24px;
-
-						background: linear-gradient(145deg, rgba(15, 18, 32, 0.96), rgba(8, 11, 20, 0.98));
-
-						border: 1px solid rgba(0, 255, 170, 0.08);
-
-						box-shadow:
-							0 0 30px rgba(0, 255, 170, 0.05),
-							0 0 60px rgba(0, 0, 0, 0.45);
-
-						display: flex;
-						flex-direction: column;
-						align-items: center;
-						gap: 24px;
-					}
-
-					.loader-wrapper {
-						position: relative;
-						width: 72px;
-						height: 72px;
-
-						display: flex;
-						justify-content: center;
-						align-items: center;
-					}
-
-					.loader-ring {
-						position: absolute;
-						width: 72px;
-						height: 72px;
-						border-radius: 50%;
-
-						border: 3px solid rgba(0, 255, 170, 0.08);
-						border-top: 3px solid #00ffb3;
-						border-right: 3px solid #00c8ff;
-
-						animation: rotate 1s linear infinite;
-
-						box-shadow: 0 0 18px rgba(0, 255, 170, 0.15);
-					}
-
-					.loader-core {
-						width: 18px;
-						height: 18px;
-						border-radius: 50%;
-
-						background: linear-gradient(135deg, #00ffb3, #00c8ff);
-
-						box-shadow:
-							0 0 12px rgba(0, 255, 170, 0.45),
-							0 0 22px rgba(0, 200, 255, 0.25);
-
-						animation: pulse 1.5s ease-in-out infinite;
-					}
-
-					.loading-content {
-						width: 100%;
-						text-align: center;
-					}
-
-					.loading-badge {
-						display: inline-flex;
-						align-items: center;
-						gap: 8px;
-
-						padding: 7px 14px;
-						border-radius: 999px;
-
-						background: rgba(0, 255, 170, 0.06);
-						border: 1px solid rgba(0, 255, 170, 0.08);
-
-						color: #00ffb3;
-
-						font-size: 11px;
-						font-weight: 700;
-						letter-spacing: 1.5px;
-
-						margin-bottom: 18px;
-					}
-
-					.pulse-dot {
-						width: 8px;
-						height: 8px;
-						border-radius: 50%;
-						background: #00ffb3;
-
-						animation: blink 1s infinite;
-					}
-
-					.loading-content h2 {
-						color: white;
-						font-size: 20px;
-						font-weight: 600;
-
-						margin-bottom: 18px;
-					}
-
-					.loading-line {
-						width: 100%;
-						height: 6px;
-
-						background: rgba(255, 255, 255, 0.05);
-
-						border-radius: 999px;
-						overflow: hidden;
-					}
-
-					.loading-progress {
-						width: 40%;
-						height: 100%;
-
-						border-radius: inherit;
-
-						background: linear-gradient(90deg, #00ffb3, #00c8ff);
-
-						animation: progressMove 1.5s ease-in-out infinite;
-					}
-
-					@keyframes rotate {
-						from {
-							transform: rotate(0deg);
-						}
-
-						to {
-							transform: rotate(360deg);
-						}
-					}
-
-					@keyframes pulse {
-						0%,
-						100% {
-							transform: scale(1);
-							opacity: 1;
-						}
-
-						50% {
-							transform: scale(1.2);
-							opacity: 0.7;
-						}
-					}
-
-					@keyframes blink {
-						0%,
-						100% {
-							opacity: 1;
-						}
-
-						50% {
-							opacity: 0.4;
-						}
-					}
-
-					@keyframes progressMove {
-						0% {
-							transform: translateX(-120%);
-						}
-
-						100% {
-							transform: translateX(320%);
-						}
-					}
-
-					@media (max-width: 480px) {
-						.loading-card {
-							width: 88%;
-							padding: 28px 22px;
-						}
-					}
-				`}</style>
-			</>
-		);
+		return <div className="p-6 text-white">Cargando tipos de cargo...</div>;
 	}
 
 	return (
@@ -374,6 +197,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 					Icono={ShieldAlert}
 					fondo="bg-zinc-800"
 				/>
+
 				<TarjetaMetrica
 					etiqueta="Activas"
 					valor={activos}
@@ -385,15 +209,15 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 			<div className="border bg-fondo border-borde rounded-xl overflow-hidden shadow-sm">
 				<div className="flex items-center justify-between p-4 border-b border-borde bg-tarjeta/50">
 					<BuscadorCasa valor={busqueda} alCambiar={setBusqueda} />
+
 					<BtnPrimario onClick={abrirNuevo}>
 						<Plus className="w-4 h-4" /> Nueva Multa
 					</BtnPrimario>
 				</div>
 
 				<table className="w-full">
-					<CabeceraTabla
-						columnas={['Nombre', 'Descripción', 'Monto', 'Estado', 'Acciones']}
-					/>
+					<CabeceraTabla columnas={['Nombre', 'Descripción', 'Monto', 'Estado', 'Acciones']} />
+
 					<tbody>
 						{filtrados.map((tipo, i) => (
 							<Fila
@@ -401,11 +225,14 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 								indice={i}
 								seleccionada={filaActiva === tipo.ID_TIPO_CARGO}
 								onClick={() =>
-									setFilaActiva(filaActiva === tipo.ID_TIPO_CARGO ? null : tipo.ID_TIPO_CARGO)
+									setFilaActiva(
+										filaActiva === tipo.ID_TIPO_CARGO ? null : tipo.ID_TIPO_CARGO,
+									)
 								}
 							>
 								<Celda mono>{tipo.NOMBRE}</Celda>
 								<Celda>{tipo.DESCRIPCION || 'Sin descripción'}</Celda>
+
 								<Celda>
 									{Number(tipo.MONTO) > 0 ? `Q${Number(tipo.MONTO).toFixed(2)}` : 'Q0.00'}
 								</Celda>
@@ -427,12 +254,14 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 												setModal('detalle');
 											}}
 										/>
+
 										<BtnAccion
 											Icono={Pencil}
 											titulo="Editar"
 											onClick={() => abrirEditar(tipo)}
 											colorHover="hover:text-blue-400"
 										/>
+
 										<BtnAccion
 											Icono={Ban}
 											titulo="Activar/Inactivar"
@@ -461,7 +290,13 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 						<Campo etiqueta="Nombre">
 							<Entrada
 								value={form.nombre}
-								onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+								maxLength={60}
+								onChange={(e) =>
+									setForm({
+										...form,
+										nombre: sanitizarTexto(e.target.value, 60),
+									})
+								}
 								placeholder="Ej: Multa ruido excesivo"
 								required
 							/>
@@ -470,21 +305,27 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 						<Campo etiqueta="Descripción">
 							<Entrada
 								value={form.descripcion}
-								onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+								maxLength={150}
+								onChange={(e) =>
+									setForm({
+										...form,
+										descripcion: sanitizarTexto(e.target.value, 150),
+									})
+								}
 								placeholder="Ej: Ruido fuera de horario permitido"
 							/>
 						</Campo>
 
 						<Campo etiqueta="Monto">
 							<Entrada
-								type="number"
-								min="1"
-								step="1"
+								type="text"
+								inputMode="numeric"
 								value={form.monto}
+								maxLength={7}
 								onChange={(e) =>
 									setForm({
 										...form,
-										monto: e.target.value === '' ? '' : Number(e.target.value),
+										monto: sanitizarMonto(e.target.value),
 									})
 								}
 								placeholder="Ej: 250"
@@ -498,6 +339,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 								setEditandoId(null);
 							}}
 							textoGuardar={guardando ? 'Guardando...' : editandoId ? 'Actualizar' : 'Guardar'}
+							disabled={guardando}
 						/>
 					</form>
 				</Modal>
