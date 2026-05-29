@@ -16,6 +16,7 @@ import {
 	validarMontoEntero,
 } from '../../utilidades/validarTexto.js';
 import { toast } from 'sonner';
+import Cargando from '../../componentes/ui/Cargando.jsx';
 
 export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 	const [datos, setDatos] = useState([]);
@@ -65,7 +66,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 	}, [datos, termino]);
 
 	function sanitizarTexto(texto, limite = 80) {
-		return texto
+		return String(texto ?? '')
 			.replace(/[<>`"'{}[\]\\]/g, '')
 			.replace(/[;|$]/g, '')
 			.replace(/\s{2,}/g, ' ')
@@ -73,7 +74,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 	}
 
 	function sanitizarMonto(valor) {
-		const limpio = String(valor).replace(/[^0-9]/g, '');
+		const limpio = String(valor ?? '').replace(/[^0-9]/g, '');
 		return limpio.slice(0, 7);
 	}
 
@@ -185,7 +186,7 @@ export default function ModuloTiposCargo({ filtroGlobal = '' }) {
 	const activos = datos.filter((t) => t.ACTIVO === 1).length;
 
 	if (cargando) {
-		return <div className="p-6 text-white">Cargando tipos de cargo...</div>;
+		return <Cargando Texto={'Tipos de cargo'} />;
 	}
 
 	return (
