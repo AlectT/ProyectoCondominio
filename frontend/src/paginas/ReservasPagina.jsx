@@ -34,6 +34,7 @@ import { extraerError } from '../utilidades/extraerError.js';
 import { generarNumeroBoleta } from '../utilidades/generarBoleta.js';
 import useStore from '../estado/useStore.js';
 import { toast } from 'sonner';
+import Cargando from '../componentes/ui/Cargando.jsx';
 
 const COLORES_AREA = [
 	{
@@ -135,7 +136,16 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 	const usuario = useStore((s) => s.usuario);
 	const esAdmin = usuario?.ROL === 'Administrador';
 
-	const { reservas, areas, cargando, error, cargarReservas, crear, cancelar, actualizarPrecioArea } = useReservas();
+	const {
+		reservas,
+		areas,
+		cargando,
+		error,
+		cargarReservas,
+		crear,
+		cancelar,
+		actualizarPrecioArea,
+	} = useReservas();
 
 	const [vistaCalendario, setVistaCalendario] = useState(true);
 	const [modoCalendario, setModoCalendario] = useState('semana');
@@ -241,7 +251,8 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 		// Cargar propiedades si es admin
 		if (esAdmin) {
 			setCargandoPropiedades(true);
-			propiedadesApi.obtenerTodas()
+			propiedadesApi
+				.obtenerTodas()
 				.then((res) => setPropiedades(res.data ?? []))
 				.catch(() => setPropiedades([]))
 				.finally(() => setCargandoPropiedades(false));
@@ -366,220 +377,7 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 			)
 		: reservas;
 
-	if (cargando)
-		return (
-			<>
-				<div className="loading-overlay">
-					<div className="loading-card">
-						{/* Loader */}
-						<div className="loader-wrapper">
-							<div className="loader-ring"></div>
-							<div className="loader-core"></div>
-						</div>
-
-						{/* Text */}
-						<div className="loading-content">
-							<span className="loading-badge">
-								<span className="pulse-dot"></span>
-								Cargando reservas
-							</span>
-
-							<div className="loading-line">
-								<div className="loading-progress"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<style jsx>{`
-					.loading-overlay {
-						position: fixed;
-						inset: 0;
-						background: rgba(4, 7, 16, 0.78);
-						backdrop-filter: blur(7px);
-
-						display: flex;
-						justify-content: center;
-						align-items: center;
-
-						z-index: 9999;
-					}
-
-					.loading-card {
-						width: 320px;
-						padding: 32px 28px;
-
-						border-radius: 24px;
-
-						background: linear-gradient(145deg, rgba(15, 18, 32, 0.96), rgba(8, 11, 20, 0.98));
-
-						border: 1px solid rgba(0, 255, 170, 0.08);
-
-						box-shadow:
-							0 0 30px rgba(0, 255, 170, 0.05),
-							0 0 60px rgba(0, 0, 0, 0.45);
-
-						display: flex;
-						flex-direction: column;
-						align-items: center;
-						gap: 24px;
-					}
-
-					.loader-wrapper {
-						position: relative;
-						width: 72px;
-						height: 72px;
-
-						display: flex;
-						justify-content: center;
-						align-items: center;
-					}
-
-					.loader-ring {
-						position: absolute;
-						width: 72px;
-						height: 72px;
-						border-radius: 50%;
-
-						border: 3px solid rgba(0, 255, 170, 0.08);
-						border-top: 3px solid #00ffb3;
-						border-right: 3px solid #00c8ff;
-
-						animation: rotate 1s linear infinite;
-
-						box-shadow: 0 0 18px rgba(0, 255, 170, 0.15);
-					}
-
-					.loader-core {
-						width: 18px;
-						height: 18px;
-						border-radius: 50%;
-
-						background: linear-gradient(135deg, #00ffb3, #00c8ff);
-
-						box-shadow:
-							0 0 12px rgba(0, 255, 170, 0.45),
-							0 0 22px rgba(0, 200, 255, 0.25);
-
-						animation: pulse 1.5s ease-in-out infinite;
-					}
-
-					.loading-content {
-						width: 100%;
-						text-align: center;
-					}
-
-					.loading-badge {
-						display: inline-flex;
-						align-items: center;
-						gap: 8px;
-
-						padding: 7px 14px;
-						border-radius: 999px;
-
-						background: rgba(0, 255, 170, 0.06);
-						border: 1px solid rgba(0, 255, 170, 0.08);
-
-						color: #00ffb3;
-
-						font-size: 11px;
-						font-weight: 700;
-						letter-spacing: 1.5px;
-
-						margin-bottom: 18px;
-					}
-
-					.pulse-dot {
-						width: 8px;
-						height: 8px;
-						border-radius: 50%;
-						background: #00ffb3;
-
-						animation: blink 1s infinite;
-					}
-
-					.loading-content h2 {
-						color: white;
-						font-size: 20px;
-						font-weight: 600;
-
-						margin-bottom: 18px;
-					}
-
-					.loading-line {
-						width: 100%;
-						height: 6px;
-
-						background: rgba(255, 255, 255, 0.05);
-
-						border-radius: 999px;
-						overflow: hidden;
-					}
-
-					.loading-progress {
-						width: 40%;
-						height: 100%;
-
-						border-radius: inherit;
-
-						background: linear-gradient(90deg, #00ffb3, #00c8ff);
-
-						animation: progressMove 1.5s ease-in-out infinite;
-					}
-
-					@keyframes rotate {
-						from {
-							transform: rotate(0deg);
-						}
-
-						to {
-							transform: rotate(360deg);
-						}
-					}
-
-					@keyframes pulse {
-						0%,
-						100% {
-							transform: scale(1);
-							opacity: 1;
-						}
-
-						50% {
-							transform: scale(1.2);
-							opacity: 0.7;
-						}
-					}
-
-					@keyframes blink {
-						0%,
-						100% {
-							opacity: 1;
-						}
-
-						50% {
-							opacity: 0.4;
-						}
-					}
-
-					@keyframes progressMove {
-						0% {
-							transform: translateX(-120%);
-						}
-
-						100% {
-							transform: translateX(320%);
-						}
-					}
-
-					@media (max-width: 480px) {
-						.loading-card {
-							width: 88%;
-							padding: 28px 22px;
-						}
-					}
-				`}</style>
-			</>
-		);
+	if (cargando) return <Cargando Texto={'Reservas'} />;
 	if (error) return <div className="text-red-400 text-sm p-8">{error}</div>;
 
 	return (
@@ -977,9 +775,7 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 									<select
 										value={propiedadElegida?.ID_PROPIEDAD ?? ''}
 										onChange={(e) => {
-											const found = propiedades.find(
-												(p) => p.ID_PROPIEDAD === Number(e.target.value)
-											);
+											const found = propiedades.find((p) => p.ID_PROPIEDAD === Number(e.target.value));
 											setPropiedadElegida(found ?? null);
 										}}
 										className="w-full px-3 py-2 text-sm border rounded-lg bg-fondo border-borde text-primario focus:outline-none focus:border-zinc-500 transition-colors"
@@ -1079,7 +875,10 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 							<div className="flex justify-between pt-2">
 								{esAdmin && (
 									<button
-										onClick={() => { setPaso(1); setErrorWiz(''); }}
+										onClick={() => {
+											setPaso(1);
+											setErrorWiz('');
+										}}
 										className="px-4 py-2 text-sm border rounded-lg border-borde text-secundario hover:text-primario transition-colors flex items-center gap-2"
 									>
 										<ArrowLeft className="w-4 h-4" /> Atrás
@@ -1119,7 +918,9 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 							{esAdmin && propiedadElegida && (
 								<div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primario/5 border border-primario/20 text-xs">
 									<Home className="w-3.5 h-3.5 text-primario" />
-									<span className="text-primario font-semibold">Propiedad {propiedadElegida.NUMERO_PROPIEDAD}</span>
+									<span className="text-primario font-semibold">
+										Propiedad {propiedadElegida.NUMERO_PROPIEDAD}
+									</span>
 								</div>
 							)}
 
@@ -1459,7 +1260,7 @@ export default function ReservasPagina({ filtroGlobal = '' }) {
 						<BotonesModal
 							alCancelar={() => setModal(null)}
 							alGuardar={guardarPrecio}
-							textoGuardar={guardandoPrecio ? "Guardando..." : "Guardar precio"}
+							textoGuardar={guardandoPrecio ? 'Guardando...' : 'Guardar precio'}
 							IconoGuardar={Save}
 							deshabilitado={guardandoPrecio}
 						/>

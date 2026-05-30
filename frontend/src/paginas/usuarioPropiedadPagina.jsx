@@ -30,7 +30,7 @@ import { extraerError } from '../utilidades/extraerError.js';
 import useStore from '../estado/useStore.js';
 import { formatearFecha } from '../utilidades/formatearFecha.js';
 import { toast } from 'sonner';
-import Cargando from '../Componentes/ui/Cargando.jsx';
+import Cargando from '../componentes/ui/Cargando.jsx';
 
 const limpiar = (str) => str?.toString().toLowerCase().replace(/\s/g, '') ?? '';
 

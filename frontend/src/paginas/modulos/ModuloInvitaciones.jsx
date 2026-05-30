@@ -17,6 +17,7 @@ import { CabeceraTabla, Fila, Celda, PieTabla } from '../../componentes/ui/Tabla
 import { Modal, ModalConfirmacion } from '../../componentes/ui/Modales.jsx';
 import { Campo, Entrada, Selector } from '../../componentes/ui/Formularios.jsx';
 import { toast } from 'sonner';
+import Cargando from '../../componentes/ui/Cargando.jsx';
 
 export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 	const usuario = useStore((s) => s.usuario);
@@ -32,7 +33,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 	const [aEliminar, setAEliminar] = useState(null);
 	const [editandoId, setEditandoId] = useState(null);
 	const [guardando, setGuardando] = useState(false);
-	
+
 	// Filtros
 	const [mostrarFiltros, setMostrarFiltros] = useState(false);
 	const [filtroTipo, setFiltroTipo] = useState('Todos');
@@ -119,11 +120,12 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 
 	const termino = (busqueda || filtroGlobal).toLowerCase().trim();
 	const filtrados = datos.filter((inv) => {
-		const cumpleTexto = !termino ||
+		const cumpleTexto =
+			!termino ||
 			inv.visitante.toLowerCase().includes(termino) ||
 			inv.casa.toLowerCase().includes(termino) ||
 			inv.codigoQR?.toLowerCase().includes(termino);
-		
+
 		const cumpleTipo = filtroTipo === 'Todos' || inv.tipo === filtroTipo;
 		const cumpleEst = filtroEstado === 'Todos' || inv.estado === filtroEstado;
 
@@ -161,9 +163,11 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 	const guardar = async (e) => {
 		if (e) e.preventDefault();
 		if (guardando) return;
-		
+
 		if (!usuario || !usuario.ID_USUARIO) {
-			toast.error('Sesión inválida o expirada. No se pudo obtener el ID del usuario.', { icon: '🚫' });
+			toast.error('Sesión inválida o expirada. No se pudo obtener el ID del usuario.', {
+				icon: '🚫',
+			});
 			return;
 		}
 
@@ -223,220 +227,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 		}
 	};
 
-	if (cargando)
-		return (
-			<>
-				<div className="loading-overlay">
-					<div className="loading-card">
-						{/* Loader */}
-						<div className="loader-wrapper">
-							<div className="loader-ring"></div>
-							<div className="loader-core"></div>
-						</div>
-
-						{/* Text */}
-						<div className="loading-content">
-							<span className="loading-badge">
-								<span className="pulse-dot"></span>
-								Cargando invitaciones
-							</span>
-
-							<div className="loading-line">
-								<div className="loading-progress"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<style jsx>{`
-					.loading-overlay {
-						position: fixed;
-						inset: 0;
-						background: rgba(4, 7, 16, 0.78);
-						backdrop-filter: blur(7px);
-
-						display: flex;
-						justify-content: center;
-						align-items: center;
-
-						z-index: 9999;
-					}
-
-					.loading-card {
-						width: 320px;
-						padding: 32px 28px;
-
-						border-radius: 24px;
-
-						background: linear-gradient(145deg, rgba(15, 18, 32, 0.96), rgba(8, 11, 20, 0.98));
-
-						border: 1px solid rgba(0, 255, 170, 0.08);
-
-						box-shadow:
-							0 0 30px rgba(0, 255, 170, 0.05),
-							0 0 60px rgba(0, 0, 0, 0.45);
-
-						display: flex;
-						flex-direction: column;
-						align-items: center;
-						gap: 24px;
-					}
-
-					.loader-wrapper {
-						position: relative;
-						width: 72px;
-						height: 72px;
-
-						display: flex;
-						justify-content: center;
-						align-items: center;
-					}
-
-					.loader-ring {
-						position: absolute;
-						width: 72px;
-						height: 72px;
-						border-radius: 50%;
-
-						border: 3px solid rgba(0, 255, 170, 0.08);
-						border-top: 3px solid #00ffb3;
-						border-right: 3px solid #00c8ff;
-
-						animation: rotate 1s linear infinite;
-
-						box-shadow: 0 0 18px rgba(0, 255, 170, 0.15);
-					}
-
-					.loader-core {
-						width: 18px;
-						height: 18px;
-						border-radius: 50%;
-
-						background: linear-gradient(135deg, #00ffb3, #00c8ff);
-
-						box-shadow:
-							0 0 12px rgba(0, 255, 170, 0.45),
-							0 0 22px rgba(0, 200, 255, 0.25);
-
-						animation: pulse 1.5s ease-in-out infinite;
-					}
-
-					.loading-content {
-						width: 100%;
-						text-align: center;
-					}
-
-					.loading-badge {
-						display: inline-flex;
-						align-items: center;
-						gap: 8px;
-
-						padding: 7px 14px;
-						border-radius: 999px;
-
-						background: rgba(0, 255, 170, 0.06);
-						border: 1px solid rgba(0, 255, 170, 0.08);
-
-						color: #00ffb3;
-
-						font-size: 11px;
-						font-weight: 700;
-						letter-spacing: 1.5px;
-
-						margin-bottom: 18px;
-					}
-
-					.pulse-dot {
-						width: 8px;
-						height: 8px;
-						border-radius: 50%;
-						background: #00ffb3;
-
-						animation: blink 1s infinite;
-					}
-
-					.loading-content h2 {
-						color: white;
-						font-size: 20px;
-						font-weight: 600;
-
-						margin-bottom: 18px;
-					}
-
-					.loading-line {
-						width: 100%;
-						height: 6px;
-
-						background: rgba(255, 255, 255, 0.05);
-
-						border-radius: 999px;
-						overflow: hidden;
-					}
-
-					.loading-progress {
-						width: 40%;
-						height: 100%;
-
-						border-radius: inherit;
-
-						background: linear-gradient(90deg, #00ffb3, #00c8ff);
-
-						animation: progressMove 1.5s ease-in-out infinite;
-					}
-
-					@keyframes rotate {
-						from {
-							transform: rotate(0deg);
-						}
-
-						to {
-							transform: rotate(360deg);
-						}
-					}
-
-					@keyframes pulse {
-						0%,
-						100% {
-							transform: scale(1);
-							opacity: 1;
-						}
-
-						50% {
-							transform: scale(1.2);
-							opacity: 0.7;
-						}
-					}
-
-					@keyframes blink {
-						0%,
-						100% {
-							opacity: 1;
-						}
-
-						50% {
-							opacity: 0.4;
-						}
-					}
-
-					@keyframes progressMove {
-						0% {
-							transform: translateX(-120%);
-						}
-
-						100% {
-							transform: translateX(320%);
-						}
-					}
-
-					@media (max-width: 480px) {
-						.loading-card {
-							width: 88%;
-							padding: 28px 22px;
-						}
-					}
-				`}</style>
-			</>
-		);
+	if (cargando) return <Cargando Texto={'Invitaciones'} />;
 
 	return (
 		<div className="space-y-6 animate-in fade-in duration-300">
@@ -472,7 +263,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-3">
 							<BuscadorCasa valor={busqueda} alCambiar={setBusqueda} />
-							<button 
+							<button
 								onClick={() => setMostrarFiltros(!mostrarFiltros)}
 								className={`p-2 rounded-lg border transition-all flex items-center gap-2 text-sm font-medium ${mostrarFiltros ? 'bg-primario/10 border-primario/30 text-primario' : 'bg-fondo border-borde text-secundario hover:text-primario hover:bg-zinc-800'}`}
 							>
@@ -496,7 +287,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 						<div className="flex gap-4 p-3 rounded-lg bg-zinc-900/50 border border-borde/50 animate-in slide-in-from-top-2">
 							<div className="flex flex-col gap-1.5">
 								<label className="text-xs font-medium text-secundario">Tipo de Pase</label>
-								<select 
+								<select
 									value={filtroTipo}
 									onChange={(e) => setFiltroTipo(e.target.value)}
 									className="bg-fondo border border-borde text-primario text-sm rounded-lg px-3 py-1.5 outline-none focus:border-primario/50"
@@ -508,7 +299,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 							</div>
 							<div className="flex flex-col gap-1.5">
 								<label className="text-xs font-medium text-secundario">Estado</label>
-								<select 
+								<select
 									value={filtroEstado}
 									onChange={(e) => setFiltroEstado(e.target.value)}
 									className="bg-fondo border border-borde text-primario text-sm rounded-lg px-3 py-1.5 outline-none focus:border-primario/50"
@@ -623,7 +414,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 					}}
 				>
 					<form onSubmit={guardar} className="space-y-4">
-						<Campo 
+						<Campo
 							etiqueta="Nombre del visitante"
 							error={errores.visitante}
 							ayuda="Escriba el primer nombre y apellido del visitante. Solo letras y espacios."

@@ -33,6 +33,7 @@ import { generarNumeroBoleta } from '../utilidades/generarBoleta.js';
 import { validarTextoConSentido } from '../utilidades/validarTexto.js';
 import useStore from '../estado/useStore.js';
 import { toast } from 'sonner';
+import Cargando from '../componentes/ui/Cargando.jsx';
 
 const limpiar = (str) => str?.toString().toLowerCase().replace(/\s/g, '') ?? '';
 const formatQ = (monto) => `Q${Number(monto ?? 0).toFixed(2)}`;
@@ -159,7 +160,8 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 		}
 
 		if (form.observaciones.trim() && !validarTextoConSentido(form.observaciones)) {
-			const msj = 'El texto de las observaciones no es válido. Por favor, ingresa un comentario con sentido.';
+			const msj =
+				'El texto de las observaciones no es válido. Por favor, ingresa un comentario con sentido.';
 			setErrorModal(msj);
 			toast.error(msj);
 			return;
@@ -204,220 +206,7 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 		return fecha.getMonth() === ahora.getMonth() && fecha.getFullYear() === ahora.getFullYear();
 	}).length;
 
-	if (cargando)
-		return (
-			<>
-				<div className="loading-overlay">
-					<div className="loading-card">
-						{/* Loader */}
-						<div className="loader-wrapper">
-							<div className="loader-ring"></div>
-							<div className="loader-core"></div>
-						</div>
-
-						{/* Text */}
-						<div className="loading-content">
-							<span className="loading-badge">
-								<span className="pulse-dot"></span>
-								Cargando pagos
-							</span>
-
-							<div className="loading-line">
-								<div className="loading-progress"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<style jsx>{`
-					.loading-overlay {
-						position: fixed;
-						inset: 0;
-						background: rgba(4, 7, 16, 0.78);
-						backdrop-filter: blur(7px);
-
-						display: flex;
-						justify-content: center;
-						align-items: center;
-
-						z-index: 9999;
-					}
-
-					.loading-card {
-						width: 320px;
-						padding: 32px 28px;
-
-						border-radius: 24px;
-
-						background: linear-gradient(145deg, rgba(15, 18, 32, 0.96), rgba(8, 11, 20, 0.98));
-
-						border: 1px solid rgba(0, 255, 170, 0.08);
-
-						box-shadow:
-							0 0 30px rgba(0, 255, 170, 0.05),
-							0 0 60px rgba(0, 0, 0, 0.45);
-
-						display: flex;
-						flex-direction: column;
-						align-items: center;
-						gap: 24px;
-					}
-
-					.loader-wrapper {
-						position: relative;
-						width: 72px;
-						height: 72px;
-
-						display: flex;
-						justify-content: center;
-						align-items: center;
-					}
-
-					.loader-ring {
-						position: absolute;
-						width: 72px;
-						height: 72px;
-						border-radius: 50%;
-
-						border: 3px solid rgba(0, 255, 170, 0.08);
-						border-top: 3px solid #00ffb3;
-						border-right: 3px solid #00c8ff;
-
-						animation: rotate 1s linear infinite;
-
-						box-shadow: 0 0 18px rgba(0, 255, 170, 0.15);
-					}
-
-					.loader-core {
-						width: 18px;
-						height: 18px;
-						border-radius: 50%;
-
-						background: linear-gradient(135deg, #00ffb3, #00c8ff);
-
-						box-shadow:
-							0 0 12px rgba(0, 255, 170, 0.45),
-							0 0 22px rgba(0, 200, 255, 0.25);
-
-						animation: pulse 1.5s ease-in-out infinite;
-					}
-
-					.loading-content {
-						width: 100%;
-						text-align: center;
-					}
-
-					.loading-badge {
-						display: inline-flex;
-						align-items: center;
-						gap: 8px;
-
-						padding: 7px 14px;
-						border-radius: 999px;
-
-						background: rgba(0, 255, 170, 0.06);
-						border: 1px solid rgba(0, 255, 170, 0.08);
-
-						color: #00ffb3;
-
-						font-size: 11px;
-						font-weight: 700;
-						letter-spacing: 1.5px;
-
-						margin-bottom: 18px;
-					}
-
-					.pulse-dot {
-						width: 8px;
-						height: 8px;
-						border-radius: 50%;
-						background: #00ffb3;
-
-						animation: blink 1s infinite;
-					}
-
-					.loading-content h2 {
-						color: white;
-						font-size: 20px;
-						font-weight: 600;
-
-						margin-bottom: 18px;
-					}
-
-					.loading-line {
-						width: 100%;
-						height: 6px;
-
-						background: rgba(255, 255, 255, 0.05);
-
-						border-radius: 999px;
-						overflow: hidden;
-					}
-
-					.loading-progress {
-						width: 40%;
-						height: 100%;
-
-						border-radius: inherit;
-
-						background: linear-gradient(90deg, #00ffb3, #00c8ff);
-
-						animation: progressMove 1.5s ease-in-out infinite;
-					}
-
-					@keyframes rotate {
-						from {
-							transform: rotate(0deg);
-						}
-
-						to {
-							transform: rotate(360deg);
-						}
-					}
-
-					@keyframes pulse {
-						0%,
-						100% {
-							transform: scale(1);
-							opacity: 1;
-						}
-
-						50% {
-							transform: scale(1.2);
-							opacity: 0.7;
-						}
-					}
-
-					@keyframes blink {
-						0%,
-						100% {
-							opacity: 1;
-						}
-
-						50% {
-							opacity: 0.4;
-						}
-					}
-
-					@keyframes progressMove {
-						0% {
-							transform: translateX(-120%);
-						}
-
-						100% {
-							transform: translateX(320%);
-						}
-					}
-
-					@media (max-width: 480px) {
-						.loading-card {
-							width: 88%;
-							padding: 28px 22px;
-						}
-					}
-				`}</style>
-			</>
-		);
+	if (cargando) return <Cargando Texto={'Pagos'} />;
 	if (error) return <div className="text-red-400 text-sm p-8">{error}</div>;
 
 	return (
@@ -545,7 +334,10 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 
 			{modal === 'crear' && (
 				<Modal titulo="Registrar Pago" alCerrar={() => setModal(null)}>
-					<form onSubmit={guardar} className="space-y-5 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2 pb-2">
+					<form
+						onSubmit={guardar}
+						className="space-y-5 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2 pb-2"
+					>
 						{esAdmin && (
 							<Campo etiqueta="Seleccionar Propiedad">
 								<select
@@ -638,11 +430,7 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 						</div>
 
 						<Campo etiqueta="Número de Boleta (Autogenerado)">
-							<Entrada
-								required
-								disabled
-								value={form.numeroBoleta}
-							/>
+							<Entrada required disabled value={form.numeroBoleta} />
 						</Campo>
 
 						<Campo etiqueta="Observaciones (opcional)">
@@ -741,11 +529,25 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 							<Campo etiqueta="Aplicar cobro a">
 								<div className="flex gap-4">
 									<label className="flex items-center gap-2 text-sm text-primario cursor-pointer font-medium hover:text-emerald-400 transition-colors">
-										<input type="radio" name="modoGen" value="ALL" checked={modoGeneracion === 'ALL'} onChange={() => setModoGeneracion('ALL')} className="w-4 h-4 accent-emerald-500" />
+										<input
+											type="radio"
+											name="modoGen"
+											value="ALL"
+											checked={modoGeneracion === 'ALL'}
+											onChange={() => setModoGeneracion('ALL')}
+											className="w-4 h-4 accent-emerald-500"
+										/>
 										Todas las propiedades
 									</label>
 									<label className="flex items-center gap-2 text-sm text-primario cursor-pointer font-medium hover:text-emerald-400 transition-colors">
-										<input type="radio" name="modoGen" value="MANUAL" checked={modoGeneracion === 'MANUAL'} onChange={() => setModoGeneracion('MANUAL')} className="w-4 h-4 accent-emerald-500" />
+										<input
+											type="radio"
+											name="modoGen"
+											value="MANUAL"
+											checked={modoGeneracion === 'MANUAL'}
+											onChange={() => setModoGeneracion('MANUAL')}
+											className="w-4 h-4 accent-emerald-500"
+										/>
 										Selección individual
 									</label>
 								</div>
@@ -753,32 +555,48 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 
 							{modoGeneracion === 'MANUAL' && (
 								<div className="space-y-3 border border-borde rounded-xl p-4 bg-tarjeta/30 shadow-inner">
-									<Entrada 
-										placeholder="🔍 Buscar número de propiedad (ej. 101)..." 
-										value={filtroPropiedades} 
+									<Entrada
+										placeholder="🔍 Buscar número de propiedad (ej. 101)..."
+										value={filtroPropiedades}
 										onChange={(e) => setFiltroPropiedades(e.target.value)}
 										className="bg-fondo"
 									/>
 									<div className="max-h-48 overflow-y-auto space-y-1 pr-2 custom-scrollbar border border-borde/50 rounded-lg p-2 bg-fondo/50">
-										{propiedades.filter(p => p.NUMERO_PROPIEDAD.toLowerCase().includes(filtroPropiedades.toLowerCase())).map(p => (
-											<label key={p.ID_PROPIEDAD} className="flex items-center justify-between gap-3 text-sm text-primario cursor-pointer p-2 hover:bg-borde rounded-md transition-colors border border-transparent hover:border-borde">
-												<div className="flex items-center gap-3">
-													<input 
-														type="checkbox" 
-														checked={propiedadesSeleccionadas.includes(p.ID_PROPIEDAD)}
-														onChange={(e) => {
-															if(e.target.checked) setPropiedadesSeleccionadas([...propiedadesSeleccionadas, p.ID_PROPIEDAD]);
-															else setPropiedadesSeleccionadas(propiedadesSeleccionadas.filter(id => id !== p.ID_PROPIEDAD));
-														}}
-														className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
-													/>
-													<span className="font-bold">Propiedad {p.NUMERO_PROPIEDAD}</span>
+										{propiedades
+											.filter((p) =>
+												p.NUMERO_PROPIEDAD.toLowerCase().includes(filtroPropiedades.toLowerCase()),
+											)
+											.map((p) => (
+												<label
+													key={p.ID_PROPIEDAD}
+													className="flex items-center justify-between gap-3 text-sm text-primario cursor-pointer p-2 hover:bg-borde rounded-md transition-colors border border-transparent hover:border-borde"
+												>
+													<div className="flex items-center gap-3">
+														<input
+															type="checkbox"
+															checked={propiedadesSeleccionadas.includes(p.ID_PROPIEDAD)}
+															onChange={(e) => {
+																if (e.target.checked)
+																	setPropiedadesSeleccionadas([...propiedadesSeleccionadas, p.ID_PROPIEDAD]);
+																else
+																	setPropiedadesSeleccionadas(
+																		propiedadesSeleccionadas.filter((id) => id !== p.ID_PROPIEDAD),
+																	);
+															}}
+															className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+														/>
+														<span className="font-bold">Propiedad {p.NUMERO_PROPIEDAD}</span>
+													</div>
+												</label>
+											))}
+										{propiedades.length > 0 &&
+											propiedades.filter((p) =>
+												p.NUMERO_PROPIEDAD.toLowerCase().includes(filtroPropiedades.toLowerCase()),
+											).length === 0 && (
+												<div className="text-center py-4 text-secundario text-sm">
+													No se encontraron propiedades.
 												</div>
-											</label>
-										))}
-										{propiedades.length > 0 && propiedades.filter(p => p.NUMERO_PROPIEDAD.toLowerCase().includes(filtroPropiedades.toLowerCase())).length === 0 && (
-											<div className="text-center py-4 text-secundario text-sm">No se encontraron propiedades.</div>
-										)}
+											)}
 									</div>
 									<div className="text-xs font-bold text-emerald-400 text-right bg-emerald-400/10 py-1.5 px-3 rounded-full inline-block ml-auto border border-emerald-400/20">
 										{propiedadesSeleccionadas.length} seleccionadas
@@ -789,12 +607,25 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 							<div className="mt-4 pt-4 border-t border-borde">
 								<div className="space-y-3">
 									<label className="flex items-center gap-2 text-sm font-bold text-secundario cursor-pointer hover:text-red-400 transition-colors">
-										<input type="checkbox" checked={incluirMora} onChange={(e) => setIncluirMora(e.target.checked)} className="w-4 h-4 accent-red-500 rounded" />
+										<input
+											type="checkbox"
+											checked={incluirMora}
+											onChange={(e) => setIncluirMora(e.target.checked)}
+											className="w-4 h-4 accent-red-500 rounded"
+										/>
 										Añadir recargo de Mora
 									</label>
 									{incluirMora && (
 										<div className="animate-in slide-in-from-top-2 duration-200">
-											<Entrada type="number" min="0" step="1" placeholder="Monto mora (Q)" value={montoMora} onChange={(e) => setMontoMora(e.target.value)} required={incluirMora} />
+											<Entrada
+												type="number"
+												min="0"
+												step="1"
+												placeholder="Monto mora (Q)"
+												value={montoMora}
+												onChange={(e) => setMontoMora(e.target.value)}
+												required={incluirMora}
+											/>
 										</div>
 									)}
 								</div>
@@ -811,13 +642,15 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 							</button>
 							<button
 								onClick={async () => {
-									if(modoGeneracion === 'MANUAL' && propiedadesSeleccionadas.length === 0) {
+									if (modoGeneracion === 'MANUAL' && propiedadesSeleccionadas.length === 0) {
 										return toast.error('Selecciona al menos una propiedad para continuar');
 									}
-									if(incluirMora) {
+									if (incluirMora) {
 										const val = Number(montoMora);
-										if(!Number.isInteger(val) || val < 0) {
-											return toast.error('🚫 El monto de mora debe ser un número entero y positivo (sin decimales ni negativos)');
+										if (!Number.isInteger(val) || val < 0) {
+											return toast.error(
+												'🚫 El monto de mora debe ser un número entero y positivo (sin decimales ni negativos)',
+											);
 										}
 									}
 									try {
@@ -825,7 +658,7 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 											propiedades: modoGeneracion === 'ALL' ? 'ALL' : propiedadesSeleccionadas,
 											incluirMora,
 											montoMora: Number(montoMora),
-											fechaEmision
+											fechaEmision,
 										});
 										toast.success('Cuotas mensuales generadas exitosamente');
 										cargarPagos();
@@ -854,11 +687,15 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 					) : (
 						<div className="space-y-5">
 							<p className="text-sm text-secundario px-2">
-								Modifica el precio de la cuota mensual de manera dinámica. Estos cambios aplicarán para las <strong>nuevas cuotas</strong> que generes en adelante.
+								Modifica el precio de la cuota mensual de manera dinámica. Estos cambios aplicarán para
+								las <strong>nuevas cuotas</strong> que generes en adelante.
 							</p>
 							<div className="flex flex-col gap-3">
-								{categorias.map(cat => (
-									<div key={cat.ID_CATEGORIA} className="p-4 flex items-center justify-between gap-4 border border-borde rounded-xl bg-tarjeta/50 hover:border-sky-400/30 transition-colors shadow-sm">
+								{categorias.map((cat) => (
+									<div
+										key={cat.ID_CATEGORIA}
+										className="p-4 flex items-center justify-between gap-4 border border-borde rounded-xl bg-tarjeta/50 hover:border-sky-400/30 transition-colors shadow-sm"
+									>
 										<div className="flex-1">
 											<h4 className="text-sm font-bold text-primario flex items-center gap-2">
 												{cat.NOMBRE}
@@ -874,7 +711,7 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 												value={cat.CUOTA_MENSUAL}
 												onChange={(e) => {
 													const newCats = [...categorias];
-													const idx = newCats.findIndex(c => c.ID_CATEGORIA === cat.ID_CATEGORIA);
+													const idx = newCats.findIndex((c) => c.ID_CATEGORIA === cat.ID_CATEGORIA);
 													newCats[idx].CUOTA_MENSUAL = e.target.value;
 													setCategorias(newCats);
 												}}
@@ -884,13 +721,15 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 										<button
 											onClick={async () => {
 												const val = Number(cat.CUOTA_MENSUAL);
-												if(!Number.isInteger(val) || val < 0) {
-													return toast.error(`🚫 La cuota para ${cat.NOMBRE} debe ser un número entero y positivo (sin decimales)`);
+												if (!Number.isInteger(val) || val < 0) {
+													return toast.error(
+														`🚫 La cuota para ${cat.NOMBRE} debe ser un número entero y positivo (sin decimales)`,
+													);
 												}
 												try {
 													await categoriasApi.actualizar(cat.ID_CATEGORIA, { cuotaMensual: val });
 													toast.success(`Cuota actualizada para: ${cat.NOMBRE}`);
-												} catch(err) {
+												} catch (err) {
 													toast.error(`Error al actualizar ${cat.NOMBRE}`);
 												}
 											}}
@@ -903,7 +742,10 @@ export default function PagosPagina({ filtroGlobal = '' }) {
 								))}
 							</div>
 							<div className="flex pt-4 border-t border-borde">
-								<button onClick={() => setModal(null)} className="w-full py-2.5 text-sm font-bold bg-fondo text-primario border border-borde rounded-lg hover:bg-borde transition-colors flex items-center justify-center gap-2">
+								<button
+									onClick={() => setModal(null)}
+									className="w-full py-2.5 text-sm font-bold bg-fondo text-primario border border-borde rounded-lg hover:bg-borde transition-colors flex items-center justify-center gap-2"
+								>
 									<XCircle className="w-5 h-5" />
 									Cerrar Configuración
 								</button>
