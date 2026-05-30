@@ -269,7 +269,9 @@ export default function ModuloVinculaciones({ filtroGlobal = '' }) {
 								onChange={(e) => setForm({ ...form, idUsuario: e.target.value })}
 							>
 								<option value="">Seleccione una persona...</option>
-								{usuarios.map((u) => (
+								{usuarios
+									.filter((u) => u.ROL === 'Residente')
+									.map((u) => (
 									<option key={u.ID_USUARIO} value={u.ID_USUARIO}>
 										{u.NOMBRE} {u.APELLIDO}
 									</option>

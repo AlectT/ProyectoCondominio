@@ -49,52 +49,81 @@ export const validarTextoConSentido = (texto) => {
 	return true;
 };
 
+// Mapa de coordenadas de un teclado QWERTY para detectar tecleo aleatorio (mashing)
+const coordsTeclado = {
+	q: [0,0], w: [0,1], e: [0,2], r: [0,3], t: [0,4], y: [0,5], u: [0,6], i: [0,7], o: [0,8], p: [0,9],
+	a: [1,0], s: [1,1], d: [1,2], f: [1,3], g: [1,4], h: [1,5], j: [1,6], k: [1,7], l: [1,8], 'ñ': [1,9],
+	z: [2,0], x: [2,1], c: [2,2], v: [2,3], b: [2,4], n: [2,5], m: [2,6]
+};
+
+const esTecleoAleatorio = (palabra) => {
+	// Palabras cortas no se penalizan
+	if (palabra.length < 4) return false;
+	
+	let distanciaTotal = 0;
+	let teclasValidas = 0;
+	
+	for (let i = 0; i < palabra.length - 1; i++) {
+		const c1 = palabra[i];
+		const c2 = palabra[i+1];
+		if (coordsTeclado[c1] && coordsTeclado[c2]) {
+			const dx = coordsTeclado[c1][0] - coordsTeclado[c2][0];
+			const dy = coordsTeclado[c1][1] - coordsTeclado[c2][1];
+			distanciaTotal += Math.sqrt(dx*dx + dy*dy);
+			teclasValidas++;
+		}
+	}
+	
+	if (teclasValidas > 0) {
+		const promedio = distanciaTotal / teclasValidas;
+		// Si el viaje promedio entre teclas es menor a 1.5, el usuario está "aplastando" teclas juntas (ej. adsas)
+		if (promedio < 1.5) return true; 
+	}
+	return false;
+};
+
 export const validarNombrePersona = (texto) => {
 	if (!texto || typeof texto !== 'string') return false;
-	const txt = texto.trim();
-	if (txt.length < 2) return false;
+	const txt = texto.trim().toLowerCase();
+	if (txt.length < 3) return false;
 
-	// Si contiene CUALQUIER COSA que no sea letra, espacio o punto, es inválido (blindaje contra símbolos y números)
-	if (/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s.]/.test(txt)) return false;
+	// Si contiene CUALQUIER COSA que no sea letra, espacio o punto, es inválido
+	if (/[^a-záéíóúñü\s.]/.test(txt)) return false;
 
-	// Validar que contenga al menos 2 letras
-	const soloLetras = txt.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
-	if (soloLetras.length < 2) return false;
+	const palabras = txt.split(/\s+/);
+	for (const palabra of palabras) {
+		const soloLetras = palabra.replace(/[^a-záéíóúñü]/g, '');
+		if (soloLetras.length === 0) continue;
 
-	// Debe contener al menos una vocal si es de 3 letras o más
-	if (soloLetras.length >= 3 && !/[aeiouyáéíóúüAEIOUYÁÉÍÓÚÜ]/.test(soloLetras)) return false;
+		// Debe contener al menos una vocal
+		if (!/[aeiouyáéíóúü]/.test(soloLetras)) return false;
 
-	// Evitar secuencias idénticas (ej. aaa)
+		// Heurística de diversidad (destruye ababab)
+		const unicos = new Set(soloLetras.split('')).size;
+		if (soloLetras.length >= 5 && unicos < 3) return false; 
+		if (soloLetras.length >= 7 && unicos < 4) return false; 
+
+		// ALGORITMO AVANZADO: Detección de Mashing (destruye "adsas", "qweqwe", "zxcvb")
+		if (esTecleoAleatorio(soloLetras)) return false;
+
+		// Evitar repeticiones raras de consonantes (ej. zzez, xx, qq)
+		if (/[hjqvwxyzñ]\1/.test(soloLetras)) return false;
+
+		// Evitar 4 consonantes o 4 vocales seguidas
+		if (/[bcdfghjklmnpqrstvwxyzñ]{4,}/.test(soloLetras)) return false;
+		if (/[aeiouáéíóúü]{4,}/.test(soloLetras)) return false;
+	}
+
+	// Evitar 3 caracteres idénticos seguidos en cualquier parte
 	if (/(.)\1{2,}/.test(txt)) return false;
 
-	// Evitar muchas consonantes seguidas (ej. jklmn)
-	if (/[bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ]{5,}/i.test(txt)) return false;
-
 	// Patrones de teclado comunes
-	const txtLower = txt.toLowerCase();
 	const patronesTeclado = [
-		'qwert',
-		'werty',
-		'ertyu',
-		'rtyui',
-		'tyuio',
-		'yuiop',
-		'asdfg',
-		'sdfgh',
-		'dfghj',
-		'fghjk',
-		'ghjkl',
-		'zxcvb',
-		'xcvbn',
-		'cvbnm',
-		'qwer',
-		'asdf',
-		'zxcv',
-		'hjkl',
-		'uiop',
-		'vbnm',
+		'qwert', 'werty', 'ertyu', 'rtyui', 'tyuio', 'yuiop',
+		'asdfg', 'sdfgh', 'dfghj', 'fghjk', 'ghjkl',
+		'zxcvb', 'xcvbn', 'cvbnm', 'qwer', 'asdf', 'zxcv', 'hjkl', 'uiop', 'vbnm'
 	];
-	if (patronesTeclado.some((p) => txtLower.includes(p))) return false;
+	if (patronesTeclado.some((p) => txt.includes(p))) return false;
 
 	return true;
 };
@@ -140,14 +169,23 @@ export const extraerNumeroPropiedad = (texto) => {
 
 export const validarNombreUsuario = (texto) => {
 	if (!texto || typeof texto !== 'string') return false;
-	const txt = texto.trim();
-	if (txt.length < 3) return false;
+	const txt = texto.trim().toLowerCase();
+	if (txt.length < 4) return false;
 
-	// Permitir letras, números, puntos, guiones bajos y medios
-	if (!/^[a-zA-Z0-9._-]+$/.test(txt)) return false;
+	if (!/^[a-z0-9._-]+$/.test(txt)) return false;
 
-	// Evitar secuencias idénticas largas
-	if (/(.)\1{3,}/.test(txt)) return false;
+	// Evitar 3 caracteres idénticos seguidos
+	if (/(.)\1{2,}/.test(txt)) return false;
+
+	// Heurística de diversidad
+	const soloLetras = txt.replace(/[^a-z]/g, '');
+	if (soloLetras.length >= 5) {
+		const unicos = new Set(soloLetras.split('')).size;
+		if (unicos < 3) return false;
+	}
+
+	// Detección de mashing de teclado
+	if (esTecleoAleatorio(soloLetras)) return false;
 
 	return true;
 };

@@ -68,7 +68,8 @@ export default function UsuariosPagina({ filtroGlobal = '' }) {
 		return cumpleTexto && cumpleRol && cumpleEst;
 	});
 
-	const personalSistema = filtrados.filter((u) => ['Administrador', 'Guardia', 'Colaborador'].includes(u.ROL));
+	const personalSistema = filtrados.filter((u) => ['Administrador', 'Guardia'].includes(u.ROL));
+	const colaboradores = filtrados.filter((u) => u.ROL === 'Colaborador');
 	const residentes = filtrados.filter((u) => u.ROL === 'Residente');
 
 	const renderTabla = (lista, titulo) => (
@@ -367,7 +368,13 @@ export default function UsuariosPagina({ filtroGlobal = '' }) {
 						onClick={() => setVistaActiva('sistema')}
 						className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${vistaActiva === 'sistema' ? 'bg-primario text-fondo' : 'bg-fondo border border-borde text-secundario hover:text-primario hover:bg-zinc-800'}`}
 					>
-						Usuarios de Sistema
+						Personal del Condominio
+					</button>
+					<button 
+						onClick={() => setVistaActiva('colaboradores')}
+						className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${vistaActiva === 'colaboradores' ? 'bg-primario text-fondo' : 'bg-fondo border border-borde text-secundario hover:text-primario hover:bg-zinc-800'}`}
+					>
+						Colaboradores
 					</button>
 					<button 
 						onClick={() => setVistaActiva('residentes')}
@@ -378,10 +385,11 @@ export default function UsuariosPagina({ filtroGlobal = '' }) {
 				</div>
 
 				<div className="py-2 mt-4">
-					{vistaActiva === 'sistema' && renderTabla(personalSistema, 'Personal del Sistema')}
+					{vistaActiva === 'sistema' && renderTabla(personalSistema, 'Personal del Condominio')}
+					{vistaActiva === 'colaboradores' && renderTabla(colaboradores, 'Colaboradores')}
 					{vistaActiva === 'residentes' && renderTabla(residentes, 'Residentes del Condominio')}
 				</div>
-				<PieTabla mostrados={vistaActiva === 'sistema' ? personalSistema.length : residentes.length} total={usuarios.length} unidad="usuarios" />
+				<PieTabla mostrados={vistaActiva === 'sistema' ? personalSistema.length : vistaActiva === 'colaboradores' ? colaboradores.length : residentes.length} total={usuarios.length} unidad="usuarios" />
 			</div>
 
 			{(modal === 'crear' || modal === 'editar') && (
