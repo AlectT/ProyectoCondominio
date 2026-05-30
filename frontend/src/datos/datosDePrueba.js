@@ -39,7 +39,7 @@ export const GRUPOS = [
 				roles: ['Administrador', 'Guardia', 'Residente'],
 			},
 			{
-				id: 'Propietarios e Inquilinos',
+				id: 'Residentes',
 				Icono: Users,
 				propio: true,
 				roles: ['Administrador', 'Guardia'],

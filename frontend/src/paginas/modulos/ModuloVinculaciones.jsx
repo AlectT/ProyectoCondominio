@@ -3,7 +3,7 @@ import { extraerError } from '../../utilidades/extraerError.js';
 // 📁 RUTA: frontend/src/paginas/modulos/ModuloVinculaciones.jsx
 // ============================================================
 import { useState, useEffect } from 'react';
-import { Link, Plus, Pencil, Trash2, Ban } from 'lucide-react';
+import { Link, Plus, Pencil, Trash2, Ban, Filter } from 'lucide-react';
 import { vinculacionesApi } from '../../api/vinculacionesApi.js';
 import { usuariosApi } from '../../api/usuariosApi.js';
 import { propiedadesApi } from '../../api/propiedadesApi.js';
@@ -23,12 +23,14 @@ export default function ModuloVinculaciones({ filtroGlobal = '' }) {
 	const [busqueda, setBusqueda] = useState('');
 	const [modal, setModal] = useState(null); // 'nuevo', 'editar'
 	const [aEliminar, setAEliminar] = useState(null);
+	const [mostrarFiltros, setMostrarFiltros] = useState(false);
+	const [filtroEstado, setFiltroEstado] = useState('Todos');
 
 	const [form, setForm] = useState({
 		id: null,
 		idUsuario: '',
 		idPropiedad: '',
-		tipoVinculo: 'Propietario',
+		tipoVinculo: 'Residente',
 	});
 
 	const cargarTodo = async () => {
@@ -42,9 +44,9 @@ export default function ModuloVinculaciones({ filtroGlobal = '' }) {
 
 			const formateados = resVinc.data.map((v) => ({
 				id: v.ID_USUARIO_PROPIEDAD,
-				usuario: v.USUARIO_NOMBRE,
+				usuario: v.NOMBRE_USUARIO,
 				idUsuario: v.ID_USUARIO,
-				propiedad: v.PROPIEDAD_NUMERO,
+				propiedad: v.NUMERO_PROPIEDAD,
 				idPropiedad: v.ID_PROPIEDAD,
 				tipoVinculo: v.TIPO_VINCULO,
 				fechaInicio: new Date(v.FECHA_INICIO).toLocaleDateString(),
@@ -69,15 +71,75 @@ export default function ModuloVinculaciones({ filtroGlobal = '' }) {
 	}, []);
 
 	const termino = (busqueda || filtroGlobal).toLowerCase().trim();
-	const filtrados = termino
+	const filtradosBusqueda = termino
 		? datos.filter(
 				(v) =>
 					v.usuario.toLowerCase().includes(termino) || v.propiedad.toLowerCase().includes(termino),
 			)
 		: datos;
+	const filtrados = filtradosBusqueda.filter(v => filtroEstado === 'Todos' || v.estado === filtroEstado);
+
+	const residentesFiltrados = filtrados;
+
+	const renderTabla = (lista, titulo) => (
+		<div className="mb-6">
+			<h3 className="text-sm font-bold text-primario px-4 mb-2 uppercase tracking-wider">{titulo} ({lista.length})</h3>
+			<div className="overflow-x-auto">
+				<table className="w-full">
+					<CabeceraTabla
+						columnas={['Propiedad', 'Usuario Residente', 'Inicio', 'Estado', 'Acciones']}
+					/>
+					<tbody>
+						{lista.map((vinc, i) => (
+							<Fila key={vinc.id} indice={i}>
+								<Celda mono>{vinc.propiedad}</Celda>
+								<Celda className="font-bold text-primario">{vinc.usuario}</Celda>
+								<Celda className="text-xs text-zinc-500">{vinc.fechaInicio}</Celda>
+								<td className="px-4 py-3">
+									<Etiqueta
+										texto={vinc.estado}
+										variante={vinc.estado === 'Activo' ? 'activo' : 'inactivo'}
+									/>
+								</td>
+								<td className="px-4 py-3">
+									<div className="flex items-center gap-1">
+										<BtnAccion
+											Icono={Pencil}
+											onClick={() => abrirModalEditar(vinc)}
+											colorHover="hover:text-blue-400"
+											titulo="Editar"
+										/>
+										<BtnAccion
+											Icono={Ban}
+											onClick={() => toggleEstado(vinc.id, vinc.estado)}
+											colorHover="hover:text-amber-400"
+											titulo="Cambiar estado"
+										/>
+										<BtnAccion
+											Icono={Trash2}
+											onClick={() => setAEliminar(vinc)}
+											colorHover="hover:text-red-500"
+											titulo="Eliminar"
+										/>
+									</div>
+								</td>
+							</Fila>
+						))}
+						{lista.length === 0 && (
+							<tr>
+								<td colSpan={6} className="px-4 py-8 text-center text-secundario text-sm">
+									No hay registros para mostrar.
+								</td>
+							</tr>
+						)}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	);
 
 	const abrirModalNuevo = () => {
-		setForm({ id: null, idUsuario: '', idPropiedad: '', tipoVinculo: 'Propietario' });
+		setForm({ id: null, idUsuario: '', idPropiedad: '', tipoVinculo: 'Residente' });
 		setModal('nuevo');
 	};
 
@@ -366,58 +428,43 @@ export default function ModuloVinculaciones({ filtroGlobal = '' }) {
 			</div>
 
 			<div className="border bg-fondo border-borde rounded-xl overflow-hidden shadow-sm">
-				<div className="flex items-center justify-between p-4 border-b border-borde bg-tarjeta/50">
-					<BuscadorCasa valor={busqueda} alCambiar={setBusqueda} />
-					<BtnPrimario onClick={abrirModalNuevo}>
-						<Plus className="w-4 h-4" /> Asignar Usuario
-					</BtnPrimario>
+				<div className="flex flex-col gap-4 p-4 border-b border-borde bg-tarjeta/50">
+					<div className="flex items-center justify-between">
+						<div className="flex items-center gap-3">
+							<BuscadorCasa valor={busqueda} alCambiar={setBusqueda} />
+							<button 
+								onClick={() => setMostrarFiltros(!mostrarFiltros)}
+								className={`p-2 rounded-lg border transition-all flex items-center gap-2 text-sm font-medium ${mostrarFiltros ? 'bg-primario/10 border-primario/30 text-primario' : 'bg-fondo border-borde text-secundario hover:text-primario hover:bg-zinc-800'}`}
+							>
+								<Filter className="w-4 h-4" />
+								<span className="hidden sm:inline">Filtros</span>
+							</button>
+						</div>
+						<BtnPrimario onClick={abrirModalNuevo}>
+							<Plus className="w-4 h-4" /> Asignar Usuario
+						</BtnPrimario>
+					</div>
+
+					{mostrarFiltros && (
+						<div className="flex gap-4 p-3 rounded-lg bg-zinc-900/50 border border-borde/50 animate-in slide-in-from-top-2">
+							<div className="flex flex-col gap-1.5">
+								<label className="text-xs font-medium text-secundario">Estado</label>
+								<select 
+									value={filtroEstado}
+									onChange={(e) => setFiltroEstado(e.target.value)}
+									className="bg-fondo border border-borde text-primario text-sm rounded-lg px-3 py-1.5 outline-none focus:border-primario/50"
+								>
+									<option value="Todos">Todos</option>
+									<option value="Activo">Activos</option>
+									<option value="Inactivo">Inactivos</option>
+								</select>
+							</div>
+						</div>
+					)}
 				</div>
-				<table className="w-full">
-					<CabeceraTabla
-						columnas={['Propiedad', 'Usuario Residente', 'Tipo', 'Inicio', 'Estado', 'Acciones']}
-					/>
-					<tbody>
-						{filtrados.map((vinc, i) => (
-							<Fila key={vinc.id} indice={i}>
-								<Celda mono>{vinc.propiedad}</Celda>
-								<Celda className="font-bold text-primario">{vinc.usuario}</Celda>
-								<td className="px-4 py-3">
-									<span
-										className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${vinc.tipoVinculo === 'Propietario' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-sky-500/10 text-sky-400 border border-sky-500/20'}`}
-									>
-										{vinc.tipoVinculo}
-									</span>
-								</td>
-								<Celda className="text-xs text-zinc-500">{vinc.fechaInicio}</Celda>
-								<td className="px-4 py-3">
-									<Etiqueta
-										texto={vinc.estado}
-										variante={vinc.estado === 'Activo' ? 'activo' : 'inactivo'}
-									/>
-								</td>
-								<td className="px-4 py-3">
-									<div className="flex items-center gap-1">
-										<BtnAccion
-											Icono={Pencil}
-											onClick={() => abrirModalEditar(vinc)}
-											colorHover="hover:text-blue-400"
-										/>
-										<BtnAccion
-											Icono={Ban}
-											onClick={() => toggleEstado(vinc.id, vinc.estado)}
-											colorHover="hover:text-amber-400"
-										/>
-										<BtnAccion
-											Icono={Trash2}
-											onClick={() => setAEliminar(vinc)}
-											colorHover="hover:text-red-500"
-										/>
-									</div>
-								</td>
-							</Fila>
-						))}
-					</tbody>
-				</table>
+				<div className="py-2">
+					{renderTabla(residentesFiltrados, 'Residentes Asignados')}
+				</div>
 				<PieTabla mostrados={filtrados.length} total={datos.length} unidad="vínculos" />
 			</div>
 
@@ -442,7 +489,6 @@ export default function ModuloVinculaciones({ filtroGlobal = '' }) {
 							</Selector>
 						</Campo>
 
-						<div className="grid grid-cols-2 gap-4">
 							<Campo etiqueta="Propiedad (Casa/Apto)">
 								<Selector
 									required
@@ -452,23 +498,12 @@ export default function ModuloVinculaciones({ filtroGlobal = '' }) {
 								>
 									<option value="">Seleccione propiedad...</option>
 									{propiedades.map((p) => (
-										<option key={p.id} value={p.id}>
-											{p.numero} - {p.categoria}
+										<option key={p.ID_PROPIEDAD} value={p.ID_PROPIEDAD}>
+											{p.NUMERO_PROPIEDAD} - {p.CATEGORIA_NOMBRE}
 										</option>
 									))}
 								</Selector>
 							</Campo>
-							<Campo etiqueta="Tipo de Vínculo">
-								<Selector
-									value={form.tipoVinculo}
-									onChange={(e) => setForm({ ...form, tipoVinculo: e.target.value })}
-									disabled={modal === 'editar'}
-								>
-									<option>Propietario</option>
-									<option>Inquilino</option>
-								</Selector>
-							</Campo>
-						</div>
 
 						{modal === 'nuevo' && (
 							<p className="text-[10px] text-zinc-500 text-center uppercase tracking-widest mt-2">

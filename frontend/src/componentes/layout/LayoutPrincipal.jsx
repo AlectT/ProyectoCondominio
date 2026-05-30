@@ -44,7 +44,7 @@ const SUBTITULOS = {
 	'Reservas de Áreas': 'Calendario y gestión de áreas sociales',
 	'Inventario Parqueos': 'Inventario de parqueos disponibles',
 	'Llamados de Atención': 'Listado de llamadas de atención acumuladas',
-	'Propietarios e Inquilinos': 'Control de inquilinos y propietarios',
+	'Residentes': 'Control de residentes del condominio',
 	'Reportes Condominio': 'Análisis visual de datos financieros y de uso',
 };
 
@@ -56,7 +56,6 @@ export default function LayoutPrincipal() {
 	const VISTAS = {
 		'Gestión de Propiedades': <ModuloPropiedades filtroGlobal={busquedaGlobal} />,
 		'Categorías de Propiedad': <ModuloCategorias filtroGlobal={busquedaGlobal} />,
-		'Vinculación Usuario-Propiedad': <ModuloVinculaciones filtroGlobal={busquedaGlobal} />,
 		'Pases de Visita (QR)': <ModuloInvitaciones filtroGlobal={busquedaGlobal} />,
 		// 'Infracciones y Multas': <ModuloMulta filtroGlobal={busquedaGlobal} />,
 		'Directorio Usuarios': <UsuariosPagina filtroGlobal={busquedaGlobal} />,
@@ -68,7 +67,7 @@ export default function LayoutPrincipal() {
 		'Reservas de Áreas': <ReservasPagina filtroGlobal={busquedaGlobal} />,
 		'Inventario Parqueos': <ParqueosPagina filtroGlobal={busquedaGlobal} />,
 		'Llamados de Atención': <LlamadasAtencionPagina filtroGlobal={busquedaGlobal} />,
-		'Propietarios e Inquilinos': <UsuarioPropiedadPagina filtroGlobal={busquedaGlobal} />,
+		'Residentes': <ModuloVinculaciones filtroGlobal={busquedaGlobal} />,
 		'Reportes Condominio': <ReportesPagina />,
 	};
 

@@ -3,7 +3,7 @@ import { UsuarioPropiedadModel } from '../models/usuarioPropiedad.js';
 export const vinculacionesController = {
 	obtenerTodas: async (req, res) => {
 		try {
-			const vinculaciones = await UsuarioPropiedadModel.obtenerTodas();
+			const vinculaciones = await UsuarioPropiedadModel.obtenerTodos();
 			res.json(vinculaciones);
 		} catch (error) {
 			console.error(error);

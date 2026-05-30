@@ -10,8 +10,8 @@ export const validarTextoConSentido = (texto) => {
 	// 2. Debe contener al menos una vocal
 	if (!/[aeiouáéíóúüAEIOUÁÉÍÓÚÜ]/.test(soloLetras)) return false;
 
-	// 3. Evitar secuencias idénticas (ej. aaaaa)
-	if (/(.)\1{3,}/.test(txt)) return false;
+	// 3. Evitar secuencias idénticas (ej. aaa)
+	if (/(.)\1{2,}/.test(txt)) return false;
 
 	// 4. Evitar muchas consonantes seguidas (ej. jklmn)
 	if (/[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]{5,}/i.test(txt)) return false;
@@ -64,8 +64,8 @@ export const validarNombrePersona = (texto) => {
 	// Debe contener al menos una vocal si es de 3 letras o más
 	if (soloLetras.length >= 3 && !/[aeiouyáéíóúüAEIOUYÁÉÍÓÚÜ]/.test(soloLetras)) return false;
 
-	// Evitar secuencias idénticas (ej. aaaaa)
-	if (/(.)\1{3,}/.test(txt)) return false;
+	// Evitar secuencias idénticas (ej. aaa)
+	if (/(.)\1{2,}/.test(txt)) return false;
 
 	// Evitar muchas consonantes seguidas (ej. jklmn)
 	if (/[bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ]{5,}/i.test(txt)) return false;

@@ -14,6 +14,8 @@ import { useState, useEffect } from 'react';
 import { Building, CheckCircle, Users, Plus, Eye, Pencil, Ban, Trash2, Filter } from 'lucide-react';
 import { propiedadesApi } from '../../api/propiedadesApi.js';
 import { categoriasApi } from '../../api/categoriasApi.js';
+import { usuariosApi } from '../../api/usuariosApi.js';
+import { vinculacionesApi } from '../../api/vinculacionesApi.js';
 import { TarjetaMetrica, Etiqueta } from '../../componentes/ui/Etiquetas.jsx';
 import { BuscadorCasa } from '../../componentes/ui/Buscador.jsx';
 import { BtnPrimario, BtnAccion, BotonesModal } from '../../componentes/ui/Botones.jsx';
@@ -25,6 +27,8 @@ import { toast } from 'sonner';
 export default function ModuloPropiedades({ filtroGlobal = '' }) {
 	const [datos, setDatos] = useState([]);
 	const [categoriasBD, setCategoriasBD] = useState([]);
+	const [usuariosBD, setUsuariosBD] = useState([]);
+	const [vinculaciones, setVinculaciones] = useState([]);
 	const [cargando, setCargando] = useState(true);
 	const [busqueda, setBusqueda] = useState('');
 	const [modal, setModal] = useState(null);
@@ -42,16 +46,17 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 		numero: '',
 		idCategoria: '',
 		propietario: '',
-		inquilino: '',
 	});
 	const [errores, setErrores] = useState({});
 
 	const cargarDatos = async () => {
 		setCargando(true);
 		try {
-			const [resProp, resCat] = await Promise.all([
+			const [resProp, resCat, resUsr, resVinc] = await Promise.all([
 				propiedadesApi.obtenerTodas(),
 				categoriasApi.obtenerTodas(),
+				usuariosApi.obtenerTodos(),
+				vinculacionesApi.obtenerTodas().catch(() => ({ data: [] }))
 			]);
 
 			setCategoriasBD(
@@ -61,12 +66,10 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 				}))
 			);
 
-			const datosFormateados = resProp.data.map((p) => {
-				const desc = p.DESCRIPCION || '';
-				const partes = desc.split(' | INQ: ');
-				const prop = partes[0] || 'Sin asignar';
-				const inq = partes[1] || null;
+			setUsuariosBD((resUsr.data || []).filter(u => u.ACTIVO === 1));
+			setVinculaciones(resVinc.data || []);
 
+			const datosFormateados = resProp.data.map((p) => {
 				return {
 					id: p.ID_PROPIEDAD,
 					numero: p.NUMERO_PROPIEDAD,
@@ -75,8 +78,7 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 					cuota: p.CUOTA_MENSUAL,
 					parqueos: p.MAX_PARQUEOS,
 					estado: p.ACTIVO === 1 ? 'Activo' : 'Inactivo',
-					propietario: prop,
-					inquilino: inq,
+					propietario: p.DESCRIPCION || 'Sin asignar',
 				};
 			});
 			setDatos(datosFormateados);
@@ -95,8 +97,7 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 	const filtrados = datos.filter((p) => {
 		const cumpleTexto = !termino || 
 			p.numero.toLowerCase().includes(termino) ||
-			p.propietario.toLowerCase().includes(termino) ||
-			(p.inquilino && p.inquilino.toLowerCase().includes(termino));
+			p.propietario.toLowerCase().includes(termino);
 		
 		const cumpleCat = filtroCategoria === 'Todas' || p.categoria.includes(filtroCategoria) || (filtroCategoria === 'Básica' && p.categoria.includes('sica'));
 		const cumpleEst = filtroEstado === 'Todos' || p.estado === filtroEstado;
@@ -162,21 +163,7 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 				if (errorLimite) error = errorLimite;
 			}
 		} else if (campo === 'propietario') {
-			nuevoValor = limpiarNombre(valor);
-			if (valor !== nuevoValor) toast.error('Carácter inválido eliminado', { id: 'char-err' });
-
-			if (nuevoValor.length > 0 && !validarNombrePersona(nuevoValor)) {
-				error = 'Ingrese un nombre válido, solo letras';
-			} else if (nuevoValor.length === 0) {
-				error = 'El nombre del propietario es obligatorio';
-			}
-		} else if (campo === 'inquilino') {
-			nuevoValor = limpiarNombre(valor);
-			if (valor !== nuevoValor) toast.error('Carácter inválido eliminado', { id: 'char-err' });
-
-			if (nuevoValor.length > 0 && !validarNombrePersona(nuevoValor)) {
-				error = 'Ingrese un nombre válido, solo letras';
-			}
+			nuevoValor = valor;
 		} else if (campo === 'idCategoria') {
 			if (!nuevoValor) {
 				error = 'Debe seleccionar una categoría';
@@ -205,12 +192,7 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 			if (errorLimite) nuevosErrores.numero = errorLimite;
 		}
 
-		if (!validarNombrePersona(form.propietario)) {
-			nuevosErrores.propietario = 'Nombre de propietario inválido. Solo letras y espacios.';
-		}
-		if (form.inquilino && !validarNombrePersona(form.inquilino)) {
-			nuevosErrores.inquilino = 'Nombre de inquilino inválido. Solo letras y espacios.';
-		}
+
 		if (!form.idCategoria) {
 			nuevosErrores.idCategoria = 'Debe seleccionar una categoría';
 		}
@@ -227,12 +209,12 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 			toast.error('Corrige los errores resaltados antes de guardar', { icon: '⚠️' });
 			return;
 		}
-		if (!form.numero.trim() || !form.propietario.trim() || !form.idCategoria) return;
+		if (!form.numero.trim() || !form.idCategoria) return;
 
 		setGuardando(true);
-		const descFinal = form.inquilino.trim()
-			? `${form.propietario.trim()} | INQ: ${form.inquilino.trim()}`
-			: form.propietario.trim();
+
+		const propFinal = form.propietario.trim() || 'Sin asignar';
+		const descFinal = propFinal;
 
 		const payload = {
 			idCategoria: Number(form.idCategoria),
@@ -265,7 +247,6 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 			numero: p.numero,
 			idCategoria: p.idCategoria,
 			propietario: p.propietario !== 'Sin asignar' ? p.propietario : '',
-			inquilino: p.inquilino || '',
 		});
 		setErrores({});
 		setEditandoId(p.id);
@@ -519,8 +500,8 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 					fondo="bg-emerald-500/10"
 				/>
 				<TarjetaMetrica
-					etiqueta="Con Inquilino"
-					valor={datos.filter((p) => p.inquilino).length}
+					etiqueta="Con Residente"
+					valor={datos.filter((p) => p.propietario !== 'Sin asignar').length}
 					Icono={Users}
 					fondo="bg-sky-500/10"
 				/>
@@ -559,7 +540,6 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 									numero: prefijo,
 									idCategoria: primerCat?.ID_CATEGORIA || '',
 									propietario: '',
-									inquilino: '',
 								});
 								setErrores({});
 								setEditandoId(null);
@@ -602,7 +582,7 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 				</div>
 				<table className="w-full">
 					<CabeceraTabla
-						columnas={['Número', 'Categoría', 'Cuota', 'Usuarios Registrados', 'Estado', 'Acciones']}
+						columnas={['Número', 'Categoría', 'Cuota', 'Residente', 'Estado', 'Acciones']}
 					/>
 					<tbody>
 						{filtrados.map((p, i) => (
@@ -614,21 +594,8 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 									</span>
 								</td>
 								<Celda>Q{p.cuota.toFixed(2)}</Celda>
-								<td className="px-4 py-3">
-									<div className="text-xs">
-										<div className="flex items-center gap-1.5 mb-1">
-											<span className="text-zinc-500 w-4">P:</span>
-											<span className={!p.inquilino ? 'text-primario font-bold' : 'text-zinc-400'}>
-												{p.propietario}
-											</span>
-										</div>
-										{p.inquilino && (
-											<div className="flex items-center gap-1.5">
-												<span className="text-zinc-500 w-4">I:</span>
-												<span className="text-primario font-bold">{p.inquilino}</span>
-											</div>
-										)}
-									</div>
+								<td className="px-4 py-3 text-xs text-zinc-400">
+									{p.propietario !== 'Sin asignar' ? p.propietario : 'Sin asignar'}
 								</td>
 								<td className="px-4 py-3">
 									<Etiqueta texto={p.estado} variante={p.estado.toLowerCase()} />
@@ -712,35 +679,26 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 								</Selector>
 							</Campo>
 						</div>
-						<Campo 
-							etiqueta="Nombre del Propietario (Obligatorio)"
-							error={errores.propietario}
-							ayuda="Escriba solo letras y espacios. Evite símbolos o números."
-						>
-							<Entrada
-								value={form.propietario}
-								onChange={(e) => manejarCambio('propietario', e.target.value)}
-								placeholder="Ej: Juan Pérez"
-								maxLength={45}
-								hasError={!!errores.propietario}
-								required
-								disabled={guardando}
-							/>
-						</Campo>
-						<Campo 
-							etiqueta="Nombre del Inquilino (Opcional)"
-							error={errores.inquilino}
-							ayuda="Dejar en blanco si la propiedad no está alquilada. Solo letras y espacios."
-						>
-							<Entrada
-								value={form.inquilino}
-								onChange={(e) => manejarCambio('inquilino', e.target.value)}
-								placeholder="Ej: Ana Gómez"
-								maxLength={45}
-								hasError={!!errores.inquilino}
-								disabled={guardando}
-							/>
-						</Campo>
+
+						<div className="grid grid-cols-1 gap-4">
+							<Campo
+								etiqueta="Residente (Opcional)"
+								ayuda="Puedes asignar un residente principal ahora o hacerlo después"
+							>
+								<Selector
+									value={form.propietario}
+									onChange={(e) => setForm({ ...form, propietario: e.target.value })}
+									disabled={guardando}
+								>
+									<option value="">Sin asignar / Propiedad vacía</option>
+									{usuariosBD.filter(u => u.ROL === 'Residente').map(u => (
+										<option key={`prop-${u.ID_USUARIO}`} value={`${u.NOMBRE} ${u.APELLIDO}`}>
+											{u.NOMBRE} {u.APELLIDO}
+										</option>
+									))}
+								</Selector>
+							</Campo>
+						</div>
 
 						<div className="p-3 rounded-lg bg-zinc-800/60 border border-borde text-xs text-secundario space-y-1">
 							<p>
@@ -777,8 +735,7 @@ export default function ModuloPropiedades({ filtroGlobal = '' }) {
 							['Categoría', seleccion.categoria],
 							['Cuota', `Q${seleccion.cuota.toFixed(2)} / mes`],
 							['Parqueos', seleccion.parqueos],
-							['Propietario', seleccion.propietario],
-							['Inquilino', seleccion.inquilino || 'No aplica'],
+							['Residente', seleccion.propietario],
 							['Estado', seleccion.estado],
 						].map(([k, v]) => (
 							<div

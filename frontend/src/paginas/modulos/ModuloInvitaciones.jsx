@@ -7,6 +7,8 @@ import { validarNombrePersona, limpiarNombre } from '../../utilidades/validarTex
 import { useState, useEffect } from 'react';
 import { QrCode, Plus, Ban, Trash2, Pencil, CheckCircle, Clock, Filter } from 'lucide-react';
 import { invitacionesApi } from '../../api/invitacionesApi.js';
+import { usuariosApi } from '../../api/usuariosApi.js';
+import { vinculacionesApi } from '../../api/vinculacionesApi.js';
 import useStore from '../../estado/useStore.js';
 import { TarjetaMetrica, Etiqueta } from '../../componentes/ui/Etiquetas.jsx';
 import { BuscadorCasa } from '../../componentes/ui/Buscador.jsx';
@@ -20,6 +22,8 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 	const usuario = useStore((s) => s.usuario);
 
 	const [datos, setDatos] = useState([]);
+	const [usuarios, setUsuarios] = useState([]);
+	const [vinculaciones, setVinculaciones] = useState([]);
 	const [cargando, setCargando] = useState(true);
 	const [busqueda, setBusqueda] = useState('');
 	const [modal, setModal] = useState(null);
@@ -36,15 +40,22 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 	const [form, setForm] = useState({
 		visitante: '',
 		tipo: 'Normal',
+		idAnfitrion: '',
 	});
 	const [errores, setErrores] = useState({});
 
 	const cargarDatos = async (silencioso = false) => {
 		if (!silencioso) setCargando(true);
 		try {
-			const respuesta = await invitacionesApi.obtenerTodas();
+			const [resInv, resUsu, resVinc] = await Promise.all([
+				invitacionesApi.obtenerTodas(),
+				usuariosApi.obtenerTodos().catch(() => ({ data: [] })),
+				vinculacionesApi.obtenerTodas().catch(() => ({ data: [] }))
+			]);
+			setUsuarios(resUsu.data || []);
+			setVinculaciones(resVinc.data || []);
 
-			const datosFormateados = respuesta.data.map((inv) => {
+			const datosFormateados = resInv.data.map((inv) => {
 				let estado = 'Activo';
 				if (inv.ACTIVO === 0) {
 					if (inv.ID_TIPO === 1 && inv.FECHA_EXPIRACION) {
@@ -55,6 +66,11 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 					}
 				}
 
+				const casasUsuario = (resVinc.data || [])
+					.filter((v) => v.ID_USUARIO === inv.ID_USUARIO)
+					.map((v) => v.NUMERO_PROPIEDAD)
+					.join(', ');
+
 				return {
 					id: inv.ID_INVITACION,
 					idUsuario: inv.ID_USUARIO,
@@ -62,6 +78,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 					tipo: inv.TIPO_NOMBRE,
 					visitante: inv.NOMBRE_VISITANTE,
 					codigoQR: inv.CODIGO_QR,
+					casa: casasUsuario || 'Sin casa',
 					activo: inv.ACTIVO,
 					estado,
 					fechaGeneracion: inv.FECHA_GENERACION
@@ -104,6 +121,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 	const filtrados = datos.filter((inv) => {
 		const cumpleTexto = !termino ||
 			inv.visitante.toLowerCase().includes(termino) ||
+			inv.casa.toLowerCase().includes(termino) ||
 			inv.codigoQR?.toLowerCase().includes(termino);
 		
 		const cumpleTipo = filtroTipo === 'Todos' || inv.tipo === filtroTipo;
@@ -153,6 +171,10 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 			toast.error('Corrige los errores resaltados antes de generar el pase', { icon: '⚠️' });
 			return;
 		}
+		if (!editandoId && !form.idAnfitrion) {
+			toast.error('Debe seleccionar un anfitrión / residente.', { icon: '⚠️' });
+			return;
+		}
 		if (!form.visitante.trim()) return;
 
 		setGuardando(true);
@@ -166,7 +188,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 				await invitacionesApi.crear({
 					nombreVisitante: form.visitante.trim(),
 					tipo: form.tipo,
-					idUsuario: usuario?.ID_USUARIO,
+					idUsuario: form.idAnfitrion,
 				});
 				toast.success('Pase QR generado exitosamente');
 			}
@@ -183,7 +205,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 	};
 
 	function abrirEditar(inv) {
-		setForm({ visitante: inv.visitante, tipo: inv.tipo });
+		setForm({ visitante: inv.visitante, tipo: inv.tipo, idAnfitrion: '' });
 		setErrores({});
 		setEditandoId(inv.id);
 		setModal('nuevo');
@@ -460,7 +482,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 						</div>
 						<BtnPrimario
 							onClick={() => {
-								setForm({ visitante: '', tipo: 'Normal' });
+								setForm({ visitante: '', tipo: 'Normal', idAnfitrion: '' });
 								setErrores({});
 								setEditandoId(null);
 								setModal('nuevo');
@@ -505,6 +527,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 					<CabeceraTabla
 						columnas={[
 							'Visitante',
+							'Casa Destino',
 							'Tipo',
 							'Código QR',
 							'Generado',
@@ -522,6 +545,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 								onClick={() => setFilaActiva(filaActiva === inv.id ? null : inv.id)}
 							>
 								<Celda>{inv.visitante}</Celda>
+								<Celda mono className="text-zinc-400">{inv.casa}</Celda>
 
 								<td className="px-4 py-3">
 									<span
@@ -616,6 +640,27 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 						</Campo>
 
 						{!editandoId && (
+							<Campo etiqueta="Residente">
+								<Selector
+									required
+									value={form.idAnfitrion}
+									onChange={(e) => setForm({ ...form, idAnfitrion: e.target.value })}
+									disabled={guardando}
+								>
+									<option value="">Seleccione el residente...</option>
+									{usuarios.filter(u => u.ROL === 'Residente' && u.ACTIVO === 1).map(u => {
+										const casas = vinculaciones.filter(v => v.ID_USUARIO === u.ID_USUARIO).map(v => v.NUMERO_PROPIEDAD).join(', ');
+										return (
+											<option key={u.ID_USUARIO} value={u.ID_USUARIO}>
+												{u.NOMBRE} {u.APELLIDO} {casas ? `(Casa ${casas})` : ''}
+											</option>
+										);
+									})}
+								</Selector>
+							</Campo>
+						)}
+
+						{!editandoId && (
 							<Campo etiqueta="Tipo de invitación">
 								<Selector
 									value={form.tipo}
@@ -687,6 +732,7 @@ export default function ModuloInvitaciones({ filtroGlobal = '' }) {
 						<div className="w-full space-y-0">
 							{[
 								['Código', seleccion.codigoQR],
+								['Casa Destino', seleccion.casa],
 								['Tipo', seleccion.tipo],
 								['Estado', seleccion.estado],
 								['Generado', seleccion.fechaGeneracion ?? '—'],

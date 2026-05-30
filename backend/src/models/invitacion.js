@@ -13,7 +13,7 @@ const ID_TIPO_SERVICIO = 2;
 
 // URL base del frontend — el celular usará esta URL al escanear el QR
 // Debe ser la IP de tu red local para que funcione en otros dispositivos
-const FRONTEND_URL = 'http://192.168.0.9:5173';
+const FRONTEND_URL = 'http://68.183.21.196:5173';
 
 const consultaBase = `
   SELECT
