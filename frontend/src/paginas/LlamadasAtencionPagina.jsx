@@ -18,6 +18,7 @@ import useStore from '../estado/useStore.js';
 import { formatearFecha } from '../utilidades/formatearFecha.js';
 import { toast } from 'sonner';
 import Cargando from '../componentes/ui/Cargando.jsx';
+import { validarTextoConSentido } from '../utilidades/validarTexto.js';
 
 const limpiar = (str) => str?.toString().toLowerCase().replace(/\s/g, '') ?? '';
 
@@ -83,9 +84,10 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 		setForm({
 			idPropiedad: la.ID_PROPIEDAD,
 			idTipoCargo: la.ID_TIPO_CARGO,
-			descripcion: la.DESCRIPCION,
+			descripcion: validarTextoConSentido(la.DESCRIPCION),
 			idAdmin: usuario.ID_USUARIO,
 		});
+
 		setErrorModal('');
 		setModal('editar');
 	};
@@ -103,9 +105,11 @@ export default function LlamadasAtencionPagina({ filtroGlobal = '' }) {
 				...form,
 				idPropiedad: Number(form.idPropiedad),
 				idTipoCargo: Number(form.idTipoCargo),
-				descripcion: form.descripcion,
+				descripcion: validarTextoConSentido(form.descripcion) && form.descripcion,
 				idAdmin: usuario.ID_USUARIO,
 			};
+
+			console.log('Datos a enviar:', datosAEnviar);
 
 			if (modal === 'crear') {
 				await crear(datosAEnviar);

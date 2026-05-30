@@ -66,6 +66,7 @@ export default function UsuarioPropiedadPagina({ filtroGlobal = '' }) {
 			.catch(() => setPropiedades([]));
 	}, []);
 
+	console.log(personal);
 	// console.log(propiedades);
 	const [form, setForm] = useState({
 		idUsuario: '',
